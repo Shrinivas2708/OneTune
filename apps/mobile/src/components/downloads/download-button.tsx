@@ -3,6 +3,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable } from "react-native";
 import { isNativePlaybackSupported } from "@/lib/platform";
+import { getErrorMessage } from "@/lib/error-message";
+import { showToast } from "@/stores/toast-store";
 import { useDownloadStore } from "@/stores/download-store";
 import { isDownloadableTrack } from "@/types/download-record";
 
@@ -25,7 +27,9 @@ export function DownloadButton({ track, size = 22 }: DownloadButtonProps) {
   const handlePress = () => {
     if (isDownloaded || isDownloading) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    void startDownload(track);
+    void startDownload(track).catch((error) => {
+      showToast(getErrorMessage(error, "Download failed."));
+    });
   };
 
   if (isDownloading) {

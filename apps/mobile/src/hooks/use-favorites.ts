@@ -1,7 +1,9 @@
 import type { TrackMetadata } from "@vibevault/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { libraryApi } from "@/lib/library-api";
+import { getErrorMessage } from "@/lib/error-message";
 import { trackKey } from "@/services/player-helpers";
+import { showToast } from "@/stores/toast-store";
 
 const FAVORITES_KEY = ["library", "favorites"] as const;
 
@@ -45,6 +47,9 @@ export function useToggleFavorite() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: FAVORITES_KEY });
+    },
+    onError: (error) => {
+      showToast(getErrorMessage(error, "Could not update favorites."));
     },
   });
 }

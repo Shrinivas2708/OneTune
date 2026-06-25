@@ -6,6 +6,7 @@ import { libraryApi } from "@/lib/library-api";
 import { isNativePlaybackSupported } from "@/lib/platform";
 import { musicApi } from "@/lib/music-api";
 import { playerEngine } from "@/services/player-engine";
+import { showToast } from "@/stores/toast-store";
 import {
   searchResultToTrack,
   usePlayerStore,
@@ -46,12 +47,13 @@ export function usePlayTrack() {
       setIsResolving(false);
       usePlayerStore.getState().setIsPlaying(false);
 
-      if (error instanceof ApiClientError) {
-        setResolveError(error.message);
-        return;
-      }
+      const message =
+        error instanceof ApiClientError
+          ? error.message
+          : "Could not start playback. Try another track.";
 
-      setResolveError("Could not start playback. Try another track.");
+      setResolveError(message);
+      showToast(message);
     },
   });
 }

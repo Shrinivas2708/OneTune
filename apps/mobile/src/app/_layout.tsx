@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PlayerSync } from "@/components/player/player-sync";
 import { LoadingScreen } from "@/components/ui/screen";
+import { ToastHost } from "@/components/ui/toast-host";
 import { AppProviders } from "@/providers/app-providers";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDownloadStore } from "@/stores/download-store";
@@ -51,6 +52,7 @@ export default function RootLayout() {
     <GestureHandlerRootView className="flex-1">
       <AppProviders>
         <PlayerSync />
+        <ToastHost />
         <StatusBar style="light" />
         <Stack
           screenOptions={{

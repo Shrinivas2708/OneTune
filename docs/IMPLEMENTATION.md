@@ -20,9 +20,10 @@
 | M10 Playlist import | ✅ | Spotify URL import + library |
 | M11 Downloads | ✅ | Device downloads + offline playback |
 | M12 Library features | ✅ | Favorites + playback history |
-| M13 Polish | ⏳ | Skeletons, error UX, refresh — **next** |
+| M13 Polish | ✅ | Skeletons, toasts, pull-to-refresh, artwork placeholders |
+| M14 VPS deploy | ⏳ | Production Docker + nginx — **next** |
 
-**Favorites and playback history are live (M12).** Polish/hardening is M13.
+**UI polish is live (M13).** VPS deployment is M14.
 
 ---
 
@@ -204,7 +205,7 @@ src/
 └── providers/app-providers.tsx
 ```
 
-**Not yet implemented:** Polish/hardening (M13) — skeleton loaders, error toasts, pull-to-refresh
+**Not yet implemented:** VPS production deploy (M14)
 
 Stack:
 

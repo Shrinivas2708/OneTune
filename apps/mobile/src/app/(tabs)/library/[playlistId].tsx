@@ -1,15 +1,18 @@
 import { FlashList } from "@shopify/flash-list";
 import type { TrackMetadata } from "@vibevault/types";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { ProviderBadge } from "@/components/search/provider-badge";
 import { DownloadButton } from "@/components/downloads/download-button";
+import { ArtworkImage } from "@/components/ui/artwork-image";
+import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
+import { PlaylistDetailSkeleton } from "@/components/ui/skeleton";
 import { usePlayTrack } from "@/hooks/use-play-track";
 import { usePlaylist } from "@/hooks/use-playlists";
 import { formatArtists } from "@/lib/track-format";
+import { getErrorMessage } from "@/lib/error-message";
 import { trackToSearchResult } from "@/lib/track-to-search-result";
 import { trackKey, usePlayerStore } from "@/stores/player-store";
 import { formatDuration } from "@vibevault/utils";
@@ -31,15 +34,7 @@ function PlaylistTrackRow({
       className={`flex-row items-center gap-3 rounded-vault-lg px-2 py-2 ${isActive ? "bg-vault-surface-elevated" : ""}`}
       onPress={onPress}
     >
-      <View className="h-12 w-12 overflow-hidden rounded-vault-md bg-vault-artwork-placeholder">
-        {track.artworkUrl ? (
-          <Image
-            contentFit="cover"
-            source={{ uri: track.artworkUrl }}
-            style={{ width: 48, height: 48 }}
-          />
-        ) : null}
-      </View>
+      <ArtworkImage label={`${track.title} artwork`} radius={8} size={48} uri={track.artworkUrl} />
 
       <View className="min-w-0 flex-1 gap-1">
         <Text className="font-inter-semibold text-base text-vault-text" numberOfLines={1}>
@@ -68,7 +63,7 @@ function PlaylistTrackRow({
 export default function PlaylistDetailScreen() {
   const router = useRouter();
   const { playlistId } = useLocalSearchParams<{ playlistId: string }>();
-  const { data, error, isLoading } = usePlaylist(playlistId ?? "");
+  const { data, error, isLoading, refetch, isRefetching } = usePlaylist(playlistId ?? "");
   const playTrack = usePlayTrack();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isResolving = usePlayerStore((state) => state.isResolving);
@@ -82,10 +77,8 @@ export default function PlaylistDetailScreen() {
 
   if (isLoading) {
     return (
-      <Screen>
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#1ed760" size="large" />
-        </View>
+      <Screen className="pt-2" padded={false}>
+        <PlaylistDetailSkeleton />
       </Screen>
     );
   }
@@ -93,9 +86,10 @@ export default function PlaylistDetailScreen() {
   if (!data || error) {
     return (
       <Screen className="pt-4">
-        <Text className="font-inter text-base text-vault-negative">
-          Playlist not found.
-        </Text>
+        <ErrorState
+          message={error ? getErrorMessage(error, "Playlist not found.") : "Playlist not found."}
+          onRetry={() => void refetch()}
+        />
       </Screen>
     );
   }
@@ -112,15 +106,7 @@ export default function PlaylistDetailScreen() {
       </View>
 
       <View className="items-center px-6 py-4">
-        <View className="h-40 w-40 overflow-hidden rounded-vault-lg bg-vault-artwork-placeholder">
-          {data.artworkUrl ? (
-            <Image
-              contentFit="cover"
-              source={{ uri: data.artworkUrl }}
-              style={{ width: 160, height: 160 }}
-            />
-          ) : null}
-        </View>
+        <ArtworkImage label={`${data.name} artwork`} radius={12} size={160} uri={data.artworkUrl} />
         <Text className="mt-4 text-center font-jakarta text-2xl text-vault-text">
           {data.name}
         </Text>
@@ -133,6 +119,13 @@ export default function PlaylistDetailScreen() {
         <FlashList
           data={data.tracks}
           keyExtractor={(item) => trackKey(item)}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              tintColor="#1ed760"
+              onRefresh={() => void refetch()}
+            />
+          }
           renderItem={({ item }) => (
             <PlaylistTrackRow
               isActive={trackKey(item) === activeKey}

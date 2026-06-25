@@ -11,7 +11,7 @@ import {
   SEARCH_MIN_QUERY_LENGTH,
   useUnifiedSearch,
 } from "@/hooks/use-unified-search";
-import { ApiClientError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/error-message";
 import { usePlayerStore } from "@/stores/player-store";
 
 import type { TrackMetadata } from "@vibevault/types";
@@ -60,11 +60,9 @@ export default function SearchScreen() {
   );
 
   const errorMessage =
-    error instanceof ApiClientError
-      ? error.message
-      : isError
-        ? "Search failed. Check your connection and try again."
-        : null;
+    isError && trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH
+      ? getErrorMessage(error, "Search failed. Check your connection and try again.")
+      : null;
 
   return (
     <Screen className="pt-4" padded={false}>

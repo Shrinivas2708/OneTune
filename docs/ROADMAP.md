@@ -336,17 +336,17 @@ feat(library): add favorites and playback history
 
 ---
 
-## M13 — Polish & Hardening
+## M13 — Polish & Hardening ✅
 
 **Goal:** App Store quality feel.
 
 ### Tasks
-- [ ] Skeleton loaders on all async screens
-- [ ] Consistent error toasts / banners
-- [ ] Pull-to-refresh where appropriate
-- [ ] Image caching and placeholder artwork
+- [x] Skeleton loaders on all async screens
+- [x] Consistent error toasts / banners
+- [x] Pull-to-refresh where appropriate
+- [x] Image caching and placeholder artwork
 - [ ] Performance audit (FlashList tuning, re-render reduction)
-- [ ] Video playback toggle (audio vs video mode) — if time permits in MVP
+- [ ] Video playback toggle (audio vs video mode) — deferred post-MVP
 
 ### Suggested commit
 ```

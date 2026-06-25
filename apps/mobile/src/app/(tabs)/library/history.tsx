@@ -1,11 +1,13 @@
 import { FlashList } from "@shopify/flash-list";
-import { ActivityIndicator, Text, View } from "react-native";
+import { RefreshControl, Text, View } from "react-native";
 import { LibraryTrackRow } from "@/components/library/library-track-row";
 import { VaultHeading, VaultSubheading } from "@/components/ui/button";
+import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
+import { TrackListSkeleton } from "@/components/ui/skeleton";
 import { useHistory } from "@/hooks/use-history";
 import { formatArtists } from "@/lib/track-format";
-import { ApiClientError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/error-message";
 
 function formatPlayedAt(iso: string) {
   const date = new Date(iso);
@@ -20,14 +22,9 @@ function formatPlayedAt(iso: string) {
 }
 
 export default function HistoryScreen() {
-  const { data, error, isLoading } = useHistory();
+  const { data, error, isLoading, refetch, isRefetching } = useHistory();
 
-  const errorMessage =
-    error instanceof ApiClientError
-      ? error.message
-      : error
-        ? "Could not load history."
-        : null;
+  const errorMessage = error ? getErrorMessage(error, "Could not load history.") : null;
 
   return (
     <Screen className="pt-4" padded={false}>
@@ -37,16 +34,10 @@ export default function HistoryScreen() {
       </View>
 
       <View className="mt-6 min-h-[200px] flex-1 px-4">
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1ed760" size="large" />
-          </View>
-        ) : null}
+        {isLoading ? <TrackListSkeleton /> : null}
 
         {errorMessage ? (
-          <Text className="px-6 text-center font-inter text-sm text-vault-negative">
-            {errorMessage}
-          </Text>
+          <ErrorState message={errorMessage} onRetry={() => void refetch()} />
         ) : null}
 
         {!isLoading && !errorMessage && (data?.length ?? 0) === 0 ? (
@@ -59,6 +50,13 @@ export default function HistoryScreen() {
           <FlashList
             data={data}
             keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                tintColor="#1ed760"
+                onRefresh={() => void refetch()}
+              />
+            }
             renderItem={({ item }) => (
               <LibraryTrackRow
                 showFavorite

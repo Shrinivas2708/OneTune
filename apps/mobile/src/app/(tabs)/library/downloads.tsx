@@ -1,9 +1,10 @@
 import { FlashList } from "@shopify/flash-list";
 import { useEffect } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { DownloadRow } from "@/components/downloads/download-row";
 import { VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
+import { TrackListSkeleton } from "@/components/ui/skeleton";
 import { useDownloadStore } from "@/stores/download-store";
 
 export default function DownloadsScreen() {
@@ -23,11 +24,7 @@ export default function DownloadsScreen() {
       </View>
 
       <View className="mt-6 min-h-[200px] flex-1 px-4">
-        {!isHydrated ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1ed760" size="large" />
-          </View>
-        ) : null}
+        {!isHydrated ? <TrackListSkeleton /> : null}
 
         {isHydrated && records.length === 0 ? (
           <View className="items-center px-6 py-10">

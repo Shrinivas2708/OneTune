@@ -1,7 +1,7 @@
 import type { DownloadRecord } from "@/types/download-record";
 import { formatDuration } from "@vibevault/utils";
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { ArtworkImage } from "@/components/ui/artwork-image";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { usePlayTrack } from "@/hooks/use-play-track";
@@ -47,15 +47,12 @@ export function DownloadRow({ record }: DownloadRowProps) {
           className="min-w-0 flex-1 flex-row items-center gap-3"
           onPress={handlePlay}
         >
-          <View className="h-12 w-12 overflow-hidden rounded-vault-md bg-vault-artwork-placeholder">
-            {record.track.artworkUrl ? (
-              <Image
-                contentFit="cover"
-                source={{ uri: record.track.artworkUrl }}
-                style={{ width: 48, height: 48 }}
-              />
-            ) : null}
-          </View>
+          <ArtworkImage
+            label={`${record.track.title} artwork`}
+            radius={8}
+            size={48}
+            uri={record.track.artworkUrl}
+          />
 
           <View className="min-w-0 flex-1">
             <Text className="font-inter-semibold text-base text-vault-text" numberOfLines={1}>

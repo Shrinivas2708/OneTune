@@ -2,7 +2,7 @@
 
 > **Read this first in every new session.** Living handoff document — update after every milestone.
 
-**Last updated:** 2025-06-25 · **Current milestone:** M12 complete → **Next: M13 (Polish & Hardening)**
+**Last updated:** 2025-06-25 · **Current milestone:** M13 complete → **Next: M14 (VPS Deploy)**
 
 ---
 
@@ -201,6 +201,21 @@ apps/mobile/src/
   app/(tabs)/library/favorites.tsx, history.tsx
 ```
 
+### M13 — Polish & Hardening ✅
+- Shared skeleton loaders (`TrackListSkeleton`, `PlaylistListSkeleton`, `PlaylistDetailSkeleton`)
+- `ErrorState` component with retry on library screens
+- Global toast host for play, favorite, and download failures
+- Pull-to-refresh on playlists, favorites, history, playlist detail
+- `ArtworkImage` with memory-disk cache + musical-notes placeholder
+
+**Polish paths:**
+```
+apps/mobile/src/
+  components/ui/skeleton.tsx, error-state.tsx, toast-host.tsx, artwork-image.tsx
+  stores/toast-store.ts
+  lib/error-message.ts
+```
+
 ---
 
 ## Package Dependency Rules
@@ -302,5 +317,5 @@ bun run dev --filter=@vibevault/mobile
 ## Suggested Next Commit
 
 ```
-feat(library): add favorites and playback history
+feat(infra): add production docker compose and nginx deployment
 ```

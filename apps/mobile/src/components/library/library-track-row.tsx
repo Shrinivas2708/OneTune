@@ -1,6 +1,6 @@
 import type { TrackMetadata } from "@vibevault/types";
 import { formatDuration } from "@vibevault/utils";
-import { Image } from "expo-image";
+import { ArtworkImage } from "@/components/ui/artwork-image";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { FavoriteButton } from "@/components/library/favorite-button";
@@ -44,15 +44,7 @@ export function LibraryTrackRow({
       className={`flex-row items-center gap-3 rounded-vault-lg px-2 py-2 ${isActive ? "bg-vault-surface-elevated" : ""}`}
       onPress={handlePress}
     >
-      <View className="h-12 w-12 overflow-hidden rounded-vault-md bg-vault-artwork-placeholder">
-        {track.artworkUrl ? (
-          <Image
-            contentFit="cover"
-            source={{ uri: track.artworkUrl }}
-            style={{ width: 48, height: 48 }}
-          />
-        ) : null}
-      </View>
+      <ArtworkImage label={`${track.title} artwork`} radius={8} size={48} uri={track.artworkUrl} />
 
       <View className="min-w-0 flex-1 gap-1">
         <Text className="font-inter-semibold text-base text-vault-text" numberOfLines={1}>

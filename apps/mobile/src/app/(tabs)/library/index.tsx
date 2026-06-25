@@ -1,13 +1,15 @@
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, RefreshControl, Text, View } from "react-native";
 import { PlaylistCard } from "@/components/library/playlist-card";
 import { VaultButton, VaultHeading, VaultSubheading } from "@/components/ui/button";
+import { ErrorState } from "@/components/ui/error-state";
+import { PlaylistListSkeleton } from "@/components/ui/skeleton";
 import { Screen } from "@/components/ui/screen";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useHistory } from "@/hooks/use-history";
 import { usePlaylists } from "@/hooks/use-playlists";
-import { ApiClientError } from "@/lib/api-client";
+import { getErrorMessage } from "@/lib/error-message";
 import { useDownloadStore } from "@/stores/download-store";
 
 export default function LibraryScreen() {
@@ -17,12 +19,7 @@ export default function LibraryScreen() {
   const { data: history } = useHistory(50);
   const downloadCount = useDownloadStore((state) => state.records.length);
 
-  const errorMessage =
-    error instanceof ApiClientError
-      ? error.message
-      : error
-        ? "Could not load your library."
-        : null;
+  const errorMessage = error ? getErrorMessage(error, "Could not load your library.") : null;
 
   return (
     <Screen className="pt-4" padded={false}>
@@ -87,21 +84,14 @@ export default function LibraryScreen() {
       </View>
 
       <View className="mt-6 min-h-[200px] flex-1 px-4">
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1ed760" size="large" />
-          </View>
-        ) : null}
+        {isLoading ? <PlaylistListSkeleton /> : null}
 
         {errorMessage ? (
-          <View className="items-center px-6 py-10">
-            <Text className="text-center font-inter text-sm text-vault-negative">
-              {errorMessage}
-            </Text>
-            <View className="mt-4 w-full">
-              <VaultButton label="Retry" onPress={() => void refetch()} variant="secondary" />
-            </View>
-          </View>
+          <ErrorState
+            message={errorMessage}
+            subtitle="Check that the API is running and try again."
+            onRetry={() => void refetch()}
+          />
         ) : null}
 
         {!isLoading && !errorMessage && (data?.length ?? 0) === 0 ? (
@@ -117,6 +107,13 @@ export default function LibraryScreen() {
             data={data}
             extraData={isRefetching}
             keyExtractor={(item) => item.id}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                tintColor="#1ed760"
+                onRefresh={() => void refetch()}
+              />
+            }
             renderItem={({ item }) => <PlaylistCard playlist={item} />}
             showsVerticalScrollIndicator={false}
           />
