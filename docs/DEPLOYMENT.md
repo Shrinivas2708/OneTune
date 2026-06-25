@@ -8,21 +8,28 @@
 
 VibeVault runs as a **Docker Compose** stack. All backend services are containerized; the mobile app is built separately with **Expo / EAS** and points at your API URL.
 
+**Local dev:** `docker compose up` (API on `:3000`, MongoDB exposed for tooling)
+
+**Production VPS:** `docker compose -f docker-compose.prod.yml up` (Nginx on `:80`/`:443`, internal services only)
+
 ```
-                    ┌─────────────┐
-   Mobile (Expo) ──►│  API :3000  │◄── public (VPS)
+  Mobile (EAS) ──► https://api.yourdomain.com
+                           │
+                    ┌──────▼──────┐
+                    │   Nginx     │  :80 / :443 (public)
                     └──────┬──────┘
                            │
+                    ┌──────▼──────┐
+                    │  API :3000  │  (internal)
+                    └──────┬──────┘
          ┌─────────────────┼─────────────────┐
          ▼                 ▼                 ▼
    ┌──────────┐    ┌────────────┐    ┌──────────┐
    │ MongoDB  │    │ Extractor  │    │ Spotify  │
-   │  :27017  │    │   :8001    │    │  :8003   │
    └──────────┘    └────────────┘    └──────────┘
                            │
                     ┌────────────┐
                     │ JioSaavn   │
-                    │   :3000    │
                     └────────────┘
          (internal Docker network only)
 ```
@@ -54,9 +61,12 @@ cp .env.example .env
 
 | Variable | Example | Description |
 |----------|---------|-------------|
-| `JWT_SECRET` | long random string (32+ chars) | Signs access/refresh tokens — **never use default in prod** |
-| `NODE_ENV` | `production` | Disables `/v1/internal/*` dev routes |
+| `JWT_SECRET` | `openssl rand -base64 48` | Signs access/refresh tokens — **never use default in prod** |
+| `NODE_ENV` | `production` | Set automatically in `docker-compose.prod.yml`; disables `/v1/internal/*` |
 | `MONGODB_URI` | `mongodb://mongodb:27017/vibevault` | Mongo connection (Docker service name) |
+| `VIBEVAULT_DOMAIN` | `api.yourdomain.com` | Public API hostname (DNS A record → VPS) |
+| `CERTBOT_EMAIL` | `you@example.com` | Let's Encrypt registration email |
+| `USE_HTTPS` | `false` → `true` | Enable TLS nginx config after certificates exist |
 
 ### Service URLs (Docker internal)
 
@@ -65,13 +75,24 @@ cp .env.example .env
 | `EXTRACTOR_URL` | `http://extractor:8001` | yt-dlp Python service |
 | `JIOSAAVN_URL` | `http://jiosaavn:3000` | Self-hosted jiosaavn-api |
 | `SPOTIFY_URL` | `http://spotify:8003` | SpotifyScraper Python service |
-| `PORT` | `3000` | API listen port |
+| `PORT` | `3000` | API listen port (internal) |
+| `LOG_LEVEL` | `info` | API log verbosity |
 
 ### Mobile
 
 | Variable | Example | Description |
 |----------|---------|-------------|
-| `EXPO_PUBLIC_API_URL` | `https://api.yourdomain.com` | API base URL in Expo app |
+| `EXPO_PUBLIC_API_URL` | `https://api.yourdomain.com` | API base URL baked into EAS builds (`eas.json` or EAS Secrets) |
+
+Set per profile in `apps/mobile/eas.json`:
+
+| Profile | Purpose | Typical `EXPO_PUBLIC_API_URL` |
+|---------|---------|-------------------------------|
+| `development` | Dev client + simulator | `http://localhost:3000` |
+| `preview` | Internal test builds | `https://api.yourdomain.com` |
+| `production` | App Store / Play Store | `https://api.yourdomain.com` |
+
+`apps/mobile/app.config.js` disables Android cleartext traffic when the URL uses `https://`.
 
 ### Feature flags (optional)
 
@@ -88,12 +109,6 @@ cp .env.example .env
 ### 1. Start the stack
 
 ```powershell
-# Windows
-docker compose up --build -d
-```
-
-```sh
-# macOS / Linux
 docker compose up --build -d
 ```
 
@@ -104,41 +119,23 @@ curl http://localhost:3000/health
 curl http://localhost:3000/health/deps
 ```
 
-Expected: `status: ok` (deps may show `degraded` if a provider container is still starting).
-
-### 3. View logs
-
-```sh
-docker compose logs -f api
-docker compose logs -f extractor
-docker compose logs -f spotify
-docker compose logs -f jiosaavn
-```
-
-### 4. Stop
+### 3. Stop
 
 ```sh
 docker compose down
 ```
 
-To remove MongoDB data:
-
-```sh
-docker compose down -v
-```
+To remove MongoDB data: `docker compose down -v`
 
 ---
 
 ## VPS Deployment (Production)
 
-> **Milestone 14** will add Nginx + TLS. Until then, this is the target layout.
-
 ### 1. Server setup
 
 ```sh
-# Ubuntu example
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y git docker.io docker-compose-plugin
+sudo apt install -y git docker.io docker-compose-plugin curl
 sudo usermod -aG docker $USER
 # re-login for group to apply
 ```
@@ -151,92 +148,132 @@ cd vibevault
 cp .env.example .env
 ```
 
-Edit `.env` for production:
+Edit `.env`:
 
 ```env
-NODE_ENV=production
-JWT_SECRET=<generate-a-strong-secret>
+JWT_SECRET=<openssl rand -base64 48>
+VIBEVAULT_DOMAIN=api.yourdomain.com
+CERTBOT_EMAIL=you@example.com
+USE_HTTPS=false
 MONGODB_URI=mongodb://mongodb:27017/vibevault
 ```
 
-Generate a secret:
+Point DNS: **A record** `api.yourdomain.com` → your VPS public IP.
+
+### 3. Start production stack (HTTP bootstrap)
 
 ```sh
-openssl rand -base64 48
+docker compose -f docker-compose.prod.yml up --build -d
 ```
 
-### 3. Start services
+Verify (HTTP, before TLS):
 
 ```sh
-docker compose up --build -d
+curl http://localhost/health
+curl http://api.yourdomain.com/health
 ```
 
-### 4. Firewall
+### 4. Obtain TLS certificate
 
-Only expose what clients need:
+```sh
+chmod +x scripts/init-letsencrypt.sh scripts/renew-letsencrypt.sh scripts/deploy-prod.sh scripts/backup-mongodb.sh
+./scripts/init-letsencrypt.sh
+# Test first: ./scripts/init-letsencrypt.sh --staging
+```
 
-| Port | Exposure | Service |
-|------|----------|---------|
-| 3000 | Public (temporary) or via Nginx | API |
-| 27017 | **Never public** | MongoDB |
-| 8001, 8003, jiosaavn 3000 | **Internal only** | Provider services |
+Enable HTTPS:
+
+```sh
+# In .env:
+USE_HTTPS=true
+
+docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
+curl https://api.yourdomain.com/health
+```
+
+### 5. Firewall
 
 ```sh
 sudo ufw allow 22
 sudo ufw allow 80
 sudo ufw allow 443
-# Do NOT open 27017, 8001, 8003 publicly
+# Do NOT open 27017, 3000, 8001, 8003 publicly
 sudo ufw enable
 ```
 
-### 5. Nginx + TLS (planned — M14)
-
-Reverse proxy pattern:
-
-```
-https://api.yourdomain.com  →  vibevault-api:3000
-```
-
-- Let's Encrypt via Certbot
-- Rate limiting on `/v1/search`
-- `client_max_body_size` for future uploads
-
-### 6. MongoDB backups
+### 6. Certificate renewal (cron)
 
 ```sh
-docker exec vibevault-mongodb mongodump --db vibevault --out /data/backup
-docker cp vibevault-mongodb:/data/backup ./backup-$(date +%F)
+# Daily at 03:00
+0 3 * * * /home/ubuntu/vibevault/scripts/renew-letsencrypt.sh >> /var/log/vibevault-certbot.log 2>&1
 ```
 
-Schedule with cron. Store backups off-server.
+### 7. MongoDB backups
+
+```sh
+./scripts/backup-mongodb.sh
+# Windows: .\scripts\backup-mongodb.ps1
+```
+
+Backups land in `./backups/vibevault-YYYY-MM-DD-HHMM/`. Copy off-server regularly.
+
+Schedule (cron example — weekly Sunday 04:00):
+
+```sh
+0 4 * * 0 /home/ubuntu/vibevault/scripts/backup-mongodb.sh >> /var/log/vibevault-backup.log 2>&1
+```
+
+### 8. Deploy updates
+
+```sh
+./scripts/deploy-prod.sh
+```
+
+Or manually:
+
+```sh
+git pull
+docker compose -f docker-compose.prod.yml up --build -d
+docker image prune -f
+```
 
 ---
 
 ## Docker Services Reference
 
-| Container | Image / Build | Host port | Internal port |
-|-----------|---------------|-----------|---------------|
-| `vibevault-api` | `docker/api.Dockerfile` | **3000** | 3000 |
-| `vibevault-mongodb` | `mongo:7` | 27017* | 27017 |
-| `vibevault-extractor` | `docker/extractor.Dockerfile` | — | 8001 |
-| `vibevault-spotify` | `docker/spotify.Dockerfile` | — | 8003 |
-| `vibevault-jiosaavn` | `docker/jiosaavn.Dockerfile` | — | 3000 |
+### Development (`docker-compose.yml`)
 
-\*MongoDB is exposed on localhost for local dev tooling. **Do not expose on a public VPS.**
+| Container | Host port | Notes |
+|-----------|-----------|-------|
+| `vibevault-api` | **3000** | Direct API access |
+| `vibevault-mongodb` | 27017 | Local tooling only |
+| Providers | — | Internal |
 
-### Build times
+### Production (`docker-compose.prod.yml`)
 
-First `docker compose up --build` can take **5–15 minutes** (JioSaavn clones upstream and builds; Spotify installs `spotifyscraper`).
+| Container | Host port | Notes |
+|-----------|-----------|-------|
+| `vibevault-nginx` | **80, 443** | Public entrypoint |
+| `vibevault-api` | — | Internal only |
+| `vibevault-mongodb` | — | **Never expose** |
+| Providers | — | Internal |
 
-### Health checks
+First `docker compose up --build` can take **5–15 minutes** (JioSaavn + Spotify images).
 
-Compose waits for all provider health checks before starting the API. If the API won't start:
+---
 
-```sh
-docker compose ps
-docker compose logs jiosaavn
-docker compose logs spotify
-```
+## Nginx
+
+Config lives in `docker/nginx/`:
+
+| File | Purpose |
+|------|---------|
+| `nginx.conf` | Global settings, rate limits, upstream |
+| `conf.d/vibevault.conf` | HTTP bootstrap (default) |
+| `conf.d/vibevault.https.conf` | HTTPS template (used when `USE_HTTPS=true`) |
+| `proxy_params` | Forwarded headers for Hono |
+
+Rate limits: `/v1/search` 30 req/min per IP; other routes 120 req/min.
 
 ---
 
@@ -244,23 +281,27 @@ docker compose logs spotify
 
 The mobile app is **not** in Docker Compose.
 
-### Development build
+### Configure API URL
+
+1. Replace `api.yourdomain.com` in `apps/mobile/eas.json` with your domain
+2. Or set `EXPO_PUBLIC_API_URL` in [EAS Secrets](https://docs.expo.dev/build-reference/variables/)
+
+### Build profiles
 
 ```sh
 cd apps/mobile
-npx eas-cli build --profile development --platform ios
+
+# Dev client (local API, cleartext OK on Android)
 npx eas-cli build --profile development --platform android
-```
 
-Set `EXPO_PUBLIC_API_URL` in `eas.json` or EAS secrets to your VPS API URL.
+# Internal test build (HTTPS production API)
+npx eas-cli build --profile preview --platform all
 
-### Production build
-
-```sh
+# Store release
 npx eas-cli build --profile production --platform all
 ```
 
-### OTA updates (later)
+### OTA updates (optional)
 
 ```sh
 npx eas-cli update --branch production
@@ -268,15 +309,16 @@ npx eas-cli update --branch production
 
 ---
 
-## Updating a Running Deployment
+## Security Checklist (Production)
 
-```sh
-git pull
-docker compose up --build -d
-docker image prune -f
-```
-
-Zero-downtime deploys (rolling updates) are out of scope for MVP — brief API restart is expected.
+- [ ] Strong `JWT_SECRET` (32+ random bytes)
+- [ ] `NODE_ENV=production` (enforced by prod compose)
+- [ ] MongoDB and provider ports not exposed publicly
+- [ ] HTTPS enabled (`USE_HTTPS=true`) before sharing with users
+- [ ] Firewall: only 22, 80, 443
+- [ ] SSH key auth, disable password login
+- [ ] Scheduled cert renewal + MongoDB backups
+- [ ] Treat as **private use** — scraping carries ToS/legal risk
 
 ---
 
@@ -284,24 +326,12 @@ Zero-downtime deploys (rolling updates) are out of scope for MVP — brief API r
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| `Docker Desktop Linux engine` error | Docker not running | Start Docker Desktop |
-| API stuck on `depends_on` | JioSaavn/Spotify slow to build | `docker compose logs jiosaavn` — wait or rebuild |
-| `401` on `/v1/search` | Auth required, no token | Register/login — see [API.md](./API.md) |
-| `503` on `/health/deps` | Provider container down | Check extractor, spotify, jiosaavn logs |
-| Spotify search fails | SpotifyScraper / network | `docker compose logs spotify` |
-| yt-dlp errors | Video unavailable / region block | Try different track; check extractor logs |
-
----
-
-## Security Checklist (Production)
-
-- [ ] Change `JWT_SECRET` from default
-- [ ] Set `NODE_ENV=production`
-- [ ] Do not expose MongoDB or provider ports publicly
-- [ ] Use HTTPS (Nginx + TLS) before sharing with friends
-- [ ] Restrict VPS access (SSH keys, firewall)
-- [ ] Treat as **private use** — scraping carries ToS/legal risk
-- [ ] Rotate `JWT_SECRET` if compromised (invalidates all sessions)
+| nginx won't start with `USE_HTTPS=true` | Certs missing | Run `init-letsencrypt.sh` first |
+| `JWT_SECRET` compose error | Empty secret in `.env` | Generate and set `JWT_SECRET` |
+| API stuck on `depends_on` | Slow provider build | `docker compose -f docker-compose.prod.yml logs jiosaavn` |
+| Mobile can't reach API | Wrong `EXPO_PUBLIC_API_URL` | Use `https://` domain in EAS profile |
+| `401` on `/v1/search` | No auth token | Register/login first |
+| certbot fails | DNS not propagated | Wait for A record; try `--staging` |
 
 ---
 

@@ -153,7 +153,7 @@ packages/*   →  Acyclic; lower layers never import from apps
 |-----------|--------|
 | Orchestration (dev + prod) | Docker Compose |
 | Monorepo | Turborepo + Bun workspaces |
-| Reverse proxy (later) | Nginx |
+| Reverse proxy | Nginx (`docker/nginx/`) |
 | Hosting | VPS |
 
 ---
@@ -482,7 +482,7 @@ Internal services (`extractor`, `jiosaavn`) are not exposed to the host. Only `a
 
 | Item | Status |
 |------|--------|
-| Nginx reverse proxy + TLS | Deferred — post-MVP infra milestone |
+| Nginx reverse proxy + TLS | ✅ `docker-compose.prod.yml` + `docker/nginx/` |
 | Proxied streaming fallback | Architecture ready; not implemented |
 | Cross-device download sync | Out of scope — device-local only |
 | Web client | Out of scope for MVP |

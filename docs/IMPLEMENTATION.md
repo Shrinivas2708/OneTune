@@ -21,7 +21,7 @@
 | M11 Downloads | ✅ | Device downloads + offline playback |
 | M12 Library features | ✅ | Favorites + playback history |
 | M13 Polish | ✅ | Skeletons, toasts, pull-to-refresh, artwork placeholders |
-| M14 VPS deploy | ⏳ | Production Docker + nginx — **next** |
+| M14 VPS deploy | ✅ | Production Docker, nginx, TLS, backups, EAS |
 
 **UI polish is live (M13).** VPS deployment is M14.
 
@@ -205,7 +205,7 @@ src/
 └── providers/app-providers.tsx
 ```
 
-**Not yet implemented:** VPS production deploy (M14)
+**MVP (M1–M14) is complete.** Post-MVP backlog in ROADMAP.md.
 
 Stack:
 

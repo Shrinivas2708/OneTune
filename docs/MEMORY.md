@@ -2,7 +2,7 @@
 
 > **Read this first in every new session.** Living handoff document — update after every milestone.
 
-**Last updated:** 2025-06-25 · **Current milestone:** M13 complete → **Next: M14 (VPS Deploy)**
+**Last updated:** 2025-06-25 · **Current milestone:** M14 complete → **MVP done**
 
 ---
 
@@ -216,6 +216,22 @@ apps/mobile/src/
   lib/error-message.ts
 ```
 
+### M14 — VPS Deploy ✅
+- `docker-compose.prod.yml` — production stack (no public MongoDB/API ports)
+- Nginx reverse proxy + rate limits (`docker/nginx/`)
+- Let's Encrypt via `scripts/init-letsencrypt.sh` + `scripts/renew-letsencrypt.sh`
+- `scripts/backup-mongodb.sh` / `.ps1` + `scripts/deploy-prod.sh`
+- EAS profiles (development, preview, production) + `app.config.js` for HTTPS/cleartext
+- Full guide: `docs/DEPLOYMENT.md`
+
+**Infra paths:**
+```
+docker-compose.prod.yml
+docker/nginx/
+scripts/init-letsencrypt.sh, renew-letsencrypt.sh, backup-mongodb.sh, deploy-prod.sh
+apps/mobile/eas.json, app.config.js
+```
+
 ---
 
 ## Package Dependency Rules
@@ -316,6 +332,4 @@ bun run dev --filter=@vibevault/mobile
 
 ## Suggested Next Commit
 
-```
-feat(infra): add production docker compose and nginx deployment
-```
+MVP milestones M1–M14 are complete. Next work is post-MVP backlog (see ROADMAP.md).

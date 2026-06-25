@@ -355,17 +355,17 @@ feat(mobile): polish UI with skeletons, haptics, and error states
 
 ---
 
-## M14 — VPS Deploy
+## M14 — VPS Deploy ✅
 
 **Goal:** Production-ready deployment.
 
 ### Tasks
-- [ ] Production `docker-compose.prod.yml`
-- [ ] Environment variable documentation
-- [ ] Nginx reverse proxy + TLS (Let's Encrypt)
-- [ ] MongoDB backup script
-- [ ] Mobile production API URL configuration
-- [ ] EAS build profiles (development, preview, production)
+- [x] Production `docker-compose.prod.yml`
+- [x] Environment variable documentation
+- [x] Nginx reverse proxy + TLS (Let's Encrypt)
+- [x] MongoDB backup script
+- [x] Mobile production API URL configuration
+- [x] EAS build profiles (development, preview, production)
 
 ### Suggested commit
 ```
