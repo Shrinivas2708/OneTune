@@ -1,0 +1,22 @@
+{
+  "name": "@vibevault/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server-env.ts",
+    "./constants": "./src/constants.ts",
+    "./feature-flags": "./src/feature-flags.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2"
+  }
+}

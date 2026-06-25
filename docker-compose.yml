@@ -1,0 +1,117 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: vibevault-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-vibevault}
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  extractor:
+    build:
+      context: .
+      dockerfile: docker/extractor.Dockerfile
+    container_name: vibevault-extractor
+    restart: unless-stopped
+    environment:
+      PORT: ${EXTRACTOR_PORT:-8001}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  jiosaavn:
+    build:
+      context: .
+      dockerfile: docker/jiosaavn.Dockerfile
+    container_name: vibevault-jiosaavn
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "fetch('http://127.0.0.1:3000/search/songs?query=test').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 60s
+
+  spotify:
+    build:
+      context: .
+      dockerfile: docker/spotify.Dockerfile
+    container_name: vibevault-spotify
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8003/health')",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 45s
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    container_name: vibevault-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: ${PORT:-3000}
+      NODE_ENV: ${NODE_ENV:-development}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/vibevault}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      EXTRACTOR_URL: ${EXTRACTOR_URL:-http://extractor:8001}
+      JIOSAAVN_URL: ${JIOSAAVN_URL:-http://jiosaavn:3000}
+      SPOTIFY_URL: ${SPOTIFY_URL:-http://spotify:8003}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      extractor:
+        condition: service_healthy
+      jiosaavn:
+        condition: service_healthy
+      spotify:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "bun",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  mongodb_data:

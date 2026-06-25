@@ -1,0 +1,284 @@
+# VibeVault — Implementation Guide
+
+> How the codebase is organized, how features are built, and where to add code. Update when structure or patterns change.
+
+---
+
+## Project Status
+
+| Milestone | Status | What exists |
+|-----------|--------|-------------|
+| M1 Monorepo & infra | ✅ | Turborepo, Docker Compose, Expo shell |
+| M2 Shared packages | ✅ | types, config, provider-core, ui, utils |
+| M3 API foundation | ✅ | Auth, MongoDB, logging, middleware |
+| M4 Provider layer | ✅ | YouTube, JioSaavn, Spotify adapters |
+| M5 Unified search | ✅ | Search orchestration, stream/download resolve |
+| M6 Mobile shell | ✅ | Auth UI, tabs, design system |
+| M7 Search UI | ✅ | Unified search screen |
+| M8 Playback engine | ✅ | react-native-track-player |
+| M9 Player UI | ✅ | Mini bar + Now Playing modal |
+| M10 Playlist import | ⏳ | Spotify URL import — **next** |
+
+**Player UI is live (M9).** Mini-player and full Now Playing screen with queue sheet.
+
+---
+
+## Repository Structure
+
+```
+vibevault/
+├── apps/
+│   ├── mobile/                 # Expo 54 + NativeWind (iOS/Android)
+│   └── api/                    # Hono API on Bun
+│       └── src/
+│           ├── app.ts          # Route assembly
+│           ├── index.ts        # DB connect, provider registry, serve
+│           ├── routes/         # HTTP handlers
+│           ├── services/       # Business logic
+│           ├── providers/      # Provider adapters (Node)
+│           ├── clients/        # HTTP clients to Python services
+│           ├── repositories/   # MongoDB data access
+│           ├── middleware/     # Auth, errors, request ID
+│           └── lib/            # db, jwt, logger, http-client
+├── services/
+│   ├── extractor/              # Python — yt-dlp
+│   ├── spotify/                # Python — SpotifyScraper
+│   └── jiosaavn/               # Docker build from upstream (no local source)
+├── packages/
+│   ├── types/                  # Zod schemas + inferred types
+│   ├── config/                 # Env, constants, feature flags
+│   ├── provider-core/        # MusicProvider interface + registry
+│   ├── ui/                     # Design tokens + Tailwind preset
+│   └── utils/                  # Pure helpers (dedupe, duration, etc.)
+├── docker/                     # Dockerfiles
+├── scripts/                    # dev.ps1, test-*.ps1
+├── docs/                       # All documentation
+└── docker-compose.yml
+```
+
+---
+
+## Layered Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Mobile (apps/mobile)                                   │
+│  UI only — never imports provider implementations       │
+└────────────────────────┬────────────────────────────────┘
+                         │ HTTPS + JSON
+┌────────────────────────▼────────────────────────────────┐
+│  API Routes (apps/api/src/routes/)                      │
+│  Validation (Zod) → Services → Response envelope        │
+└────────────────────────┬────────────────────────────────┘
+                         │
+         ┌───────────────┼───────────────┐
+         ▼               ▼               ▼
+   Auth service    Search service   Media service
+         │               │               │
+         ▼               ▼               ▼
+   MongoDB         Provider registry   Provider adapters
+                         │
+         ┌───────────────┼───────────────┐
+         ▼               ▼               ▼
+   Extractor        JioSaavn API     Spotify service
+   (Python)         (Node/Bun)       (Python)
+```
+
+### Rules
+
+1. **Routes** are thin — validate input, call service, return `{ data }`.
+2. **Services** contain business logic — no HTTP framework types in providers.
+3. **Providers** normalize external data to `@vibevault/types` DTOs.
+4. **Python services** return provider-specific JSON; adapters map to shared types.
+5. **Packages** never import from `apps/`.
+
+---
+
+## Adding a New Provider
+
+1. **Service** (if new runtime): add `services/<name>/` + `docker/<name>.Dockerfile` + Compose service.
+2. **Client**: `apps/api/src/clients/<name>-client.ts` — HTTP calls only.
+3. **Adapter**: `apps/api/src/providers/<name>.adapter.ts` — implement `MusicProvider`.
+4. **Mappers**: extend `apps/api/src/providers/mappers.ts`.
+5. **Register**: `apps/api/src/providers/index.ts`.
+6. **Types**: add provider ID to `ProviderIdSchema` in `@vibevault/types`.
+7. **Docs**: update `ARCHITECTURE.md`, `API.md`, this file.
+
+No changes required in search orchestrator or mobile if the adapter implements the contract.
+
+---
+
+## Key Implementation Areas
+
+### Authentication (`apps/api/src/services/auth-service.ts`)
+
+- Passwords: `Bun.password` bcrypt (cost 12)
+- Access token: JWT, 15 minutes, stateless
+- Refresh token: JWT + MongoDB `refreshSessions` collection (revocable)
+- Routes: `/v1/auth/register`, `/login`, `/refresh`, `/logout`, `/me`
+
+### Unified search (`apps/api/src/services/search-service.ts`)
+
+1. Fan-out to all `providerRegistry.listSearchable()` in parallel
+2. Per-provider timeout: 8 seconds
+3. Merge results → assign relevance scores → dedupe by title+artist
+4. Dedup priority: **jiosaavn > youtube > spotify**
+5. Rank and paginate
+
+Failed providers go in `providersFailed`; partial results still return.
+
+### Streaming (`apps/api/src/services/media-service.ts`)
+
+- **Option A:** API returns direct CDN URL; client plays it
+- `StreamManifest.deliveryMode: 'direct'` today; `'proxied'` later via feature flag
+- Spotify does **not** stream — returns `501` for Spotify `trackRef`
+
+### Provider adapters
+
+| Adapter | File | Backend |
+|---------|------|---------|
+| YouTube | `youtube.adapter.ts` | `services/extractor` (yt-dlp) |
+| JioSaavn | `jiosaavn.adapter.ts` | `services/jiosaavn` (HTTP) |
+| Spotify | `spotify.adapter.ts` | `services/spotify` (SpotifyScraper) |
+
+### Shared types (`packages/types`)
+
+Zod schemas are the **single source of truth**. API validates requests/responses; mobile imports the same types.
+
+```typescript
+// Success
+{ data: T, meta?: Record<string, unknown> }
+
+// Error
+{ error: { code: string, message: string, details?: unknown } }
+```
+
+### Design system (`packages/ui` + `docs/DESIGN.md`)
+
+- Tokens: colors, typography, spacing, shadows
+- Tailwind preset: `@vibevault/ui/tailwind`
+- Fonts: Inter + Plus Jakarta Sans (open source)
+- **Read `DESIGN.md` before any UI work**
+
+---
+
+## Mobile (Current State)
+
+`apps/mobile` has an authenticated **tab shell** with login/register, design tokens, and API wiring.
+
+**Implemented (M6–M9):**
+
+```
+src/
+├── app/
+│   ├── _layout.tsx          # Fonts, splash, providers, auth hydrate
+│   ├── index.tsx            # Auth redirect
+│   ├── (auth)/              # login, register
+│   └── (tabs)/              # home, search, library, settings
+├── components/
+│   ├── ui/                  # Screen, VaultButton, VaultInput
+│   └── search/              # SearchInput, TrackRow, ProviderBadge, list
+├── hooks/
+│   ├── use-unified-search.ts
+│   ├── use-play-track.ts
+│   └── use-debounced-value.ts
+├── lib/
+│   ├── api-client.ts        # Typed fetch + JWT refresh
+│   ├── music-api.ts         # search + stream resolve
+│   ├── storage.ts           # MMKV (native) / localStorage (web)
+│   ├── query-client.ts
+│   └── config.ts            # EXPO_PUBLIC_API_URL
+├── stores/
+│   ├── auth-store.ts        # Zustand + MMKV session
+│   └── player-store.ts      # Queue, progress, stream manifest
+├── services/
+│   ├── player-engine.native.ts  # RNTP setup + playback
+│   └── playback-service.ts      # Lock screen remote events
+├── components/player/       # MiniPlayer, NowPlayingModal, QueueSheet, ProgressBar
+│   └── tab-bar-with-player.tsx
+├── hooks/use-playback-controls.ts
+├── stores/player-ui-store.ts
+└── providers/app-providers.tsx
+```
+
+**Not yet implemented:** Playlist import (M10), downloads (M11), library persistence (M12)
+
+Stack:
+
+| Concern | Library |
+|---------|---------|
+| Routing | Expo Router |
+| Styling | NativeWind |
+| Server state | TanStack Query |
+| Client state | Zustand |
+| Forms | React Hook Form + Zod |
+| Playback | react-native-track-player (EAS dev build) |
+| Storage | MMKV |
+
+**Env:** `EXPO_PUBLIC_API_URL` (default `http://localhost:3000`). Android emulator: use `http://10.0.2.2:3000`.
+
+**Dev builds:** MMKV and `react-native-track-player` need an EAS dev client:
+
+```sh
+cd apps/mobile
+npx eas-cli build --profile development --platform android
+# or --platform ios
+npx expo start --dev-client
+```
+
+Web (`w` in Expo) supports auth/search UI only — playback resolves streams but does not play audio.
+
+---
+
+## Coding Standards
+
+| Area | Convention |
+|------|------------|
+| TS files | `kebab-case.ts` |
+| React components | `PascalCase.tsx` |
+| API routes | `/v1/kebab-case` |
+| Env vars | `SCREAMING_SNAKE` |
+| Commits | Conventional: `feat(api): ...`, `fix(mobile): ...` |
+| Errors | Typed `AppError` / `ProviderError` with stable `code` |
+| Config | No hardcoded URLs — use `@vibevault/config` |
+| UI colors | No hardcoded hex — use `@vibevault/ui` tokens |
+
+---
+
+## Testing Without UI
+
+Backend is testable via scripts (no mobile app required):
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/test-auth.ps1` | Register, login, me, refresh, logout |
+| `scripts/test-providers.ps1` | Per-provider search via internal routes |
+| `scripts/test-search.ps1` | Unified search + stream resolve (auto-login) |
+
+Internal routes (`/v1/internal/*`) are available when `NODE_ENV !== production` and **do not require auth**.
+
+Public music routes (`/v1/search`, etc.) require JWT. Use the mobile login/register screens or `scripts/test-search.ps1` for API testing.
+
+---
+
+## Milestone Workflow
+
+1. Read `MEMORY.md`, `DESIGN.md` (if UI), `ARCHITECTURE.md`
+2. Explain plan
+3. Implement smallest runnable increment
+4. Update docs (`MEMORY.md`, relevant guides)
+5. Suggest conventional commit
+6. Summarize before next milestone
+
+---
+
+## Related Docs
+
+| Doc | Purpose |
+|-----|---------|
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | Day-to-day dev setup |
+| [API.md](./API.md) | Endpoint reference |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Docker and VPS |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design |
+| [DESIGN.md](./DESIGN.md) | UI/UX |
+| [ROADMAP.md](./ROADMAP.md) | Milestones |

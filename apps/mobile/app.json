@@ -1,0 +1,50 @@
+{
+  "scheme": "vibevault",
+  "userInterfaceStyle": "dark",
+  "orientation": "portrait",
+  "backgroundColor": "#121212",
+  "splash": {
+    "backgroundColor": "#121212",
+    "resizeMode": "contain"
+  },
+  "ios": {
+    "infoPlist": {
+      "UIBackgroundModes": ["audio"]
+    }
+  },
+  "android": {
+    "permissions": []
+  },
+  "web": {
+    "output": "static"
+  },
+  "plugins": [
+    "expo-router",
+    "expo-font",
+    "expo-dev-client",
+    [
+      "expo-splash-screen",
+      {
+        "backgroundColor": "#121212"
+      }
+    ],
+    [
+      "expo-build-properties",
+      {
+        "android": {
+          "usesCleartextTraffic": true
+        }
+      }
+    ]
+  ],
+  "name": "VibeVault",
+  "slug": "vibevault",
+  "extra": {
+    "router": {
+      "origin": "https://vibevault.app"
+    },
+    "eas": {
+      "projectId": "replace-with-eas-project-id"
+    }
+  }
+}

@@ -1,0 +1,66 @@
+import "../global.css";
+
+import {
+  Inter_400Regular,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  useFonts,
+} from "@expo-google-fonts/inter";
+import { PlusJakartaSans_700Bold } from "@expo-google-fonts/plus-jakarta-sans";
+import { Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { PlayerSync } from "@/components/player/player-sync";
+import { LoadingScreen } from "@/components/ui/screen";
+import { AppProviders } from "@/providers/app-providers";
+import { useAuthStore } from "@/stores/auth-store";
+
+SplashScreen.preventAutoHideAsync();
+
+export default function RootLayout() {
+  const hydrate = useAuthStore((state) => state.hydrate);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Inter_700Bold,
+    PlusJakartaSans_700Bold,
+  });
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+
+  useEffect(() => {
+    if (fontsLoaded && isHydrated) {
+      void SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded, isHydrated]);
+
+  if (!fontsLoaded || !isHydrated) {
+    return <LoadingScreen />;
+  }
+
+  return (
+    <GestureHandlerRootView className="flex-1">
+      <AppProviders>
+        <PlayerSync />
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: "#121212" },
+            animation: "fade",
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </AppProviders>
+    </GestureHandlerRootView>
+  );
+}
