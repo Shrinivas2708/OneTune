@@ -296,12 +296,12 @@ feat(playlists): add spotify playlist import
 **Goal:** Download tracks to device and play offline.
 
 ### Tasks
-- [ ] Download manager (foreground + background download)
-- [ ] Local file storage + MMKV index
-- [ ] Downloads screen in Library tab
-- [ ] Offline playback via local `file://` URI
-- [ ] Download progress UI
-- [ ] Delete download
+- [x] Download manager (foreground + background download)
+- [x] Local file storage + MMKV index
+- [x] Downloads screen in Library tab
+- [x] Offline playback via local `file://` URI
+- [x] Download progress UI
+- [x] Delete download
 
 ### Done when
 - User downloads a track, toggles airplane mode, track still plays

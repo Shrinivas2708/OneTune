@@ -1,4 +1,4 @@
-import type { TrackMetadata, StreamManifest } from "@vibevault/types";
+import type { StreamManifest, TrackMetadata } from "@vibevault/types";
 import type { AddTrack } from "react-native-track-player";
 import { manifestCache, manifestCacheKey } from "@/lib/manifest-cache";
 
@@ -6,19 +6,33 @@ export function trackKey(track: TrackMetadata) {
   return manifestCacheKey(track.ref.providerId, track.ref.externalId);
 }
 
+export type PlaybackSource =
+  | { kind: "local"; fileUri: string }
+  | { kind: "stream"; manifest: StreamManifest };
+
 export function toPlayerTrack(
   track: TrackMetadata,
-  manifest: StreamManifest,
+  source: PlaybackSource,
 ): AddTrack {
+  const url = source.kind === "local" ? source.fileUri : source.manifest.url;
+  const headers =
+    source.kind === "stream" ? source.manifest.headers : undefined;
+  const contentType =
+    source.kind === "stream" ? source.manifest.mimeType : undefined;
+
   return {
     id: trackKey(track),
-    url: manifest.url,
+    url,
     title: track.title,
     artist: track.artists.map((artist) => artist.name).join(", "),
     album: track.album?.name,
     artwork: track.artworkUrl,
     duration: track.durationMs ? track.durationMs / 1000 : undefined,
-    headers: manifest.headers,
-    contentType: manifest.mimeType,
+    headers,
+    contentType,
   };
+}
+
+export function isLocalPlaybackSource(source: PlaybackSource) {
+  return source.kind === "local";
 }

@@ -1,5 +1,6 @@
 import type { SearchResult, TrackMetadata } from "@vibevault/types";
 import { isStreamExpired } from "@vibevault/utils";
+import * as FileSystem from "expo-file-system/legacy";
 import TrackPlayer, {
   AppKilledPlaybackBehavior,
   Capability,
@@ -8,15 +9,21 @@ import TrackPlayer, {
 } from "react-native-track-player";
 import { manifestCache } from "@/lib/manifest-cache";
 import { musicApi } from "@/lib/music-api";
+import { downloadManager } from "@/services/download-manager";
 import {
   searchResultToTrack,
   usePlayerStore,
 } from "@/stores/player-store";
-import { toPlayerTrack, trackKey } from "./player-helpers";
+import {
+  isLocalPlaybackSource,
+  toPlayerTrack,
+  trackKey,
+  type PlaybackSource,
+} from "./player-helpers";
 
 let setupPromise: Promise<void> | null = null;
 
-async function resolveManifest(track: TrackMetadata) {
+async function resolveStreamManifest(track: TrackMetadata) {
   const key = trackKey(track);
   const cached = manifestCache.get(key);
 
@@ -29,6 +36,23 @@ async function resolveManifest(track: TrackMetadata) {
   return manifest;
 }
 
+async function resolvePlaybackSource(
+  track: TrackMetadata,
+): Promise<PlaybackSource> {
+  const key = trackKey(track);
+  const local = downloadManager.getLocalRecord(key);
+
+  if (local) {
+    const info = await FileSystem.getInfoAsync(local.localPath);
+    if (info.exists) {
+      return { kind: "local", fileUri: local.fileUri };
+    }
+  }
+
+  const manifest = await resolveStreamManifest(track);
+  return { kind: "stream", manifest };
+}
+
 async function playTrackAtIndex(index: number) {
   const queue = usePlayerStore.getState().queue;
   const track = queue[index];
@@ -37,8 +61,8 @@ async function playTrackAtIndex(index: number) {
     return;
   }
 
-  const manifest = await resolveManifest(track);
-  const playerTrack = toPlayerTrack(track, manifest);
+  const source = await resolvePlaybackSource(track);
+  const playerTrack = toPlayerTrack(track, source);
 
   await TrackPlayer.reset();
   await TrackPlayer.setQueue([playerTrack]);
@@ -47,7 +71,8 @@ async function playTrackAtIndex(index: number) {
   usePlayerStore.setState({
     currentIndex: index,
     currentTrack: track,
-    streamManifest: manifest,
+    streamManifest: source.kind === "stream" ? source.manifest : null,
+    isLocalPlayback: isLocalPlaybackSource(source),
     isPlaying: true,
     resolveError: null,
   });
@@ -156,9 +181,10 @@ export const playerEngine = {
   },
 
   async refreshExpiredStreamIfNeeded() {
-    const { streamManifest, currentTrack, isPlaying } = usePlayerStore.getState();
+    const { streamManifest, currentTrack, isPlaying, isLocalPlayback } =
+      usePlayerStore.getState();
 
-    if (!streamManifest || !currentTrack || !isPlaying) {
+    if (isLocalPlayback || !streamManifest || !currentTrack || !isPlaying) {
       return;
     }
 
@@ -172,8 +198,14 @@ export const playerEngine = {
     }
 
     const progress = await TrackPlayer.getProgress();
-    const manifest = await resolveManifest(currentTrack);
-    const playerTrack = toPlayerTrack(currentTrack, manifest);
+    const source = await resolvePlaybackSource(currentTrack);
+
+    if (source.kind === "local") {
+      usePlayerStore.setState({ isLocalPlayback: true, streamManifest: null });
+      return;
+    }
+
+    const playerTrack = toPlayerTrack(currentTrack, source);
 
     await TrackPlayer.pause();
     await TrackPlayer.reset();
@@ -181,7 +213,7 @@ export const playerEngine = {
     await TrackPlayer.skip(0, progress.position);
     await TrackPlayer.play();
 
-    usePlayerStore.getState().setStreamManifest(manifest);
+    usePlayerStore.getState().setStreamManifest(source.manifest);
   },
 
   async handleQueueEnded() {

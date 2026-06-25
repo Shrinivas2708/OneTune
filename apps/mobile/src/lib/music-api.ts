@@ -1,7 +1,10 @@
 import {
+  DownloadManifestSchema,
+  ResolveDownloadRequestSchema,
   ResolveStreamRequestSchema,
   SearchResultPageSchema,
   StreamManifestSchema,
+  type ResolveDownloadRequest,
   type ResolveStreamRequest,
   type SearchResultPage,
 } from "@vibevault/types";
@@ -26,5 +29,15 @@ export const musicApi = {
         body: JSON.stringify(ResolveStreamRequestSchema.parse(request)),
       },
       StreamManifestSchema,
+    ),
+
+  resolveDownload: (request: ResolveDownloadRequest) =>
+    apiRequest(
+      "/v1/downloads/resolve",
+      {
+        method: "POST",
+        body: JSON.stringify(ResolveDownloadRequestSchema.parse(request)),
+      },
+      DownloadManifestSchema,
     ),
 };

@@ -2,7 +2,7 @@
 
 > **Read this first in every new session.** Living handoff document — update after every milestone.
 
-**Last updated:** 2025-06-25 · **Current milestone:** M10 complete → **Next: M11 (Downloads & Offline)**
+**Last updated:** 2025-06-25 · **Current milestone:** M11 complete → **Next: M12 (Library Features)**
 
 ---
 
@@ -172,6 +172,14 @@ apps/mobile/
 - Re-import same URL updates tracks (upsert by `userId` + `sourceUrl`)
 - Test script: `scripts/test-playlists.ps1` (set `SPOTIFY_PLAYLIST_URL`)
 
+### M11 — Downloads & Offline ✅
+- `POST /v1/downloads/resolve` wired on mobile via `musicApi.resolveDownload`
+- Download manager (`expo-file-system/legacy`) saves to app documents + MMKV index
+- Offline playback: player prefers local `file://` before stream resolve
+- Library → Downloads screen (list, progress, delete)
+- Download button on Search + playlist tracks (YouTube/JioSaavn only)
+- Stream expiry refresh skipped for local playback
+
 ---
 
 ## Package Dependency Rules
@@ -273,5 +281,5 @@ bun run dev --filter=@vibevault/mobile
 ## Suggested Next Commit
 
 ```
-feat(playlists): add spotify playlist import
+feat(mobile): add device downloads and offline playback
 ```

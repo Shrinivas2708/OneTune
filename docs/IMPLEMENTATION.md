@@ -18,9 +18,10 @@
 | M8 Playback engine | ✅ | react-native-track-player |
 | M9 Player UI | ✅ | Mini bar + Now Playing modal |
 | M10 Playlist import | ✅ | Spotify URL import + library |
-| M11 Downloads | ⏳ | Offline playback — **next** |
+| M11 Downloads | ✅ | Device downloads + offline playback |
+| M12 Library features | ⏳ | Favorites + history — **next** |
 
-**Playlist import is live (M10).** Spotify playlists save to per-user library in MongoDB.
+**Downloads and offline playback are live (M11).** Favorites/history is M12.
 
 ---
 
@@ -202,7 +203,7 @@ src/
 └── providers/app-providers.tsx
 ```
 
-**Not yet implemented:** Downloads (M11), full library persistence beyond playlists (M12)
+**Not yet implemented:** Favorites/history (M12)
 
 Stack:
 

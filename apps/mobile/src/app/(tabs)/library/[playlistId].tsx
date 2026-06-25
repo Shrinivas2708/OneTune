@@ -5,6 +5,7 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { ProviderBadge } from "@/components/search/provider-badge";
+import { DownloadButton } from "@/components/downloads/download-button";
 import { Screen } from "@/components/ui/screen";
 import { usePlayTrack } from "@/hooks/use-play-track";
 import { usePlaylist } from "@/hooks/use-playlists";
@@ -50,7 +51,8 @@ function PlaylistTrackRow({
         <ProviderBadge providerId={track.ref.providerId} />
       </View>
 
-      <View className="min-w-[44px] items-end">
+      <View className="min-w-[44px] items-end flex-row gap-1">
+        <DownloadButton track={track} />
         {isResolving ? (
           <ActivityIndicator color="#1ed760" size="small" />
         ) : track.durationMs !== undefined ? (

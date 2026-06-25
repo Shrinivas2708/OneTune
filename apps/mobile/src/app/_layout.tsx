@@ -16,12 +16,14 @@ import { PlayerSync } from "@/components/player/player-sync";
 import { LoadingScreen } from "@/components/ui/screen";
 import { AppProviders } from "@/providers/app-providers";
 import { useAuthStore } from "@/stores/auth-store";
+import { useDownloadStore } from "@/stores/download-store";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const hydrate = useAuthStore((state) => state.hydrate);
   const isHydrated = useAuthStore((state) => state.isHydrated);
+  const hydrateDownloads = useDownloadStore((state) => state.hydrate);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -32,7 +34,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     void hydrate();
-  }, [hydrate]);
+    void hydrateDownloads();
+  }, [hydrate, hydrateDownloads]);
 
   useEffect(() => {
     if (fontsLoaded && isHydrated) {

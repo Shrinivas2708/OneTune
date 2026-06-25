@@ -9,6 +9,7 @@ interface PlayerState {
   streamManifest: StreamManifest | null;
   isPlaying: boolean;
   isResolving: boolean;
+  isLocalPlayback: boolean;
   resolveError: string | null;
   position: number;
   duration: number;
@@ -44,6 +45,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   streamManifest: null,
   isPlaying: false,
   isResolving: false,
+  isLocalPlayback: false,
   resolveError: null,
   position: 0,
   duration: 0,
@@ -78,6 +80,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       streamManifest: null,
       isPlaying: false,
       isResolving: false,
+      isLocalPlayback: false,
       resolveError: null,
       position: 0,
       duration: 0,

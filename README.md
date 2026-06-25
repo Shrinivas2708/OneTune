@@ -64,4 +64,4 @@ packages/       Shared types, config, UI tokens, provider contracts
 
 ## Status
 
-**Milestone 10 complete** — Spotify playlist import and library UI. Next: M11 (Downloads & Offline).
+**Milestone 11 complete** — device downloads and offline playback. Next: M12 (Library Features).

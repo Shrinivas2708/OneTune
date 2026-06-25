@@ -1,15 +1,17 @@
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { PlaylistCard } from "@/components/library/playlist-card";
 import { VaultButton, VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
+import { useDownloadStore } from "@/stores/download-store";
 import { usePlaylists } from "@/hooks/use-playlists";
 import { ApiClientError } from "@/lib/api-client";
 
 export default function LibraryScreen() {
   const router = useRouter();
   const { data, error, isLoading, refetch, isRefetching } = usePlaylists();
+  const downloadCount = useDownloadStore((state) => state.records.length);
 
   const errorMessage =
     error instanceof ApiClientError
@@ -22,9 +24,25 @@ export default function LibraryScreen() {
     <Screen className="pt-4" padded={false}>
       <View className="px-6">
         <VaultHeading>Your Library</VaultHeading>
-        <VaultSubheading>Imported playlists from Spotify.</VaultSubheading>
+        <VaultSubheading>Playlists and offline downloads.</VaultSubheading>
 
-        <View className="mt-6">
+        <View className="mt-6 gap-3">
+          <Pressable
+            accessibilityRole="button"
+            className="flex-row items-center justify-between rounded-vault-lg bg-vault-surface-elevated px-4 py-4"
+            onPress={() => router.push("/(tabs)/library/downloads")}
+          >
+            <View>
+              <Text className="font-inter-semibold text-base text-vault-text">
+                Downloads
+              </Text>
+              <Text className="mt-1 font-inter text-sm text-vault-muted">
+                {downloadCount} saved for offline
+              </Text>
+            </View>
+            <Text className="font-inter text-sm text-vault-muted">›</Text>
+          </Pressable>
+
           <VaultButton
             label="Import Spotify playlist"
             onPress={() => router.push("/(tabs)/library/import")}
