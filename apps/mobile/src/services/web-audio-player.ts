@@ -7,6 +7,7 @@ type AudioListeners = {
 let audio: HTMLAudioElement | null = null;
 let loadedUrl: string | null = null;
 let listeners: AudioListeners = {};
+let volume = 1;
 
 function getAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
@@ -14,6 +15,7 @@ function getAudio(): HTMLAudioElement | null {
   if (!audio) {
     audio = new Audio();
     audio.preload = "auto";
+    audio.volume = volume;
 
     audio.addEventListener("timeupdate", () => {
       const position = audio!.currentTime;
@@ -38,6 +40,18 @@ export const webAudioPlayer = {
     listeners = next;
   },
 
+  setVolume(nextVolume: number) {
+    volume = Math.min(1, Math.max(0, nextVolume));
+    const element = getAudio();
+    if (element) {
+      element.volume = volume;
+    }
+  },
+
+  getVolume() {
+    return volume;
+  },
+
   load(url: string) {
     const element = getAudio();
     if (!element || !url) return;
@@ -46,12 +60,14 @@ export const webAudioPlayer = {
 
     loadedUrl = url;
     element.src = url;
+    element.volume = volume;
     element.load();
   },
 
   async play(): Promise<void> {
     const element = getAudio();
     if (!element?.src) return;
+    element.volume = volume;
     await element.play();
   },
 

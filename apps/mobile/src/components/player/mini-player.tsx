@@ -5,6 +5,7 @@ import { formatArtists } from "@/lib/track-format";
 import { usePlayerUiStore } from "@/stores/player-ui-store";
 import { usePlayerStore } from "@/stores/player-store";
 import { FavoriteButton } from "@/components/library/favorite-button";
+import { VolumeControl } from "@/components/player/volume-control";
 import { PlaybackButtons } from "./playback-buttons";
 import { ProgressBar } from "./progress-bar";
 import { TrackArtwork } from "./track-artwork";
@@ -39,6 +40,9 @@ export function MiniPlayer() {
     <View className="overflow-hidden rounded-t-vault-2xl border-t border-vault-border bg-vault-surface-card/95 shadow-vault-medium">
       <View className="px-4 pt-2">
         <ProgressBar duration={duration} position={position} onSeek={seekTo} />
+        <View className="mt-2">
+          <VolumeControl />
+        </View>
       </View>
 
       <View className="flex-row items-center gap-2 px-4 py-3">

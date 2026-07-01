@@ -1,4 +1,5 @@
 import { env } from "@vibevault/config/server";
+import { pickBestImageUrl } from "@vibevault/utils";
 import { fetchJson } from "../lib/http-client";
 
 export interface JioSaavnSong {
@@ -101,5 +102,5 @@ export function pickBestDownloadUrl(
 export function pickBestImage(
   images: Array<{ url: string }>,
 ): string | undefined {
-  return images[0]?.url;
+  return pickBestImageUrl(images);
 }

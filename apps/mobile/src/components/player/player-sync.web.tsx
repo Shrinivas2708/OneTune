@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { resolvePlaybackUrl } from "@/lib/playback-url";
 import { playerEngine } from "@/services/player-engine";
+import { ensureQueuePreloader } from "@/services/queue-preloader";
 import { webAudioPlayer } from "@/services/web-audio-player";
 import { usePlayerStore } from "@/stores/player-store";
 import { showToast } from "@/stores/toast-store";
@@ -8,6 +9,12 @@ import { showToast } from "@/stores/toast-store";
 export function PlayerSync() {
   const streamManifest = usePlayerStore((state) => state.streamManifest);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const volume = usePlayerStore((state) => state.volume);
+
+  useEffect(() => {
+    ensureQueuePreloader();
+    webAudioPlayer.setVolume(usePlayerStore.getState().volume);
+  }, []);
 
   useEffect(() => {
     webAudioPlayer.setListeners({
@@ -24,6 +31,10 @@ export function PlayerSync() {
       },
     });
   }, []);
+
+  useEffect(() => {
+    webAudioPlayer.setVolume(volume);
+  }, [volume]);
 
   useEffect(() => {
     if (!streamManifest?.url) return;

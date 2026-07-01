@@ -1,6 +1,7 @@
 import type { SearchResult, TrackMetadata, StreamManifest } from "@vibevault/types";
 import { create } from "zustand";
 import { manifestCache } from "@/lib/manifest-cache";
+import { loadWebVolume, saveWebVolume } from "@/lib/web-volume";
 import { trackKey } from "@/services/player-helpers";
 
 interface PlayerState {
@@ -12,6 +13,7 @@ interface PlayerState {
   resolveError: string | null;
   position: number;
   duration: number;
+  volume: number;
   /** Tracks explicitly added to play later — never includes the current track. */
   queue: TrackMetadata[];
   setCurrentTrack: (track: TrackMetadata | null) => void;
@@ -20,6 +22,7 @@ interface PlayerState {
   setIsResolving: (isResolving: boolean) => void;
   setResolveError: (error: string | null) => void;
   setProgress: (position: number, duration: number) => void;
+  setVolume: (volume: number) => void;
   addToQueue: (track: TrackMetadata) => boolean;
   removeFromQueue: (index: number) => void;
   setQueue: (tracks: TrackMetadata[]) => void;
@@ -48,6 +51,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   resolveError: null,
   position: 0,
   duration: 0,
+  volume: loadWebVolume(),
   queue: [],
 
   setCurrentTrack: (track) => set({ currentTrack: track }),
@@ -56,6 +60,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setIsResolving: (isResolving) => set({ isResolving }),
   setResolveError: (error) => set({ resolveError: error }),
   setProgress: (position, duration) => set({ position, duration }),
+
+  setVolume: (volume) => {
+    const clamped = Math.min(1, Math.max(0, volume));
+    saveWebVolume(clamped);
+    set({ volume: clamped });
+  },
 
   addToQueue: (track) => {
     const key = trackKey(track);

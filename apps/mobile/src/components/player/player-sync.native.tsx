@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { State, usePlaybackState, useProgress } from "react-native-track-player";
 import { playerEngine } from "@/services/player-engine";
+import { ensureQueuePreloader } from "@/services/queue-preloader";
 import { usePlayerStore } from "@/stores/player-store";
 
 export function PlayerSync() {
@@ -9,6 +10,7 @@ export function PlayerSync() {
   const setProgress = usePlayerStore((state) => state.setProgress);
 
   useEffect(() => {
+    ensureQueuePreloader();
     void playerEngine.ensureSetup();
   }, []);
 

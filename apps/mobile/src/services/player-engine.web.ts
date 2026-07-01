@@ -1,52 +1,68 @@
 import type { SearchResult, TrackMetadata } from "@vibevault/types";
 import { isStreamExpired } from "@vibevault/utils";
-import { manifestCache } from "@/lib/manifest-cache";
-import { musicApi } from "@/lib/music-api";
+import { getErrorMessage } from "@/lib/error-message";
 import { resolvePlaybackUrl } from "@/lib/playback-url";
-import { resolvePlayableResult } from "@/lib/resolve-playable-track";
-import { trackToSearchResult } from "@/lib/track-to-search-result";
+import {
+  beginPlaybackTransition,
+  isActivePlaybackGeneration,
+  prepareTrackTransition,
+  removeTrackAndSkippedFromQueue,
+} from "@/services/playback-core";
 import {
   searchResultToTrack,
   usePlayerStore,
 } from "@/stores/player-store";
 import { showToast } from "@/stores/toast-store";
-import { trackKey } from "./player-helpers";
 import { webAudioPlayer } from "./web-audio-player";
 
-async function resolveStreamManifest(track: TrackMetadata) {
-  const key = trackKey(track);
-  const cached = manifestCache.get(key);
+async function transitionToTrack(
+  track: TrackMetadata,
+  token: number,
+  options: { syncQueue: boolean },
+) {
+  usePlayerStore.setState({ isResolving: true, resolveError: null });
+  webAudioPlayer.pause();
 
-  if (cached && !isStreamExpired(cached.expiresAt)) {
-    return cached;
+  try {
+    const prepared = await prepareTrackTransition(track, token);
+    if (!prepared) return;
+
+    if (options.syncQueue) {
+      removeTrackAndSkippedFromQueue(track);
+    }
+
+    const { playable, manifest } = prepared;
+
+    usePlayerStore.setState({
+      currentTrack: playable,
+      streamManifest: manifest,
+      isPlaying: true,
+      resolveError: null,
+      position: 0,
+      duration: playable.durationMs ? playable.durationMs / 1000 : 0,
+    });
+  } catch (error) {
+    if (!isActivePlaybackGeneration(token)) return;
+
+    const message = getErrorMessage(error, "Could not start playback.");
+    usePlayerStore.getState().setIsPlaying(false);
+    usePlayerStore.getState().setResolveError(message);
+    showToast(message);
+  } finally {
+    if (isActivePlaybackGeneration(token)) {
+      usePlayerStore.getState().setIsResolving(false);
+    }
   }
-
-  const manifest = await musicApi.resolveStream({ trackRef: track.ref });
-  manifestCache.set(key, manifest);
-  return manifest;
-}
-
-async function playNow(track: TrackMetadata) {
-  const playable = searchResultToTrack(
-    await resolvePlayableResult(trackToSearchResult(track)),
-  );
-  const manifest = await resolveStreamManifest(playable);
-
-  usePlayerStore.setState({
-    currentTrack: playable,
-    streamManifest: manifest,
-    isPlaying: true,
-    resolveError: null,
-    position: 0,
-    duration: playable.durationMs ? playable.durationMs / 1000 : 0,
-  });
 }
 
 export const playerEngine = {
   async ensureSetup() {},
 
   async playSearchResult(result: SearchResult) {
-    await playNow(searchResultToTrack(result));
+    const token = beginPlaybackTransition();
+    await transitionToTrack(searchResultToTrack(result), token, {
+      syncQueue: false,
+    });
   },
 
   async addToQueue(result: SearchResult) {
@@ -63,9 +79,8 @@ export const playerEngine = {
     const queue = usePlayerStore.getState().queue;
     if (queue.length === 0) return;
 
-    const [next, ...rest] = queue;
-    usePlayerStore.setState({ queue: rest });
-    await playNow(next);
+    const token = beginPlaybackTransition();
+    await transitionToTrack(queue[0]!, token, { syncQueue: true });
   },
 
   async skipToPrevious() {
@@ -78,9 +93,8 @@ export const playerEngine = {
     const track = queue[index];
     if (!track) return;
 
-    const rest = queue.filter((_, itemIndex) => itemIndex !== index);
-    usePlayerStore.setState({ queue: rest });
-    await playNow(track);
+    const token = beginPlaybackTransition();
+    await transitionToTrack(track, token, { syncQueue: true });
   },
 
   async play() {
@@ -104,10 +118,13 @@ export const playerEngine = {
     if (!streamManifest || !currentTrack || !isPlaying) return;
     if (!isStreamExpired(streamManifest.expiresAt)) return;
 
+    const token = beginPlaybackTransition();
     const position = usePlayerStore.getState().position;
-    const manifest = await resolveStreamManifest(currentTrack);
-    usePlayerStore.setState({ streamManifest: manifest });
-    webAudioPlayer.load(resolvePlaybackUrl(manifest));
+    const prepared = await prepareTrackTransition(currentTrack, token);
+    if (!prepared) return;
+
+    usePlayerStore.setState({ streamManifest: prepared.manifest });
+    webAudioPlayer.load(resolvePlaybackUrl(prepared.manifest));
     webAudioPlayer.seek(position);
     await webAudioPlayer.play();
   },

@@ -1,5 +1,4 @@
 import type { SearchResult, TrackMetadata } from "@vibevault/types";
-import { isStreamExpired } from "@vibevault/utils";
 import * as FileSystem from "expo-file-system/legacy";
 import TrackPlayer, {
   AppKilledPlaybackBehavior,
@@ -7,11 +6,14 @@ import TrackPlayer, {
   Event,
   State,
 } from "react-native-track-player";
-import { manifestCache } from "@/lib/manifest-cache";
-import { musicApi } from "@/lib/music-api";
-import { resolvePlayableResult } from "@/lib/resolve-playable-track";
-import { trackToSearchResult } from "@/lib/track-to-search-result";
+import { getErrorMessage } from "@/lib/error-message";
 import { downloadManager } from "@/services/download-manager";
+import {
+  beginPlaybackTransition,
+  isActivePlaybackGeneration,
+  prepareTrackTransition,
+  removeTrackAndSkippedFromQueue,
+} from "@/services/playback-core";
 import {
   searchResultToTrack,
   usePlayerStore,
@@ -23,21 +25,11 @@ import {
   trackKey,
   type PlaybackSource,
 } from "./player-helpers";
+import { manifestCache } from "@/lib/manifest-cache";
+import { musicApi } from "@/lib/music-api";
+import { isStreamExpired } from "@vibevault/utils";
 
 let setupPromise: Promise<void> | null = null;
-
-async function resolveStreamManifest(track: TrackMetadata) {
-  const key = trackKey(track);
-  const cached = manifestCache.get(key);
-
-  if (cached && !isStreamExpired(cached.expiresAt)) {
-    return cached;
-  }
-
-  const manifest = await musicApi.resolveStream({ trackRef: track.ref });
-  manifestCache.set(key, manifest);
-  return manifest;
-}
 
 async function resolvePlaybackSource(
   track: TrackMetadata,
@@ -52,16 +44,22 @@ async function resolvePlaybackSource(
     }
   }
 
-  const manifest = await resolveStreamManifest(track);
+  const cached = manifestCache.get(key);
+  let manifest = cached && !isStreamExpired(cached.expiresAt) ? cached : null;
+
+  if (!manifest) {
+    manifest = await musicApi.resolveStream({ trackRef: track.ref });
+    manifestCache.set(key, manifest);
+  }
+
   return { kind: "stream", manifest };
 }
 
-async function playNow(track: TrackMetadata) {
-  const playable = searchResultToTrack(
-    await resolvePlayableResult(trackToSearchResult(track)),
-  );
-  const source = await resolvePlaybackSource(playable);
-  const playerTrack = toPlayerTrack(playable, source);
+async function startNativePlayback(
+  playable: TrackMetadata,
+  manifest: PlaybackSource,
+) {
+  const playerTrack = toPlayerTrack(playable, manifest);
 
   await TrackPlayer.reset();
   await TrackPlayer.setQueue([playerTrack]);
@@ -69,11 +67,46 @@ async function playNow(track: TrackMetadata) {
 
   usePlayerStore.setState({
     currentTrack: playable,
-    streamManifest: source.kind === "stream" ? source.manifest : null,
-    isLocalPlayback: isLocalPlaybackSource(source),
+    streamManifest: manifest.kind === "stream" ? manifest.manifest : null,
+    isLocalPlayback: isLocalPlaybackSource(manifest),
     isPlaying: true,
     resolveError: null,
   });
+}
+
+async function transitionToTrack(
+  track: TrackMetadata,
+  token: number,
+  options: { syncQueue: boolean },
+) {
+  await playerEngine.ensureSetup();
+  usePlayerStore.setState({ isResolving: true, resolveError: null });
+
+  try {
+    await TrackPlayer.pause();
+    const prepared = await prepareTrackTransition(track, token);
+    if (!prepared) return;
+
+    if (options.syncQueue) {
+      removeTrackAndSkippedFromQueue(track);
+    }
+
+    const source = await resolvePlaybackSource(prepared.playable);
+    if (!isActivePlaybackGeneration(token)) return;
+
+    await startNativePlayback(prepared.playable, source);
+  } catch (error) {
+    if (!isActivePlaybackGeneration(token)) return;
+
+    const message = getErrorMessage(error, "Could not start playback.");
+    usePlayerStore.getState().setIsPlaying(false);
+    usePlayerStore.getState().setResolveError(message);
+    showToast(message);
+  } finally {
+    if (isActivePlaybackGeneration(token)) {
+      usePlayerStore.getState().setIsResolving(false);
+    }
+  }
 }
 
 export const playerEngine = {
@@ -118,8 +151,10 @@ export const playerEngine = {
   },
 
   async playSearchResult(result: SearchResult) {
-    await this.ensureSetup();
-    await playNow(searchResultToTrack(result));
+    const token = beginPlaybackTransition();
+    await transitionToTrack(searchResultToTrack(result), token, {
+      syncQueue: false,
+    });
   },
 
   async addToQueue(result: SearchResult) {
@@ -133,14 +168,11 @@ export const playerEngine = {
   },
 
   async skipToNext() {
-    await this.ensureSetup();
-
     const queue = usePlayerStore.getState().queue;
     if (queue.length === 0) return;
 
-    const [next, ...rest] = queue;
-    usePlayerStore.setState({ queue: rest });
-    await playNow(next);
+    const token = beginPlaybackTransition();
+    await transitionToTrack(queue[0]!, token, { syncQueue: true });
   },
 
   async skipToPrevious() {
@@ -150,15 +182,12 @@ export const playerEngine = {
   },
 
   async playQueueIndex(index: number) {
-    await this.ensureSetup();
-
     const queue = usePlayerStore.getState().queue;
     const track = queue[index];
     if (!track) return;
 
-    const rest = queue.filter((_, itemIndex) => itemIndex !== index);
-    usePlayerStore.setState({ queue: rest });
-    await playNow(track);
+    const token = beginPlaybackTransition();
+    await transitionToTrack(track, token, { syncQueue: true });
   },
 
   async play() {

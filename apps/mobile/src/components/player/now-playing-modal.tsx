@@ -7,12 +7,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { FavoriteButton } from "@/components/library/favorite-button";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 import { formatArtists } from "@/lib/track-format";
+import { getTrackArtworkUri } from "@/lib/track-artwork";
 import { usePlayerUiStore } from "@/stores/player-ui-store";
 import { usePlayerStore } from "@/stores/player-store";
 import { PlaybackButtons } from "./playback-buttons";
 import { ProgressBar } from "./progress-bar";
 import { QueueSheet } from "./queue-sheet";
 import { TrackArtwork } from "./track-artwork";
+import { VolumeControl } from "./volume-control";
 
 export function NowPlayingModal() {
   const isOpen = usePlayerUiStore((state) => state.isNowPlayingOpen);
@@ -50,10 +52,10 @@ export function NowPlayingModal() {
       onRequestClose={closeNowPlaying}
     >
       <View className="flex-1 bg-vault-background">
-        {currentTrack.artworkUrl ? (
+        {getTrackArtworkUri(currentTrack) ? (
           <Image
             contentFit="cover"
-            source={{ uri: currentTrack.artworkUrl }}
+            source={{ uri: getTrackArtworkUri(currentTrack) }}
             style={StyleSheet.absoluteFillObject}
           />
         ) : null}
@@ -108,6 +110,7 @@ export function NowPlayingModal() {
             </View>
 
             <View className="gap-6 px-6 pb-8">
+              <VolumeControl />
               <ProgressBar
                 duration={duration}
                 large

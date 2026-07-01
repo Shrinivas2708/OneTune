@@ -65,7 +65,7 @@ musicRoutes.post(
   zValidator("json", MatchTrackRequestSchema),
   async (c) => {
     const body = c.req.valid("json");
-    const match = await matchService.matchPlayableTrack(body, getRequestId(c));
+    const match = await matchService.matchPlayableTrack(body);
     return jsonSuccess(c, SearchResultSchema.parse(match));
   },
 );

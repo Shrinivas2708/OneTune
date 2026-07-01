@@ -1,5 +1,10 @@
 import type { PaginationMeta } from "@vibevault/types";
 
+export {
+  imageSizeScore,
+  pickBestImageUrl,
+  upgradeArtworkUrl,
+} from "./image";
 export { normalizeTrackKey } from "./strings";
 export {
   assignRelevanceScores,
