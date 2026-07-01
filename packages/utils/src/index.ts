@@ -3,6 +3,7 @@ import type { PaginationMeta } from "@vibevault/types";
 export { normalizeTrackKey } from "./strings";
 export {
   assignRelevanceScores,
+  boostQueryMatch,
   deduplicateSearchResults,
   rankSearchResults,
 } from "./search";

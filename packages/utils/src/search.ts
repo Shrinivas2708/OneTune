@@ -44,14 +44,40 @@ export function deduplicateSearchResults(results: SearchResult[]): SearchResult[
 
 export function rankSearchResults(results: SearchResult[]): SearchResult[] {
   return [...results].sort((a, b) => {
-    const scoreDelta = (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0);
-    if (scoreDelta !== 0) return scoreDelta;
-
     const priorityDelta =
       PROVIDER_PRIORITY[b.providerId] - PROVIDER_PRIORITY[a.providerId];
     if (priorityDelta !== 0) return priorityDelta;
 
+    const scoreDelta = (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0);
+    if (scoreDelta !== 0) return scoreDelta;
+
     return a.title.localeCompare(b.title);
+  });
+}
+
+/** Boost results whose title/artist match query tokens (0–1 added to base score). */
+export function boostQueryMatch(
+  results: SearchResult[],
+  query: string,
+): SearchResult[] {
+  const tokens = query
+    .toLowerCase()
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 2);
+
+  if (tokens.length === 0) return results;
+
+  return results.map((result) => {
+    const haystack = `${result.title} ${primaryArtist(result)}`.toLowerCase();
+    const matched = tokens.filter((token) => haystack.includes(token)).length;
+    const matchScore = matched / tokens.length;
+    const base = result.relevanceScore ?? 0.5;
+
+    return {
+      ...result,
+      relevanceScore: Math.min(1, base * 0.55 + matchScore * 0.45),
+    };
   });
 }
 

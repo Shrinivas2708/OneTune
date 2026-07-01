@@ -7,6 +7,7 @@ import {
 import type { SearchQuery, SearchResultPage } from "@vibevault/types";
 import {
   assignRelevanceScores,
+  boostQueryMatch,
   buildPaginationMeta,
   deduplicateSearchResults,
   rankSearchResults,
@@ -62,6 +63,10 @@ export async function unifiedSearch(
   const providersQueried: ProviderId[] = [];
   const providersFailed: ProviderId[] = [];
   const mergedResults = [];
+  const perProviderLimit = Math.max(
+    5,
+    Math.ceil(query.limit / Math.max(providers.length, 1)),
+  );
 
   for (let index = 0; index < settled.length; index += 1) {
     const provider = providers[index]!;
@@ -70,7 +75,11 @@ export async function unifiedSearch(
     providersQueried.push(provider.id);
 
     if (result.status === "fulfilled") {
-      mergedResults.push(...result.value.page.results);
+      const providerResults = result.value.page.results.slice(
+        0,
+        perProviderLimit,
+      );
+      mergedResults.push(...assignRelevanceScores(providerResults));
       continue;
     }
 
@@ -81,7 +90,7 @@ export async function unifiedSearch(
     );
   }
 
-  const scored = assignRelevanceScores(mergedResults);
+  const scored = boostQueryMatch(mergedResults, query.query);
   const deduped = deduplicateSearchResults(scored);
   const ranked = rankSearchResults(deduped);
 

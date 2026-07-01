@@ -17,6 +17,9 @@ def _base_opts(**extra: Any) -> dict[str, Any]:
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
+        # Prefer audio; fall back through common YouTube format chains.
+        "format": "bestaudio[ext=m4a]/bestaudio/best[height<=720]/best",
+        "nocheckcertificate": True,
         **extra,
     }
 
@@ -109,7 +112,13 @@ def search_tracks(query: str, limit: int) -> list[dict[str, Any]]:
 
 
 def resolve_stream(url: str, prefer_video: bool = False) -> dict[str, Any]:
-    with yt_dlp.YoutubeDL(_base_opts()) as ydl:
+    format_chain = (
+        "bestvideo[height<=720]+bestaudio/best[height<=720]/best"
+        if prefer_video
+        else "bestaudio[ext=m4a]/bestaudio/best[height<=720]/best"
+    )
+
+    with yt_dlp.YoutubeDL(_base_opts(format=format_chain)) as ydl:
         info = ydl.extract_info(url, download=False)
 
     chosen = _pick_format(info, prefer_video=prefer_video)
