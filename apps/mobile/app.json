@@ -8,11 +8,13 @@
     "resizeMode": "contain"
   },
   "ios": {
+    "bundleIdentifier": "com.vibevault.app",
     "infoPlist": {
       "UIBackgroundModes": ["audio"]
     }
   },
   "android": {
+    "package": "com.vibevault.app",
     "permissions": []
   },
   "web": {
@@ -39,12 +41,19 @@
   ],
   "name": "VibeVault",
   "slug": "vibevault",
+  "version": "1.0.0",
   "extra": {
     "router": {
       "origin": "https://vibevault.app"
     },
     "eas": {
-      "projectId": "replace-with-eas-project-id"
+      "projectId": "122c1b04-d383-4bc5-8eed-15c308ac28b6"
     }
+  },
+  "runtimeVersion": {
+    "policy": "appVersion"
+  },
+  "updates": {
+    "url": "https://u.expo.dev/122c1b04-d383-4bc5-8eed-15c308ac28b6"
   }
 }
