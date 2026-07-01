@@ -20,7 +20,7 @@ healthRoutes.get("/health", (c) => {
 healthRoutes.get("/health/deps", async (c) => {
   const checks = await Promise.allSettled([
     fetch(`${env.EXTRACTOR_URL}/health`).then((r) => r.ok),
-    fetch(`${env.JIOSAAVN_URL}/search/songs?query=test`).then((r) => r.ok),
+    fetch(`${env.JIOSAAVN_URL}/api/search/songs?query=test`).then((r) => r.ok),
     fetch(`${env.SPOTIFY_URL}/health`).then((r) => r.ok),
   ]);
 

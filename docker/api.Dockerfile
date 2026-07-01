@@ -1,9 +1,10 @@
-FROM oven/bun:1.2 AS base
+FROM oven/bun:1.3 AS base
 WORKDIR /app
 
 # Install workspace dependencies
 COPY package.json bun.lock turbo.json ./
 COPY apps/api/package.json ./apps/api/
+COPY apps/mobile/package.json ./apps/mobile/
 COPY packages/config/package.json ./packages/config/
 COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/

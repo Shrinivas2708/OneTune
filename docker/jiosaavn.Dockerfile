@@ -1,10 +1,10 @@
-FROM oven/bun:1.2 AS base
+FROM oven/bun:1.3 AS base
 
 WORKDIR /app
 
 ARG JIOSAAVN_API_REF=main
 
-RUN apt-get update && apt-get install -y --no-install-recommends git \
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 --branch ${JIOSAAVN_API_REF} \
@@ -15,7 +15,7 @@ FROM base AS build
 RUN bun install --frozen-lockfile
 RUN bun run build
 
-FROM oven/bun:1.2-alpine AS production
+FROM oven/bun:1.3-alpine AS production
 
 WORKDIR /app
 

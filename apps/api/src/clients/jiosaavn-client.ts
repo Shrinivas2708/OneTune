@@ -52,7 +52,7 @@ export async function jiosaavnSearchSongs(
   const response = await fetchJson<{
     success: boolean;
     data: JioSaavnSearchSongs;
-  }>(buildUrl("/search/songs", { query, page: page - 1, limit }));
+  }>(buildUrl("/api/search/songs", { query, page: page - 1, limit }));
 
   return response.data;
 }
@@ -61,7 +61,7 @@ export async function jiosaavnGetSong(id: string): Promise<JioSaavnSong> {
   const response = await fetchJson<{
     success: boolean;
     data: JioSaavnSong[];
-  }>(buildUrl("/songs", { ids: id }));
+  }>(buildUrl("/api/songs", { ids: id }));
 
   const song = response.data[0];
   if (!song) {
@@ -77,7 +77,7 @@ export async function jiosaavnImportPlaylist(
   const response = await fetchJson<{
     success: boolean;
     data: JioSaavnPlaylist;
-  }>(buildUrl("/playlists", { link: url, page: 0, limit }));
+  }>(buildUrl("/api/playlists", { link: url, page: 0, limit }));
 
   return response.data;
 }
