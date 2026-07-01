@@ -73,7 +73,7 @@ export function MiniPlayer() {
           onPress={handleOpenQueue}
         >
           <Ionicons color="#ffffff" name="list" size={18} />
-          {queueLength > 1 ? (
+          {queueLength > 0 ? (
             <View className="absolute -right-1 -top-1 min-w-[16px] rounded-full bg-vault-accent px-1">
               <Text className="text-center font-inter-bold text-[10px] text-black">
                 {queueLength}

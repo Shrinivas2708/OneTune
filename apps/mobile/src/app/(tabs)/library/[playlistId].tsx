@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { ProviderBadge } from "@/components/search/provider-badge";
 import { DownloadButton } from "@/components/downloads/download-button";
+import { AddToQueueButton } from "@/components/player/add-to-queue-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
 import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
@@ -47,6 +48,7 @@ function PlaylistTrackRow({
       </View>
 
       <View className="min-w-[44px] items-end flex-row gap-1">
+        <AddToQueueButton result={trackToSearchResult(track)} size={20} />
         <DownloadButton track={track} />
         {isResolving ? (
           <ActivityIndicator color="#1ed760" size="small" />

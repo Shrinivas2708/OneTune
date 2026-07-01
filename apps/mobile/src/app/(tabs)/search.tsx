@@ -4,7 +4,6 @@ import { useLocalSearchParams } from "expo-router";
 import { SearchInput } from "@/components/search/search-input";
 import { SearchMessage } from "@/components/search/search-message";
 import { SearchResultsList } from "@/components/search/search-results-list";
-import { LibraryHub } from "@/components/library/library-hub";
 import { VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
@@ -85,9 +84,6 @@ export default function SearchScreen() {
         <VaultSubheading>One query. YouTube, JioSaavn, Spotify.</VaultSubheading>
         <View className="mt-5">
           <SearchInput value={query} onChangeText={setQuery} />
-        </View>
-        <View className="mt-4">
-          <LibraryHub />
         </View>
       </View>
 

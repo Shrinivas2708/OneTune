@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { DownloadButton } from "@/components/downloads/download-button";
+import { AddToQueueButton } from "@/components/player/add-to-queue-button";
 import { FavoriteButton } from "@/components/library/favorite-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -69,6 +70,7 @@ export function TrackRow({
 
         <View className="items-center gap-2">
           <View className="flex-row items-center gap-1.5">
+            <AddToQueueButton result={result} />
             <FavoriteButton track={track} />
             <DownloadButton track={result} />
           </View>

@@ -8,7 +8,6 @@ export function usePlaybackControls() {
   const duration = usePlayerStore((state) => state.duration);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const queue = usePlayerStore((state) => state.queue);
-  const currentIndex = usePlayerStore((state) => state.currentIndex);
 
   const play = useCallback(() => {
     void playerEngine.play();
@@ -42,8 +41,8 @@ export function usePlaybackControls() {
     void playerEngine.seekTo(seconds);
   }, []);
 
-  const hasNext = currentIndex < queue.length - 1;
-  const hasPrevious = currentIndex > 0;
+  const hasNext = queue.length > 0;
+  const hasPrevious = position > 3;
 
   return {
     isPlaying,
@@ -51,7 +50,6 @@ export function usePlaybackControls() {
     duration,
     currentTrack,
     queue,
-    currentIndex,
     hasNext,
     hasPrevious,
     play,

@@ -7,17 +7,11 @@ import { TrackArtwork } from "./track-artwork";
 
 interface QueueSheetProps {
   queue: TrackMetadata[];
-  currentIndex: number;
   onSelect: (index: number) => void;
   onClose: () => void;
 }
 
-export function QueueSheet({
-  queue,
-  currentIndex,
-  onSelect,
-  onClose,
-}: QueueSheetProps) {
+export function QueueSheet({ queue, onSelect, onClose }: QueueSheetProps) {
   return (
     <View className="max-h-[50%] rounded-t-vault-xl bg-vault-surface-elevated px-4 pb-6 pt-3">
       <View className="mb-4 flex-row items-center justify-between">
@@ -27,35 +21,32 @@ export function QueueSheet({
         </Pressable>
       </View>
 
-      <View className="gap-1">
-        {queue.map((track, index) => {
-          const isActive = index === currentIndex;
-          return (
+      {queue.length === 0 ? (
+        <Text className="py-6 text-center font-inter text-sm text-vault-muted">
+          Nothing queued. Tap + on a track to add it here.
+        </Text>
+      ) : (
+        <View className="gap-1">
+          {queue.map((track, index) => (
             <Pressable
               key={trackKey(track)}
               accessibilityRole="button"
-              className={`flex-row items-center gap-3 rounded-vault-lg px-2 py-2 ${isActive ? "bg-vault-surface-card" : ""}`}
+              className="flex-row items-center gap-3 rounded-vault-lg px-2 py-2"
               onPress={() => onSelect(index)}
             >
               <TrackArtwork size={44} track={track} radius={6} />
               <View className="min-w-0 flex-1">
-                <Text
-                  className={`font-inter-semibold text-sm ${isActive ? "text-vault-accent" : "text-vault-text"}`}
-                  numberOfLines={1}
-                >
+                <Text className="font-inter-semibold text-sm text-vault-text" numberOfLines={1}>
                   {track.title}
                 </Text>
                 <Text className="font-inter text-xs text-vault-muted" numberOfLines={1}>
                   {formatArtists(track)}
                 </Text>
               </View>
-              {isActive ? (
-                <Ionicons color="#1ed760" name="volume-medium" size={18} />
-              ) : null}
             </Pressable>
-          );
-        })}
-      </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }

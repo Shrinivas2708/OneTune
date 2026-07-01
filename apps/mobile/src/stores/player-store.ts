@@ -5,7 +5,6 @@ import { trackKey } from "@/services/player-helpers";
 
 interface PlayerState {
   currentTrack: TrackMetadata | null;
-  currentIndex: number;
   streamManifest: StreamManifest | null;
   isPlaying: boolean;
   isResolving: boolean;
@@ -13,15 +12,16 @@ interface PlayerState {
   resolveError: string | null;
   position: number;
   duration: number;
+  /** Tracks explicitly added to play later — never includes the current track. */
   queue: TrackMetadata[];
   setCurrentTrack: (track: TrackMetadata | null) => void;
-  setCurrentIndex: (index: number) => void;
   setStreamManifest: (manifest: StreamManifest | null) => void;
   setIsPlaying: (isPlaying: boolean) => void;
   setIsResolving: (isResolving: boolean) => void;
   setResolveError: (error: string | null) => void;
   setProgress: (position: number, duration: number) => void;
-  enqueueTrack: (track: TrackMetadata) => void;
+  addToQueue: (track: TrackMetadata) => boolean;
+  removeFromQueue: (index: number) => void;
   setQueue: (tracks: TrackMetadata[]) => void;
   reset: () => void;
 }
@@ -41,7 +41,6 @@ export function searchResultToTrack(result: SearchResult): TrackMetadata {
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
   currentTrack: null,
-  currentIndex: -1,
   streamManifest: null,
   isPlaying: false,
   isResolving: false,
@@ -52,22 +51,31 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   queue: [],
 
   setCurrentTrack: (track) => set({ currentTrack: track }),
-  setCurrentIndex: (index) => set({ currentIndex: index }),
   setStreamManifest: (manifest) => set({ streamManifest: manifest }),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setIsResolving: (isResolving) => set({ isResolving }),
   setResolveError: (error) => set({ resolveError: error }),
   setProgress: (position, duration) => set({ position, duration }),
 
-  enqueueTrack: (track) => {
+  addToQueue: (track) => {
     const key = trackKey(track);
-    const queue = get().queue.filter((item) => trackKey(item) !== key);
-    const nextQueue = [...queue, track];
-    set({
-      queue: nextQueue,
-      currentTrack: track,
-      currentIndex: nextQueue.length - 1,
-    });
+    const { currentTrack, queue } = get();
+
+    if (currentTrack && trackKey(currentTrack) === key) {
+      return false;
+    }
+
+    if (queue.some((item) => trackKey(item) === key)) {
+      return false;
+    }
+
+    set({ queue: [...queue, track] });
+    return true;
+  },
+
+  removeFromQueue: (index) => {
+    const queue = get().queue.filter((_, itemIndex) => itemIndex !== index);
+    set({ queue });
   },
 
   setQueue: (tracks) => set({ queue: tracks }),
@@ -76,7 +84,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     manifestCache.clear();
     set({
       currentTrack: null,
-      currentIndex: -1,
       streamManifest: null,
       isPlaying: false,
       isResolving: false,

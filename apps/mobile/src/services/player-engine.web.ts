@@ -7,6 +7,7 @@ import {
   searchResultToTrack,
   usePlayerStore,
 } from "@/stores/player-store";
+import { showToast } from "@/stores/toast-store";
 import { trackKey } from "./player-helpers";
 import { webAudioPlayer } from "./web-audio-player";
 
@@ -23,16 +24,10 @@ async function resolveStreamManifest(track: TrackMetadata) {
   return manifest;
 }
 
-async function playTrackAtIndex(index: number) {
-  const queue = usePlayerStore.getState().queue;
-  const track = queue[index];
-
-  if (!track) return;
-
+async function playNow(track: TrackMetadata) {
   const manifest = await resolveStreamManifest(track);
 
   usePlayerStore.setState({
-    currentIndex: index,
     currentTrack: track,
     streamManifest: manifest,
     isPlaying: true,
@@ -46,43 +41,41 @@ export const playerEngine = {
   async ensureSetup() {},
 
   async playSearchResult(result: SearchResult) {
-    const track = searchResultToTrack(result);
-    const key = trackKey(track);
-    const state = usePlayerStore.getState();
-    const existingIndex = state.queue.findIndex((item) => trackKey(item) === key);
-
-    let queue = [...state.queue];
-    if (existingIndex === -1) {
-      queue.push(track);
-    }
-
-    const playIndex = existingIndex === -1 ? queue.length - 1 : existingIndex;
-    usePlayerStore.setState({ queue });
-
-    await playTrackAtIndex(playIndex);
+    await playNow(searchResultToTrack(result));
   },
 
-  async skipToNext() {
-    const { currentIndex, queue } = usePlayerStore.getState();
-    if (currentIndex >= queue.length - 1) return;
-    await playTrackAtIndex(currentIndex + 1);
-  },
-
-  async skipToPrevious() {
-    const { currentIndex } = usePlayerStore.getState();
-    if (currentIndex <= 0) {
-      webAudioPlayer.seek(0);
-      usePlayerStore.getState().setProgress(0, usePlayerStore.getState().duration);
+  async addToQueue(result: SearchResult) {
+    const added = usePlayerStore.getState().addToQueue(searchResultToTrack(result));
+    if (added) {
+      showToast("Added to queue");
       return;
     }
 
-    await playTrackAtIndex(currentIndex - 1);
+    showToast("Already playing or queued");
+  },
+
+  async skipToNext() {
+    const queue = usePlayerStore.getState().queue;
+    if (queue.length === 0) return;
+
+    const [next, ...rest] = queue;
+    usePlayerStore.setState({ queue: rest });
+    await playNow(next);
+  },
+
+  async skipToPrevious() {
+    webAudioPlayer.seek(0);
+    usePlayerStore.getState().setProgress(0, usePlayerStore.getState().duration);
   },
 
   async playQueueIndex(index: number) {
-    const { queue } = usePlayerStore.getState();
-    if (index < 0 || index >= queue.length) return;
-    await playTrackAtIndex(index);
+    const queue = usePlayerStore.getState().queue;
+    const track = queue[index];
+    if (!track) return;
+
+    const rest = queue.filter((_, itemIndex) => itemIndex !== index);
+    usePlayerStore.setState({ queue: rest });
+    await playNow(track);
   },
 
   async play() {
@@ -115,13 +108,13 @@ export const playerEngine = {
   },
 
   async handleQueueEnded() {
-    const { currentIndex, queue } = usePlayerStore.getState();
-    if (currentIndex < queue.length - 1) {
-      await this.skipToNext();
+    const queue = usePlayerStore.getState().queue;
+    if (queue.length === 0) {
+      usePlayerStore.getState().setIsPlaying(false);
       return;
     }
 
-    usePlayerStore.getState().setIsPlaying(false);
+    await this.skipToNext();
   },
 
   syncPlaybackState(_state?: unknown) {},

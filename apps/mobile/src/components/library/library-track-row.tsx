@@ -3,6 +3,7 @@ import { formatDuration } from "@vibevault/utils";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Text, View } from "react-native";
 import { DownloadButton } from "@/components/downloads/download-button";
+import { AddToQueueButton } from "@/components/player/add-to-queue-button";
 import { FavoriteButton } from "@/components/library/favorite-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -59,6 +60,7 @@ export function LibraryTrackRow({
         </View>
 
         <View className="flex-row items-center gap-1">
+          <AddToQueueButton result={trackToSearchResult(track)} />
           {showFavorite ? <FavoriteButton track={track} /> : null}
           {showDownload ? <DownloadButton track={track} /> : null}
           {isResolvingThis ? (

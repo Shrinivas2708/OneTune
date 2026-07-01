@@ -14,6 +14,7 @@ import {
   searchResultToTrack,
   usePlayerStore,
 } from "@/stores/player-store";
+import { showToast } from "@/stores/toast-store";
 import {
   isLocalPlaybackSource,
   toPlayerTrack,
@@ -53,14 +54,7 @@ async function resolvePlaybackSource(
   return { kind: "stream", manifest };
 }
 
-async function playTrackAtIndex(index: number) {
-  const queue = usePlayerStore.getState().queue;
-  const track = queue[index];
-
-  if (!track) {
-    return;
-  }
-
+async function playNow(track: TrackMetadata) {
   const source = await resolvePlaybackSource(track);
   const playerTrack = toPlayerTrack(track, source);
 
@@ -69,7 +63,6 @@ async function playTrackAtIndex(index: number) {
   await TrackPlayer.play();
 
   usePlayerStore.setState({
-    currentIndex: index,
     currentTrack: track,
     streamManifest: source.kind === "stream" ? source.manifest : null,
     isLocalPlayback: isLocalPlaybackSource(source),
@@ -121,49 +114,46 @@ export const playerEngine = {
 
   async playSearchResult(result: SearchResult) {
     await this.ensureSetup();
+    await playNow(searchResultToTrack(result));
+  },
 
-    const track = searchResultToTrack(result);
-    const key = trackKey(track);
-    const state = usePlayerStore.getState();
-    const existingIndex = state.queue.findIndex((item) => trackKey(item) === key);
-
-    let queue = [...state.queue];
-    if (existingIndex === -1) {
-      queue.push(track);
+  async addToQueue(result: SearchResult) {
+    const added = usePlayerStore.getState().addToQueue(searchResultToTrack(result));
+    if (added) {
+      showToast("Added to queue");
+      return;
     }
 
-    const playIndex = existingIndex === -1 ? queue.length - 1 : existingIndex;
-    usePlayerStore.setState({ queue });
-
-    await playTrackAtIndex(playIndex);
+    showToast("Already playing or queued");
   },
 
   async skipToNext() {
-    const { currentIndex, queue } = usePlayerStore.getState();
-    if (currentIndex >= queue.length - 1) {
-      return;
-    }
+    await this.ensureSetup();
 
-    await playTrackAtIndex(currentIndex + 1);
+    const queue = usePlayerStore.getState().queue;
+    if (queue.length === 0) return;
+
+    const [next, ...rest] = queue;
+    usePlayerStore.setState({ queue: rest });
+    await playNow(next);
   },
 
   async skipToPrevious() {
-    const { currentIndex } = usePlayerStore.getState();
-    if (currentIndex <= 0) {
-      await TrackPlayer.seekTo(0);
-      return;
-    }
-
-    await playTrackAtIndex(currentIndex - 1);
+    await this.ensureSetup();
+    await TrackPlayer.seekTo(0);
+    usePlayerStore.getState().setProgress(0, usePlayerStore.getState().duration);
   },
 
   async playQueueIndex(index: number) {
-    const { queue } = usePlayerStore.getState();
-    if (index < 0 || index >= queue.length) {
-      return;
-    }
+    await this.ensureSetup();
 
-    await playTrackAtIndex(index);
+    const queue = usePlayerStore.getState().queue;
+    const track = queue[index];
+    if (!track) return;
+
+    const rest = queue.filter((_, itemIndex) => itemIndex !== index);
+    usePlayerStore.setState({ queue: rest });
+    await playNow(track);
   },
 
   async play() {
@@ -217,13 +207,13 @@ export const playerEngine = {
   },
 
   async handleQueueEnded() {
-    const { currentIndex, queue } = usePlayerStore.getState();
-    if (currentIndex < queue.length - 1) {
-      await this.skipToNext();
+    const queue = usePlayerStore.getState().queue;
+    if (queue.length === 0) {
+      usePlayerStore.getState().setIsPlaying(false);
       return;
     }
 
-    usePlayerStore.getState().setIsPlaying(false);
+    await this.skipToNext();
   },
 
   syncPlaybackState(state: State | undefined) {

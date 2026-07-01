@@ -27,7 +27,6 @@ export function NowPlayingModal() {
     position,
     duration,
     queue,
-    currentIndex,
     hasNext,
     hasPrevious,
     toggle,
@@ -134,7 +133,6 @@ export function NowPlayingModal() {
               exiting={FadeOut.duration(150)}
             >
               <QueueSheet
-                currentIndex={currentIndex}
                 queue={queue}
                 onClose={closeQueue}
                 onSelect={(index) => {
