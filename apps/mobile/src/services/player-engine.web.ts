@@ -3,6 +3,8 @@ import { isStreamExpired } from "@vibevault/utils";
 import { manifestCache } from "@/lib/manifest-cache";
 import { musicApi } from "@/lib/music-api";
 import { resolvePlaybackUrl } from "@/lib/playback-url";
+import { resolvePlayableResult } from "@/lib/resolve-playable-track";
+import { trackToSearchResult } from "@/lib/track-to-search-result";
 import {
   searchResultToTrack,
   usePlayerStore,
@@ -25,15 +27,18 @@ async function resolveStreamManifest(track: TrackMetadata) {
 }
 
 async function playNow(track: TrackMetadata) {
-  const manifest = await resolveStreamManifest(track);
+  const playable = searchResultToTrack(
+    await resolvePlayableResult(trackToSearchResult(track)),
+  );
+  const manifest = await resolveStreamManifest(playable);
 
   usePlayerStore.setState({
-    currentTrack: track,
+    currentTrack: playable,
     streamManifest: manifest,
     isPlaying: true,
     resolveError: null,
     position: 0,
-    duration: track.durationMs ? track.durationMs / 1000 : 0,
+    duration: playable.durationMs ? playable.durationMs / 1000 : 0,
   });
 }
 

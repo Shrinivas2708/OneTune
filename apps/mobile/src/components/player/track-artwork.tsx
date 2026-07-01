@@ -1,5 +1,6 @@
 import type { TrackMetadata } from "@vibevault/types";
 import { ArtworkImage } from "@/components/ui/artwork-image";
+import { getTrackArtworkUri } from "@/lib/track-artwork";
 
 interface TrackArtworkProps {
   track: TrackMetadata;
@@ -13,7 +14,7 @@ export function TrackArtwork({ track, size, radius = 8 }: TrackArtworkProps) {
       label={`${track.title} artwork`}
       radius={radius}
       size={size}
-      uri={track.artworkUrl}
+      uri={getTrackArtworkUri(track)}
     />
   );
 }

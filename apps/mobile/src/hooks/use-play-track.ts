@@ -3,6 +3,7 @@ import type { SearchResult } from "@vibevault/types";
 import * as Haptics from "expo-haptics";
 import { ApiClientError } from "@/lib/api-client";
 import { libraryApi } from "@/lib/library-api";
+import { resolvePlayableResult } from "@/lib/resolve-playable-track";
 import { playerEngine } from "@/services/player-engine";
 import { showToast } from "@/stores/toast-store";
 import {
@@ -16,8 +17,9 @@ export function usePlayTrack() {
 
   return useMutation({
     mutationFn: async (result: SearchResult) => {
-      await playerEngine.playSearchResult(result);
-      return searchResultToTrack(result);
+      const playable = await resolvePlayableResult(result);
+      await playerEngine.playSearchResult(playable);
+      return searchResultToTrack(playable);
     },
     onMutate: () => {
       setIsResolving(true);

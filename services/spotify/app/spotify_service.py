@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import urllib.parse
+import urllib.request
 from typing import Any
 
 from spotify_scraper import SpotifyClient
@@ -23,6 +26,20 @@ def _id_from_uri(uri: str | None, prefix: str) -> str:
     if not uri or f"{prefix}:" not in uri:
         return ""
     return uri.split(f"{prefix}:")[-1].split("?")[0]
+
+
+def _oembed_thumbnail(spotify_url: str) -> str | None:
+    try:
+        endpoint = (
+            "https://open.spotify.com/oembed?"
+            + urllib.parse.urlencode({"url": spotify_url})
+        )
+        with urllib.request.urlopen(endpoint, timeout=8) as response:
+            data = json.load(response)
+        thumbnail = data.get("thumbnail_url")
+        return str(thumbnail) if thumbnail else None
+    except Exception:
+        return None
 
 
 def _pick_image(*sources: Any) -> str | None:
@@ -73,6 +90,8 @@ def _map_track(track: Any) -> dict[str, Any] | None:
         getattr(track, "images", None),
         getattr(album_ref, "images", None) if album_ref else None,
     )
+    if not artwork and track_id:
+        artwork = _oembed_thumbnail(_track_url(track_id))
 
     duration_ms = getattr(track, "duration_ms", None)
     if duration_ms is None:
@@ -137,6 +156,10 @@ def import_playlist(url: str, max_tracks: int = 100) -> dict[str, Any]:
         raise ValueError("No playable tracks found in this Spotify playlist")
 
     artwork = _pick_image(getattr(playlist, "images", None))
+    if not artwork:
+        artwork = _oembed_thumbnail(url)
+    if not artwork and tracks:
+        artwork = tracks[0].get("artwork_url")
     owner = getattr(playlist, "owner", None)
     owner_name = getattr(owner, "display_name", None) if owner else None
     if not owner_name and owner is not None:

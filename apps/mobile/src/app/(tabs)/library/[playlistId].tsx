@@ -2,21 +2,26 @@ import { FlashList } from "@shopify/flash-list";
 import type { TrackMetadata } from "@vibevault/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useMemo } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { ProviderBadge } from "@/components/search/provider-badge";
 import { DownloadButton } from "@/components/downloads/download-button";
+import { PlaylistActions } from "@/components/library/playlist-actions";
 import { AddToQueueButton } from "@/components/player/add-to-queue-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
+import { getTrackArtworkUri } from "@/lib/track-artwork";
 import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
 import { PlaylistDetailSkeleton } from "@/components/ui/skeleton";
 import { usePlayTrack } from "@/hooks/use-play-track";
 import { usePlaylist } from "@/hooks/use-playlists";
+import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { formatArtists } from "@/lib/track-format";
 import { getErrorMessage } from "@/lib/error-message";
 import { trackToSearchResult } from "@/lib/track-to-search-result";
 import { trackKey, usePlayerStore } from "@/stores/player-store";
 import { formatDuration } from "@vibevault/utils";
+import type { SavedPlaylist } from "@vibevault/types";
 
 function PlaylistTrackRow({
   track,
@@ -32,10 +37,10 @@ function PlaylistTrackRow({
   return (
     <Pressable
       accessibilityRole="button"
-      className={`flex-row items-center gap-3 rounded-vault-lg px-2 py-2 ${isActive ? "bg-vault-surface-elevated" : ""}`}
+      className={`flex-row items-center gap-3 rounded-vault-lg px-2 py-2.5 ${isActive ? "bg-vault-surface-elevated" : ""}`}
       onPress={onPress}
     >
-      <ArtworkImage label={`${track.title} artwork`} radius={8} size={48} uri={track.artworkUrl} />
+      <ArtworkImage label={`${track.title} artwork`} radius={8} size={48} uri={getTrackArtworkUri(track)} />
 
       <View className="min-w-0 flex-1 gap-1">
         <Text className="font-inter-semibold text-base text-vault-text" numberOfLines={1}>
@@ -62,6 +67,39 @@ function PlaylistTrackRow({
   );
 }
 
+function PlaylistListHeader({
+  playlist,
+  tracks,
+}: {
+  playlist: SavedPlaylist;
+  tracks: TrackMetadata[];
+}) {
+  return (
+    <View className="pb-2">
+      <View className="flex-row items-center gap-4 px-4 py-3">
+        <ArtworkImage
+          label={`${playlist.name} artwork`}
+          radius={12}
+          size={96}
+          uri={
+            playlist.artworkUrl ??
+            (tracks[0] ? getTrackArtworkUri(tracks[0]) : undefined)
+          }
+        />
+        <View className="min-w-0 flex-1 gap-1">
+          <Text className="font-jakarta text-xl text-vault-text" numberOfLines={2}>
+            {playlist.name}
+          </Text>
+          <Text className="font-inter text-sm text-vault-muted">
+            {playlist.trackCount} tracks
+          </Text>
+        </View>
+      </View>
+      <PlaylistActions tracks={tracks} />
+    </View>
+  );
+}
+
 export default function PlaylistDetailScreen() {
   const router = useRouter();
   const { playlistId } = useLocalSearchParams<{ playlistId: string }>();
@@ -69,6 +107,7 @@ export default function PlaylistDetailScreen() {
   const playTrack = usePlayTrack();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isResolving = usePlayerStore((state) => state.isResolving);
+  const bottomInset = useScrollBottomInset();
 
   const resolvingKey =
     isResolving && playTrack.variables
@@ -76,6 +115,23 @@ export default function PlaylistDetailScreen() {
       : null;
 
   const activeKey = currentTrack ? trackKey(currentTrack) : null;
+
+  const listHeader = useMemo(
+    () => (data ? <PlaylistListHeader playlist={data} tracks={data.tracks} /> : null),
+    [data],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: TrackMetadata }) => (
+      <PlaylistTrackRow
+        isActive={trackKey(item) === activeKey}
+        isResolving={trackKey(item) === resolvingKey}
+        track={item}
+        onPress={() => playTrack.mutate(trackToSearchResult(item))}
+      />
+    ),
+    [activeKey, playTrack, resolvingKey],
+  );
 
   if (isLoading) {
     return (
@@ -107,20 +163,13 @@ export default function PlaylistDetailScreen() {
         </Text>
       </View>
 
-      <View className="items-center px-6 py-4">
-        <ArtworkImage label={`${data.name} artwork`} radius={12} size={160} uri={data.artworkUrl} />
-        <Text className="mt-4 text-center font-jakarta text-2xl text-vault-text">
-          {data.name}
-        </Text>
-        <Text className="mt-1 font-inter text-sm text-vault-muted">
-          {data.trackCount} tracks
-        </Text>
-      </View>
-
-      <View className="min-h-[200px] flex-1 px-4">
+      <View className="min-h-0 flex-1">
         <FlashList
+          contentContainerStyle={{ paddingBottom: bottomInset }}
           data={data.tracks}
+          estimatedItemSize={76}
           keyExtractor={(item) => trackKey(item)}
+          ListHeaderComponent={listHeader}
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -128,15 +177,8 @@ export default function PlaylistDetailScreen() {
               onRefresh={() => void refetch()}
             />
           }
-          renderItem={({ item }) => (
-            <PlaylistTrackRow
-              isActive={trackKey(item) === activeKey}
-              isResolving={trackKey(item) === resolvingKey}
-              track={item}
-              onPress={() => playTrack.mutate(trackToSearchResult(item))}
-            />
-          )}
-          showsVerticalScrollIndicator={false}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator
         />
       </View>
     </Screen>

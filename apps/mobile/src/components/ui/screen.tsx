@@ -18,7 +18,7 @@ export function Screen({
 }: ScreenProps) {
   const content = (
     <SafeAreaView className={`flex-1 bg-vault-background ${className}`}>
-      <View className={`flex-1 ${padded ? "px-6" : ""}`}>{children}</View>
+      <View className={`min-h-0 flex-1 ${padded ? "px-6" : ""}`}>{children}</View>
     </SafeAreaView>
   );
 

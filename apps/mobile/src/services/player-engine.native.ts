@@ -9,6 +9,8 @@ import TrackPlayer, {
 } from "react-native-track-player";
 import { manifestCache } from "@/lib/manifest-cache";
 import { musicApi } from "@/lib/music-api";
+import { resolvePlayableResult } from "@/lib/resolve-playable-track";
+import { trackToSearchResult } from "@/lib/track-to-search-result";
 import { downloadManager } from "@/services/download-manager";
 import {
   searchResultToTrack,
@@ -55,15 +57,18 @@ async function resolvePlaybackSource(
 }
 
 async function playNow(track: TrackMetadata) {
-  const source = await resolvePlaybackSource(track);
-  const playerTrack = toPlayerTrack(track, source);
+  const playable = searchResultToTrack(
+    await resolvePlayableResult(trackToSearchResult(track)),
+  );
+  const source = await resolvePlaybackSource(playable);
+  const playerTrack = toPlayerTrack(playable, source);
 
   await TrackPlayer.reset();
   await TrackPlayer.setQueue([playerTrack]);
   await TrackPlayer.play();
 
   usePlayerStore.setState({
-    currentTrack: track,
+    currentTrack: playable,
     streamManifest: source.kind === "stream" ? source.manifest : null,
     isLocalPlayback: isLocalPlaybackSource(source),
     isPlaying: true,

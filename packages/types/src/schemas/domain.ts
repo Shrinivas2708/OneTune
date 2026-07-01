@@ -209,6 +209,14 @@ export const RecordHistoryRequestSchema = z.object({
 
 export type RecordHistoryRequest = z.infer<typeof RecordHistoryRequestSchema>;
 
+export const MatchTrackRequestSchema = z.object({
+  title: z.string().min(1),
+  artists: z.array(ArtistSummarySchema).min(1),
+  durationMs: z.number().int().nonnegative().nullish(),
+});
+
+export type MatchTrackRequest = z.infer<typeof MatchTrackRequestSchema>;
+
 export const HistoryQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(50),
 });

@@ -1,6 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
 import type { SearchResult } from "@vibevault/types";
 import { Text, View } from "react-native";
+import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { SearchMessage } from "./search-message";
 import { SearchSkeleton } from "./search-skeleton";
 import { TrackRow } from "./track-row";
@@ -30,6 +31,8 @@ export function SearchResultsList({
   onPressTrack,
   providersFailed = [],
 }: SearchResultsListProps) {
+  const bottomInset = useScrollBottomInset();
+
   if (isLoading || (isFetching && results.length === 0)) {
     return <SearchSkeleton />;
   }
@@ -44,7 +47,7 @@ export function SearchResultsList({
   }
 
   return (
-    <View className="min-h-[200px] flex-1">
+    <View className="min-h-0 flex-1">
       {providersFailed.length > 0 ? (
         <View className="mb-3 rounded-vault-lg border border-vault-warning/30 bg-vault-warning/10 px-3 py-2">
           <Text className="font-inter text-xs text-vault-warning">
@@ -54,7 +57,9 @@ export function SearchResultsList({
       ) : null}
 
       <FlashList<SearchResult>
+        contentContainerStyle={{ paddingBottom: bottomInset }}
         data={results}
+        estimatedItemSize={88}
         keyExtractor={(item) => trackKey(item)}
         keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => (
@@ -65,7 +70,7 @@ export function SearchResultsList({
             onPress={onPressTrack}
           />
         )}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator
       />
     </View>
   );

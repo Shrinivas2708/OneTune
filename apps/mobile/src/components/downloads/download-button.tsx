@@ -4,9 +4,9 @@ import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable } from "react-native";
 import { isNativePlaybackSupported } from "@/lib/platform";
 import { getErrorMessage } from "@/lib/error-message";
+import { resolvePlayableTrack } from "@/lib/resolve-playable-track";
 import { showToast } from "@/stores/toast-store";
 import { useDownloadStore } from "@/stores/download-store";
-import { isDownloadableTrack } from "@/types/download-record";
 
 interface DownloadButtonProps {
   track: TrackMetadata;
@@ -18,7 +18,7 @@ export function DownloadButton({ track, size = 22 }: DownloadButtonProps) {
   const isDownloaded = useDownloadStore((state) => state.isDownloaded(track));
   const job = useDownloadStore((state) => state.getJob(track));
 
-  if (!isNativePlaybackSupported || !isDownloadableTrack(track)) {
+  if (!isNativePlaybackSupported) {
     return null;
   }
 
@@ -27,9 +27,11 @@ export function DownloadButton({ track, size = 22 }: DownloadButtonProps) {
   const handlePress = () => {
     if (isDownloaded || isDownloading) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    void startDownload(track).catch((error) => {
-      showToast(getErrorMessage(error, "Download failed."));
-    });
+    void resolvePlayableTrack(track)
+      .then((playable) => startDownload(playable))
+      .catch((error) => {
+        showToast(getErrorMessage(error, "Download failed."));
+      });
   };
 
   if (isDownloading) {

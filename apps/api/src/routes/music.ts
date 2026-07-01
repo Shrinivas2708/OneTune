@@ -8,12 +8,15 @@ import {
   ResolveStreamRequestSchema,
   SearchRequestQuerySchema,
   SearchResultPageSchema,
+  SearchResultSchema,
   StreamManifestSchema,
+  MatchTrackRequestSchema,
   TrackMetadataSchema,
 } from "@vibevault/types";
 import { jsonSuccess } from "../lib/response";
 import { requireAuth } from "../middleware/request-id";
 import * as mediaService from "../services/media-service";
+import * as matchService from "../services/match-service";
 import * as searchService from "../services/search-service";
 import { getRequestId } from "../types";
 import type { AppEnv } from "../types";
@@ -54,6 +57,16 @@ musicRoutes.get(
     const { providerId, externalId } = c.req.valid("param");
     const metadata = await mediaService.getTrackMetadata(providerId, externalId);
     return jsonSuccess(c, TrackMetadataSchema.parse(metadata));
+  },
+);
+
+musicRoutes.post(
+  "/tracks/match",
+  zValidator("json", MatchTrackRequestSchema),
+  async (c) => {
+    const body = c.req.valid("json");
+    const match = await matchService.matchPlayableTrack(body, getRequestId(c));
+    return jsonSuccess(c, SearchResultSchema.parse(match));
   },
 );
 

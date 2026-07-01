@@ -1,9 +1,12 @@
 import {
   DownloadManifestSchema,
+  MatchTrackRequestSchema,
   ResolveDownloadRequestSchema,
   ResolveStreamRequestSchema,
   SearchResultPageSchema,
+  SearchResultSchema,
   StreamManifestSchema,
+  type MatchTrackRequest,
   type ResolveDownloadRequest,
   type ResolveStreamRequest,
   type SearchResultPage,
@@ -39,5 +42,15 @@ export const musicApi = {
         body: JSON.stringify(ResolveDownloadRequestSchema.parse(request)),
       },
       DownloadManifestSchema,
+    ),
+
+  matchTrack: (request: MatchTrackRequest) =>
+    apiRequest(
+      "/v1/tracks/match",
+      {
+        method: "POST",
+        body: JSON.stringify(MatchTrackRequestSchema.parse(request)),
+      },
+      SearchResultSchema,
     ),
 };

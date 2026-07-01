@@ -8,6 +8,11 @@ export {
   rankSearchResults,
 } from "./search";
 export {
+  isPlayableProvider,
+  pickBestPlayableMatch,
+  type TrackMatchHint,
+} from "./match";
+export {
   boostYouTubeMusicSignals,
   buildYouTubeQueriesFromHints,
   filterYouTubeSearchResults,

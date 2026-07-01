@@ -6,6 +6,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
 import { TrackListSkeleton } from "@/components/ui/skeleton";
 import { useHistory } from "@/hooks/use-history";
+import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { formatArtists } from "@/lib/track-format";
 import { getErrorMessage } from "@/lib/error-message";
 
@@ -23,6 +24,7 @@ function formatPlayedAt(iso: string) {
 
 export default function HistoryScreen() {
   const { data, error, isLoading, refetch, isRefetching } = useHistory();
+  const bottomInset = useScrollBottomInset();
 
   const errorMessage = error ? getErrorMessage(error, "Could not load history.") : null;
 
@@ -33,7 +35,7 @@ export default function HistoryScreen() {
         <VaultSubheading>Recently played tracks.</VaultSubheading>
       </View>
 
-      <View className="mt-6 min-h-[200px] flex-1 px-4">
+      <View className="mt-6 min-h-0 flex-1 px-4">
         {isLoading ? <TrackListSkeleton /> : null}
 
         {errorMessage ? (
@@ -48,7 +50,9 @@ export default function HistoryScreen() {
 
         {!isLoading && !errorMessage && data && data.length > 0 ? (
           <FlashList
+            contentContainerStyle={{ paddingBottom: bottomInset }}
             data={data}
+            estimatedItemSize={80}
             keyExtractor={(item) => item.id}
             refreshControl={
               <RefreshControl
@@ -64,7 +68,7 @@ export default function HistoryScreen() {
                 track={item.track}
               />
             )}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator
           />
         ) : null}
       </View>

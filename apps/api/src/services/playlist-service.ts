@@ -6,8 +6,10 @@ import { sanitizeImportedPlaylist } from "../providers/mappers";
 import {
   findPlaylistByIdForUser,
   listPlaylistsByUser,
+  updatePlaylistTracksForUser,
   upsertPlaylistBySourceUrl,
 } from "../repositories/playlist-repository";
+import { enrichSpotifyPlaylistArtwork } from "./playlist-artwork-service";
 
 const SPOTIFY_PLAYLIST_URL =
   /^(https?:\/\/)?(open\.)?spotify\.com\/playlist\/[a-zA-Z0-9]+/i;
@@ -73,5 +75,19 @@ export async function getUserPlaylist(userId: string, playlistId: string) {
     throw new AppError(ERROR_CODES.NOT_FOUND, "Playlist not found", 404);
   }
 
-  return playlist;
+  const { playlist: enriched, changed } =
+    await enrichSpotifyPlaylistArtwork(playlist);
+
+  if (!changed) {
+    return playlist;
+  }
+
+  const updated = await updatePlaylistTracksForUser({
+    userId,
+    playlistId,
+    tracks: enriched.tracks,
+    artworkUrl: enriched.artworkUrl,
+  });
+
+  return updated ?? enriched;
 }

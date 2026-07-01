@@ -6,10 +6,12 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
 import { TrackListSkeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { getErrorMessage } from "@/lib/error-message";
 
 export default function FavoritesScreen() {
   const { data, error, isLoading, refetch, isRefetching } = useFavorites();
+  const bottomInset = useScrollBottomInset();
 
   const errorMessage = error ? getErrorMessage(error, "Could not load favorites.") : null;
 
@@ -20,7 +22,7 @@ export default function FavoritesScreen() {
         <VaultSubheading>Tracks you liked — tap ♥ on any song to save it here.</VaultSubheading>
       </View>
 
-      <View className="mt-6 min-h-[200px] flex-1 px-4">
+      <View className="mt-6 min-h-0 flex-1 px-4">
         {isLoading ? <TrackListSkeleton /> : null}
 
         {errorMessage ? (
@@ -35,7 +37,9 @@ export default function FavoritesScreen() {
 
         {!isLoading && !errorMessage && data && data.length > 0 ? (
           <FlashList
+            contentContainerStyle={{ paddingBottom: bottomInset }}
             data={data}
+            estimatedItemSize={80}
             keyExtractor={(item) => item.id}
             refreshControl={
               <RefreshControl
@@ -47,7 +51,7 @@ export default function FavoritesScreen() {
             renderItem={({ item }) => (
               <LibraryTrackRow showFavorite track={item.track} />
             )}
-            showsVerticalScrollIndicator={false}
+            showsVerticalScrollIndicator
           />
         ) : null}
       </View>

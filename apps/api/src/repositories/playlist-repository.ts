@@ -130,3 +130,33 @@ export async function findPlaylistByIdForUser(
 
   return doc ? toSavedPlaylist(doc) : null;
 }
+
+export async function updatePlaylistTracksForUser(input: {
+  userId: string;
+  playlistId: string;
+  tracks: TrackMetadata[];
+  artworkUrl?: string;
+}): Promise<SavedPlaylist | null> {
+  if (!ObjectId.isValid(input.userId) || !ObjectId.isValid(input.playlistId)) {
+    return null;
+  }
+
+  const tracks = sanitizeStoredTracks(input.tracks);
+  const result = await playlists().findOneAndUpdate(
+    {
+      _id: new ObjectId(input.playlistId),
+      userId: new ObjectId(input.userId),
+    },
+    {
+      $set: {
+        tracks,
+        trackCount: tracks.length,
+        ...(input.artworkUrl ? { artworkUrl: input.artworkUrl } : {}),
+        updatedAt: new Date(),
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  return result ? toSavedPlaylist(result) : null;
+}
