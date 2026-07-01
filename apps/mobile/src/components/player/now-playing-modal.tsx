@@ -8,7 +8,6 @@ import { FavoriteButton } from "@/components/library/favorite-button";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 import { formatArtists } from "@/lib/track-format";
 import { getTrackArtworkUri } from "@/lib/track-artwork";
-import { VerticalVolumeControl } from "@/components/player/vertical-volume-control";
 import { usePlayerUiStore } from "@/stores/player-ui-store";
 import { usePlayerStore } from "@/stores/player-store";
 import { PlaybackButtons } from "./playback-buttons";
@@ -90,11 +89,7 @@ export function NowPlayingModal() {
               </Pressable>
             </View>
 
-            <View className="relative flex-1 justify-center px-8">
-              <View className="absolute right-2 top-8 z-10">
-                <VerticalVolumeControl height={128} />
-              </View>
-
+            <View className="flex-1 justify-center px-8">
               <View className="items-center">
                 <TrackArtwork size={280} track={currentTrack} radius={12} />
                 <View className="mt-8 w-full items-center gap-2">

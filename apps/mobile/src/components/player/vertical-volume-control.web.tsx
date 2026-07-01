@@ -32,7 +32,7 @@ export function VerticalVolumeControl({
     volume === 0 ? "volume-mute" : volume < 0.35 ? "volume-low" : "volume-high";
 
   return (
-    <View className="items-center gap-2 rounded-vault-xl border border-vault-border/60 bg-black/30 px-2 py-3">
+    <View className="items-center gap-2 px-1 py-1">
       {showPercent ? (
         <Text className="font-inter-semibold text-[11px] text-vault-muted">
           {Math.round(volume * 100)}
