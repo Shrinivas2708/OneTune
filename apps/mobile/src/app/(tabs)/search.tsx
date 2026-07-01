@@ -30,7 +30,7 @@ export default function SearchScreen() {
   const [query, setQuery] = useState(
     typeof params.q === "string" ? params.q : "",
   );
-  const debouncedQuery = useDebouncedValue(query, 400);
+  const debouncedQuery = useDebouncedValue(query, 500);
 
   useEffect(() => {
     if (typeof params.q === "string" && params.q.length > 0) {
@@ -109,7 +109,7 @@ export default function SearchScreen() {
           />
         ) : null}
 
-        {isDebouncing ? (
+        {isDebouncing && !data ? (
           <SearchMessage icon="hourglass-outline" title="Searching…" />
         ) : null}
 
@@ -123,13 +123,13 @@ export default function SearchScreen() {
 
         {!showHint &&
         !showMinLength &&
-        !isDebouncing &&
         !errorMessage &&
-        trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH ? (
+        trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH &&
+        (!isDebouncing || data) ? (
           <SearchResultsList
             activeTrackKey={activeTrackKey(currentTrack)}
-            isFetching={isFetching}
-            isLoading={isLoading}
+            isFetching={isFetching || isDebouncing}
+            isLoading={isLoading && !data}
             providersFailed={data?.providersFailed ?? []}
             query={trimmedDebounced}
             resolvingTrackKey={resolvingTrackKey}

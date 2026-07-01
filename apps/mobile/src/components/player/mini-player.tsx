@@ -1,12 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
 import { formatArtists } from "@/lib/track-format";
 import { usePlayerUiStore } from "@/stores/player-ui-store";
 import { usePlayerStore } from "@/stores/player-store";
 import { FavoriteButton } from "@/components/library/favorite-button";
-import { VolumeSlider } from "@/components/player/volume-slider";
+import { MiniVolumeButton } from "@/components/player/mini-volume-button";
 import { PlaybackButtons } from "./playback-buttons";
 import { ProgressBar } from "./progress-bar";
 import { TrackArtwork } from "./track-artwork";
@@ -14,10 +13,8 @@ import { TrackArtwork } from "./track-artwork";
 export function MiniPlayer() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const queueLength = usePlayerStore((state) => state.queue.length);
-  const volume = usePlayerStore((state) => state.volume);
   const openNowPlaying = usePlayerUiStore((state) => state.openNowPlaying);
   const openQueue = usePlayerUiStore((state) => state.openQueue);
-  const [showVolume, setShowVolume] = useState(false);
   const {
     isPlaying,
     position,
@@ -39,17 +36,8 @@ export function MiniPlayer() {
     openQueue();
   };
 
-  const volumeIcon =
-    volume === 0 ? "volume-mute" : volume < 0.35 ? "volume-low" : "volume-high";
-
   return (
-    <View className="overflow-hidden rounded-t-vault-xl border-t border-vault-border bg-vault-surface-card/95">
-      {Platform.OS === "web" && showVolume ? (
-        <View className="border-b border-vault-border px-3 py-2">
-          <VolumeSlider showLabel />
-        </View>
-      ) : null}
-
+    <View className="rounded-t-vault-xl border-t border-vault-border bg-vault-surface-card/95">
       <View className="px-3 pt-1.5">
         <ProgressBar compact duration={duration} position={position} onSeek={seekTo} />
       </View>
@@ -71,24 +59,9 @@ export function MiniPlayer() {
           </View>
         </Pressable>
 
-        {Platform.OS === "web" ? (
-          <Pressable
-            accessibilityLabel="Adjust volume"
-            accessibilityRole="button"
-            className="h-8 w-8 items-center justify-center"
-            hitSlop={6}
-            onPress={() => setShowVolume((value) => !value)}
-          >
-            <Ionicons
-              color={showVolume ? "#1ed760" : "#b3b3b3"}
-              name={volumeIcon}
-              size={18}
-            />
-          </Pressable>
-        ) : null}
+        <MiniVolumeButton />
 
         <Pressable
-          accessibilityLabel="Open queue"
           accessibilityRole="button"
           className="h-8 w-8 items-center justify-center"
           onPress={handleOpenQueue}

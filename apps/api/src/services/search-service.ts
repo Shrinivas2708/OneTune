@@ -9,7 +9,6 @@ import {
   assignRelevanceScores,
   boostQueryMatch,
   boostYouTubeMusicSignals,
-  buildYouTubeQueriesFromHints,
   buildPaginationMeta,
   deduplicateSearchResults,
   filterYouTubeSearchResults,
@@ -17,10 +16,41 @@ import {
 } from "@vibevault/utils";
 import { createRequestLogger } from "../lib/logger";
 
+const SEARCH_CACHE_TTL_MS = 2 * 60_000;
+const JIOSAAVN_TIMEOUT_MS = 5_000;
+const SPOTIFY_TIMEOUT_MS = 4_000;
+const YOUTUBE_TIMEOUT_MS = 6_000;
+
+const searchCache = new Map<
+  string,
+  { expiresAt: number; page: SearchResultPage }
+>();
+
+function searchCacheKey(query: SearchQuery): string {
+  return `${query.query.trim().toLowerCase()}:${query.page}:${query.limit}`;
+}
+
+function readSearchCache(query: SearchQuery): SearchResultPage | null {
+  const entry = searchCache.get(searchCacheKey(query));
+  if (!entry) return null;
+  if (entry.expiresAt <= Date.now()) {
+    searchCache.delete(searchCacheKey(query));
+    return null;
+  }
+  return entry.page;
+}
+
+function writeSearchCache(query: SearchQuery, page: SearchResultPage) {
+  searchCache.set(searchCacheKey(query), {
+    expiresAt: Date.now() + SEARCH_CACHE_TTL_MS,
+    page,
+  });
+}
+
 async function withProviderTimeout<T>(
   providerId: ProviderId,
   operation: Promise<T>,
-  timeoutMs = SEARCH_PROVIDER_TIMEOUT_MS,
+  timeoutMs: number,
 ): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
@@ -43,109 +73,80 @@ async function withProviderTimeout<T>(
   }
 }
 
-function dedupeByExternalId(results: SearchResult[]): SearchResult[] {
-  const seen = new Set<string>();
-  const unique: SearchResult[] = [];
-
-  for (const result of results) {
-    const key = `${result.providerId}:${result.ref.externalId}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(result);
-  }
-
-  return unique;
+function providerTimeoutMs(providerId: ProviderId): number {
+  if (providerId === "jiosaavn") return JIOSAAVN_TIMEOUT_MS;
+  if (providerId === "spotify") return SPOTIFY_TIMEOUT_MS;
+  if (providerId === "youtube") return YOUTUBE_TIMEOUT_MS;
+  return Math.min(SEARCH_PROVIDER_TIMEOUT_MS, 5_000);
 }
 
-async function searchYouTubeWithCatalogHints(
+async function searchProvider(
+  providerId: ProviderId,
   query: SearchQuery,
-  catalogHints: SearchResult[],
+  limit: number,
 ): Promise<SearchResult[]> {
-  const youtube = providerRegistry.get("youtube");
-  if (!youtube) return [];
+  const provider = providerRegistry.get(providerId);
+  if (!provider) return [];
 
-  const rawPage = await withProviderTimeout(
-    "youtube",
-    youtube.search({ ...query, types: ["track"] }),
+  const page = await withProviderTimeout(
+    providerId,
+    provider.search({
+      ...query,
+      limit,
+      types: ["track"],
+    }),
+    providerTimeoutMs(providerId),
   );
-  const rawFiltered = filterYouTubeSearchResults(rawPage.results);
 
-  const refinedQueries = buildYouTubeQueriesFromHints(
-    catalogHints,
-    query.query,
-  );
-  const refined: SearchResult[] = [];
+  let results = assignRelevanceScores(page.results);
 
-  for (const refinedQuery of refinedQueries.slice(0, 3)) {
-    try {
-      const page = await withProviderTimeout(
-        "youtube",
-        youtube.search({
-          ...query,
-          query: refinedQuery,
-          limit: Math.min(5, query.limit),
-          types: ["track"],
-        }),
-        Math.min(SEARCH_PROVIDER_TIMEOUT_MS, 6_000),
-      );
-      refined.push(...filterYouTubeSearchResults(page.results));
-    } catch {
-      // Refined pass is best-effort; raw + catalog providers still contribute.
-    }
+  if (providerId === "youtube") {
+    results = boostYouTubeMusicSignals(
+      assignRelevanceScores(filterYouTubeSearchResults(results)),
+    );
   }
 
-  const merged = dedupeByExternalId([
-    ...assignRelevanceScores(refined).map((result) => ({
-      ...result,
-      relevanceScore: Math.min(1, (result.relevanceScore ?? 0.5) + 0.15),
-    })),
-    ...assignRelevanceScores(rawFiltered),
-  ]);
-
-  return boostYouTubeMusicSignals(merged);
+  return results;
 }
 
 export async function unifiedSearch(
   query: SearchQuery,
   requestId?: string,
 ): Promise<SearchResultPage> {
+  const cached = readSearchCache(query);
+  if (cached) {
+    return cached;
+  }
+
   const log = createRequestLogger(requestId ?? "search");
   const providers = providerRegistry.listSearchable();
-  const catalogProviders = providers.filter((p) => p.id !== "youtube");
   const perProviderLimit = Math.max(
     5,
     Math.ceil(query.limit / Math.max(providers.length, 1)),
   );
 
   const settled = await Promise.allSettled(
-    catalogProviders.map(async (provider) => {
-      const page = await withProviderTimeout(
+    providers.map(async (provider) => {
+      const results = await searchProvider(
         provider.id,
-        provider.search({
-          ...query,
-          types: ["track"],
-        }),
+        query,
+        perProviderLimit,
       );
-      return { providerId: provider.id, page };
+      return { providerId: provider.id, results };
     }),
   );
 
-  const providersQueried: ProviderId[] = ["youtube"];
+  const providersQueried: ProviderId[] = [];
   const providersFailed: ProviderId[] = [];
-  const catalogResults: SearchResult[] = [];
+  const mergedResults: SearchResult[] = [];
 
   for (let index = 0; index < settled.length; index += 1) {
-    const provider = catalogProviders[index]!;
+    const provider = providers[index]!;
     const result = settled[index]!;
-
     providersQueried.push(provider.id);
 
     if (result.status === "fulfilled") {
-      const providerResults = result.value.page.results.slice(
-        0,
-        perProviderLimit,
-      );
-      catalogResults.push(...assignRelevanceScores(providerResults));
+      mergedResults.push(...result.value.results);
       continue;
     }
 
@@ -156,15 +157,6 @@ export async function unifiedSearch(
     );
   }
 
-  let youtubeResults: SearchResult[] = [];
-  try {
-    youtubeResults = await searchYouTubeWithCatalogHints(query, catalogResults);
-  } catch (error) {
-    providersFailed.push("youtube");
-    log.warn({ err: error }, "youtube search failed");
-  }
-
-  const mergedResults = [...catalogResults, ...youtubeResults];
   const scored = boostQueryMatch(mergedResults, query.query);
   const deduped = deduplicateSearchResults(scored);
   const ranked = rankSearchResults(deduped);
@@ -180,7 +172,7 @@ export async function unifiedSearch(
     );
   }
 
-  return {
+  const page: SearchResultPage = {
     results: pageResults,
     meta: buildPaginationMeta(
       query.page,
@@ -191,4 +183,7 @@ export async function unifiedSearch(
     providersQueried,
     providersFailed,
   };
+
+  writeSearchCache(query, page);
+  return page;
 }
