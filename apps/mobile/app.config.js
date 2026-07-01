@@ -19,6 +19,7 @@ module.exports = () => {
       },
     },
   ]);
+  plugins.push("./plugins/with-worklets-monorepo.js");
 
   return {
     ...appJson,
