@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { resolvePlaybackUrl } from "@/lib/playback-url";
 import { playerEngine } from "@/services/player-engine";
+import { recordPlaybackHistory } from "@/services/playback-history";
 import { ensureQueuePreloader } from "@/services/queue-preloader";
 import { webAudioPlayer } from "@/services/web-audio-player";
 import { usePlayerStore } from "@/stores/player-store";
@@ -10,6 +11,12 @@ export function PlayerSync() {
   const streamManifest = usePlayerStore((state) => state.streamManifest);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
   const volume = usePlayerStore((state) => state.volume);
+  const currentTrack = usePlayerStore((state) => state.currentTrack);
+
+  useEffect(() => {
+    if (!currentTrack) return;
+    recordPlaybackHistory(currentTrack);
+  }, [currentTrack]);
 
   useEffect(() => {
     ensureQueuePreloader();

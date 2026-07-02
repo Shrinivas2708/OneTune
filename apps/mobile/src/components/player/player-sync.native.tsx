@@ -6,6 +6,7 @@ import TrackPlayer, {
   useProgress,
 } from "react-native-track-player";
 import { playerEngine } from "@/services/player-engine";
+import { recordPlaybackHistory } from "@/services/playback-history";
 import { ensureQueuePreloader } from "@/services/queue-preloader";
 import { trackKey, usePlayerStore } from "@/stores/player-store";
 
@@ -16,11 +17,27 @@ export function PlayerSync() {
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const queueLength = usePlayerStore((state) => state.queue.length);
   const lastAutoAdvanceKeyRef = useRef<string | null>(null);
+  const lastHistoryKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     ensureQueuePreloader();
     void playerEngine.ensureSetup();
   }, []);
+
+  useEffect(() => {
+    if (!currentTrack) {
+      lastHistoryKeyRef.current = null;
+      return;
+    }
+
+    const key = trackKey(currentTrack);
+    if (lastHistoryKeyRef.current === key) {
+      return;
+    }
+
+    lastHistoryKeyRef.current = key;
+    recordPlaybackHistory(currentTrack);
+  }, [currentTrack]);
 
   useEffect(() => {
     const subscription = TrackPlayer.addEventListener(

@@ -63,7 +63,11 @@ libraryRoutes.get(
     const userId = c.get("userId")!;
     const { limit } = c.req.valid("query");
     const entries = await libraryService.getHistory(userId, limit);
-    return jsonSuccess(c, z.array(HistoryEntrySchema).parse(entries));
+    const parsed = entries.flatMap((entry) => {
+      const result = HistoryEntrySchema.safeParse(entry);
+      return result.success ? [result.data] : [];
+    });
+    return jsonSuccess(c, parsed);
   },
 );
 

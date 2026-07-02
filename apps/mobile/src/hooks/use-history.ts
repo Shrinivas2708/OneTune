@@ -3,7 +3,9 @@ import { libraryApi } from "@/lib/library-api";
 import { getErrorMessage } from "@/lib/error-message";
 import { showToast } from "@/stores/toast-store";
 
-const HISTORY_KEY = ["library", "history"] as const;
+import { HISTORY_QUERY_KEY } from "@/services/playback-history";
+
+const HISTORY_KEY = HISTORY_QUERY_KEY;
 
 export function useHistory(limit = 50) {
   return useQuery({

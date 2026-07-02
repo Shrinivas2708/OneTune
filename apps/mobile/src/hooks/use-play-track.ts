@@ -2,7 +2,6 @@ import { useMutation } from "@tanstack/react-query";
 import type { SearchResult, TrackMetadata } from "@vibevault/types";
 import * as Haptics from "expo-haptics";
 import { ApiClientError } from "@/lib/api-client";
-import { libraryApi } from "@/lib/library-api";
 import { resolvePlayableResult } from "@/lib/resolve-playable-track";
 import { downloadManager } from "@/services/download-manager";
 import { playerEngine } from "@/services/player-engine";
@@ -39,10 +38,9 @@ export function usePlayTrack() {
       setIsResolving(true);
       setResolveError(null);
     },
-    onSuccess: (track) => {
+    onSuccess: () => {
       setIsResolving(false);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      void libraryApi.recordHistory(track).catch(() => undefined);
     },
     onError: (error) => {
       setIsResolving(false);
