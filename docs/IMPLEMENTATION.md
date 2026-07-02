@@ -22,8 +22,10 @@
 | M12 Library features | ✅ | Favorites + playback history |
 | M13 Polish | ✅ | Skeletons, toasts, pull-to-refresh, artwork placeholders |
 | M14 VPS deploy | ✅ | Production Docker, nginx, TLS, backups, local APK |
+| M15 Render + Atlas | ✅ | `render.yaml`, cloud deploy guide |
+| M16 Polish + website | ✅ | Library nav, lock-screen fix, history, icons, React landing |
 
-**MVP (M1–M14) is complete.** Post-MVP playback/search polish documented in MEMORY.md. Further backlog in ROADMAP.md.
+**MVP (M1–M14) and polish (M15–M16) are complete.** Future work is backlog-only — see ROADMAP.md.
 
 ---
 
@@ -44,6 +46,10 @@ OneTune/
 │           ├── repositories/   # MongoDB data access
 │           ├── middleware/     # Auth, errors, request ID
 │           └── lib/            # db, jwt, logger, http-client
+├── website/                    # React + Vite marketing site
+│   ├── src/                    # App, sections, components
+│   ├── public/                 # assets/, downloads/ (APK)
+│   └── dist/                   # Production build output
 ├── services/
 │   ├── extractor/              # Python — yt-dlp
 │   ├── spotify/                # Python — SpotifyScraper
@@ -182,7 +188,7 @@ Zod schemas are the **single source of truth**. API validates requests/responses
 
 `apps/mobile` has an authenticated **tab shell** with login/register, design tokens, and API wiring.
 
-**Implemented (M6–M14 + post-MVP polish):**
+**Implemented (M6–M16):**
 
 ```
 src/
@@ -222,8 +228,6 @@ src/
 
 **Web vs native:** Native uses `react-native-track-player`. Web uses `web-audio-player.ts` with optional volume UI (`*.web.tsx` platform files).
 
-**MVP (M1–M14) is complete.** Post-MVP backlog in ROADMAP.md.
-
 Stack:
 
 | Concern | Library |
@@ -248,6 +252,34 @@ npx expo start --dev-client
 ```
 
 Web (`w` in Expo) supports auth/search UI; web audio playback works via `web-audio-player` but native features (downloads, background audio, lock screen) require a dev build.
+
+---
+
+## Marketing website (`website/`)
+
+React 19 + Vite + TypeScript. **Not** part of the Expo app — builds to static files in `dist/`.
+
+```
+website/
+├── src/
+│   ├── App.tsx
+│   ├── config.ts              # apkUrl (or VITE_APK_URL)
+│   ├── components/            # Header, Footer, ApkLink, Reveal
+│   ├── sections/                # Hero, Features, Vibes, Android, CTA
+│   └── data/content.tsx       # Copy + feature/vibe lists
+├── public/
+│   ├── assets/                # icon.png, logo.png
+│   └── downloads/             # OneTune-1.0.0.apk (via website:sync-apk)
+└── dist/                      # Production output (gitignored)
+```
+
+```powershell
+bun run website:dev
+bun run website:sync-apk
+bun run website:build
+```
+
+Deploy `website/dist/` to any static host. See [DEPLOYMENT.md §4](./DEPLOYMENT.md#4-marketing-website).
 
 ---
 
@@ -303,3 +335,4 @@ Public music routes (`/v1/search`, etc.) require JWT. Use the mobile login/regis
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | System design |
 | [DESIGN.md](./DESIGN.md) | UI/UX |
 | [ROADMAP.md](./ROADMAP.md) | Milestones |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | VPS, APK, website deploy |

@@ -63,6 +63,9 @@ OneTune/
 ├── apps/
 │   ├── mobile/                 # Expo app (iOS + Android)
 │   └── api/                    # Node/TypeScript HTTP API
+├── website/                    # React + Vite marketing site (static deploy)
+│   ├── src/                    # Sections, components, config
+│   └── public/                 # icon, logo, downloads/*.apk
 ├── services/
 │   ├── extractor/              # Python + yt-dlp extraction service
 │   └── jiosaavn/               # Self-hosted jiosaavn-api container
@@ -76,7 +79,7 @@ OneTune/
 │   ├── MEMORY.md               # Session handoff
 │   ├── DEVELOPMENT.md          # Local dev guide
 │   ├── IMPLEMENTATION.md       # Code structure guide
-│   ├── DEPLOYMENT.md           # Docker / VPS / local APK
+│   ├── DEPLOYMENT.md           # Docker / VPS / local APK / website
 │   ├── API.md                  # HTTP API reference
 │   ├── ARCHITECTURE.md         # This file
 │   ├── DESIGN.md               # UI/UX source of truth

@@ -209,6 +209,9 @@ After dev build is installed and Metro is running:
 | `docker compose logs -f api` | Follow API logs |
 | `cd apps/mobile && npx expo start --dev-client` | Metro for dev client |
 | `cd apps/mobile && npx expo run:android` | Build + install dev client |
+| `bun run website:dev` | Marketing site (Vite dev server) |
+| `bun run website:sync-apk` | Copy APK → `website/public/downloads/` |
+| `bun run website:build` | Production site → `website/dist/` |
 
 ---
 
@@ -235,6 +238,38 @@ Dev-only provider routes (`NODE_ENV=development`):
 | `.env` (repo root) | API secrets, MongoDB, JWT — Docker |
 | `.env.example` | Template (committed) |
 | `apps/mobile/.env` | `EXPO_PUBLIC_API_URL` for Metro / Gradle |
+| `website/.env` | Optional `VITE_APK_URL` for landing page builds |
+
+---
+
+## 11. Marketing website (React)
+
+The public landing page is in `website/` — **React 19 + Vite + TypeScript**, separate from the Expo app.
+
+### Dev
+
+```powershell
+cd onetune
+bun run website:dev
+```
+
+### Wire up APK downloads
+
+```powershell
+cd apps\mobile && bun run build:android:standalone
+cd ..\.. && bun run website:sync-apk
+```
+
+Configure in `website/src/config.ts` or `website/.env`:
+
+```env
+VITE_APK_URL=/downloads/OneTune-1.0.0.apk
+VITE_APK_FILE_NAME=OneTune-1.0.0.apk
+```
+
+Use a full HTTPS URL in production. Deploy output: `bun run website:build` → `website/dist/`.
+
+See [DEPLOYMENT.md §4](./DEPLOYMENT.md#4-marketing-website) for hosting.
 
 ---
 
@@ -263,3 +298,4 @@ Backend and production APK issues: [DEPLOYMENT.md](./DEPLOYMENT.md).
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Production APK build, ADB install, backend deploy |
 | [API.md](./API.md) | Endpoints |
 | [IMPLEMENTATION.md](./IMPLEMENTATION.md) | Code structure |
+| [website/](../website/) | React marketing site source |

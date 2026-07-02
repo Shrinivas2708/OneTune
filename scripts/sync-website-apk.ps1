@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
-$destDir = Join-Path $root "website\downloads"
+$destDir = Join-Path $root "website\public\downloads"
 $destApk = Join-Path $destDir "OneTune-1.0.0.apk"
 
 $candidates = @(

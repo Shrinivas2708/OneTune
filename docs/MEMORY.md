@@ -2,7 +2,7 @@
 
 > **Read this first in every new session.** Living handoff document — update after every milestone.
 
-**Last updated:** 2026-06-29 · **Current milestone:** M15 Render deploy docs + production polish
+**Last updated:** 2026-07-02 · **Current milestone:** M16 complete — production polish + marketing site
 
 ---
 
@@ -28,6 +28,7 @@ Self-hosted, multi-provider music + music-video app for **iOS & Android**. Frien
 ```
 apps/mobile/          Expo app
 apps/api/             Hono API on Bun
+website/              React + Vite marketing site (Android download landing)
 services/extractor/   Python FastAPI + yt-dlp
 services/jiosaavn/    Docker build from upstream repo
 packages/
@@ -40,6 +41,8 @@ docs/                 ARCHITECTURE, DESIGN, DECISIONS, ROADMAP, MEMORY, DEVELOPM
 docker/               Dockerfiles
 render.yaml           Render Blueprint (API + providers)
 scripts/dev.ps1       Windows dev bootstrap
+scripts/sync-website-apk.ps1   Copy release APK → website/public/downloads/
+patches/              react-native-track-player new-arch fix
 ```
 
 ---
@@ -256,6 +259,34 @@ packages/utils/src/image.ts
 
 **Production deploy:** See `docs/DEPLOYMENT-RENDER.md` (Render + Atlas) or `docs/DEPLOYMENT.md` (VPS).
 
+### M16 — Production Polish & Marketing Site ✅
+- **Library navigation:** Sub-screens always back to library index; Library tab pops stack when deep; explicit stack in `_layout.tsx`
+- **Lock-screen / notification controls:** `react-native-track-player` patch — `MusicService.emit()` uses `reactContext` (new architecture / bridgeless); requires native rebuild after patch
+- **Playback history:** `recordPlaybackHistory()` from `player-sync` when `currentTrack` changes (covers playlist play, skip, lock-screen skip — not only `use-play-track`)
+- **App icon:** `scripts/generate-adaptive-icon.cjs` — logo scaled to 56% on 1024px canvas → `adaptive-icon.png`
+- **Marketing website:** `website/` — React 19 + Vite + TypeScript; Lyra-style landing page; APK download via `src/config.ts` / `VITE_APK_URL`
+- **Docs:** Local Android workflow (CLI + ADB); EAS/cloud build removed from primary path
+
+**Key paths:**
+```
+apps/mobile/src/components/ui/sub-screen-header.tsx
+apps/mobile/src/services/playback-history.ts
+apps/mobile/src/components/player/player-sync.native.tsx
+apps/mobile/scripts/generate-adaptive-icon.cjs
+patches/react-native-track-player+4.1.2.patch
+website/src/                    # React landing page
+website/public/downloads/       # APK for site (sync script)
+scripts/sync-website-apk.ps1
+```
+
+**Website commands:**
+```powershell
+bun run website:dev          # Vite dev server
+bun run website:build        # → website/dist/
+bun run website:sync-apk     # Copy OneTune-1.0.0.apk into public/downloads/
+bun run website:serve        # Build + static serve dist/
+```
+
 ---
 
 ## Package Dependency Rules
@@ -320,7 +351,12 @@ cd apps/mobile && npx expo start --dev-client
 
 # Standalone release APK
 cd apps/mobile && bun run build:android:standalone
-adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+adb install -r apps/mobile/android/app/build/outputs/apk/release/OneTune-1.0.0.apk
+
+# Marketing website
+bun run website:dev
+bun run website:sync-apk
+bun run website:build
 ```
 
 ---
@@ -332,7 +368,8 @@ adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 | Spotify → playable stream matching | ✅ `POST /v1/tracks/match` + mobile `resolve-playable-track` |
 | Nginx + TLS | ✅ M14 |
 | Proxied streaming | Feature flag ready, not implemented |
-| react-native-track-player | ✅ M8 |
+| react-native-track-player | ✅ M8 (+ M16 new-arch patch) |
+| Marketing landing page | ✅ M16 — `website/` React + Vite |
 
 ---
 
@@ -361,6 +398,12 @@ adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 
 ---
 
+## Project status
+
+**MVP (M1–M14) and post-MVP polish (M15–M16) are complete.** The Android app, API deploy paths, and marketing website are documented and working. See `ROADMAP.md` for future backlog only.
+
+---
+
 ## Suggested Next Commit
 
-MVP milestones M1–M14 are complete. Post-MVP polish (queue, match, search, volume) is documented above. See ROADMAP.md for remaining backlog.
+All planned MVP and polish milestones are done. Use `ROADMAP.md` post-MVP backlog for new work.

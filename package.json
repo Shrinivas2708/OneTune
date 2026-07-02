@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "website"
   ],
   "scripts": {
     "dev": "turbo run dev",
@@ -14,7 +15,10 @@
     "docker:up": "docker compose up --build -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "website:serve": "npx serve website",
+    "website:dev": "bun run --filter @onetune/website dev",
+    "website:build": "bun run --filter @onetune/website build",
+    "website:preview": "bun run --filter @onetune/website preview",
+    "website:serve": "bun run website:build && npx serve website/dist",
     "website:sync-apk": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/sync-website-apk.ps1",
     "postinstall": "patch-package && node scripts/patch-track-player-turbo.mjs"
   },

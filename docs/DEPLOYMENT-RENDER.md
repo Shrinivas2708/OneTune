@@ -229,7 +229,7 @@ First build: **15–30 minutes**.
 
 ```powershell
 adb devices
-adb install -r android\app\build\outputs\apk\release\app-release.apk
+adb install -r android\app\build\outputs\apk\release\OneTune-1.0.0.apk
 ```
 
 Enable **Install unknown apps** on the phone if prompted.
@@ -251,6 +251,8 @@ npx expo prebuild --platform android --clean
 4. Install via ADB or drag onto emulator.
 
 Full details: [DEPLOYMENT.md — Mobile APK](./DEPLOYMENT.md#3-mobile-apk-local-build).
+
+Optional: host a download landing page — `bun run website:sync-apk && bun run website:build` then deploy `website/dist/` ([DEPLOYMENT.md §4](./DEPLOYMENT.md#4-marketing-website)).
 
 ---
 
@@ -327,6 +329,7 @@ Or **Manual Deploy** in Render dashboard.
 | Doc | Purpose |
 |-----|---------|
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | VPS / Docker Compose alternative |
-| [DEVELOPMENT.md](./DEVELOPMENT.md) | Local dev + dev client |
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | Local dev + dev client + website |
 | [API.md](./API.md) | Endpoints |
 | [MEMORY.md](./MEMORY.md) | Project handoff |
+| [website/](../website/) | React landing page |

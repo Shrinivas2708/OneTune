@@ -64,7 +64,7 @@ The mobile app only talks to **your API**. The API orchestrates provider microse
 | API | Bun, Hono, Zod, MongoDB |
 | Providers | Python (FastAPI + yt-dlp), self-hosted JioSaavn API, SpotifyScraper |
 | Monorepo | Turborepo, Bun workspaces |
-| Deploy | Docker Compose · Render Blueprint · **local Android APK** |
+| Deploy | Docker Compose · Render Blueprint · **local Android APK** · static React site |
 
 ---
 
@@ -114,7 +114,15 @@ Press `w` in Metro for quick UI work in the browser. Playback and downloads requ
 1. Deploy backend — [DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)
 2. Set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your HTTPS API URL
 3. `cd apps/mobile && bun run build:android:standalone`
-4. `adb install -r android/app/build/outputs/apk/release/app-release.apk`
+4. `adb install -r android/app/build/outputs/apk/release/OneTune-1.0.0.apk`
+
+**Optional — marketing site with APK download:**
+
+```powershell
+bun run website:sync-apk
+bun run website:build
+# deploy website/dist/ to your static host
+```
 
 ---
 
@@ -123,8 +131,9 @@ Press `w` in Metro for quick UI work in the browser. Playback and downloads requ
 ```
 OneTune/
 ├── apps/
-│   ├── mobile/          # Expo app (iOS + Android)
+│   ├── mobile/          # Expo app (Android + iOS)
 │   └── api/             # Hono API on Bun
+├── website/             # React + Vite marketing site
 ├── services/
 │   ├── extractor/       # Python + yt-dlp
 │   └── spotify/         # SpotifyScraper service
@@ -145,15 +154,15 @@ OneTune/
 
 | Document | What's inside |
 |----------|----------------|
-| [Development](docs/DEVELOPMENT.md) | Daily dev, Metro, `expo run:android`, ADB |
+| [Development](docs/DEVELOPMENT.md) | Daily dev, Metro, `expo run:android`, ADB, website |
 | [Deploy on Render](docs/DEPLOYMENT-RENDER.md) | Atlas + Render API + local APK |
-| [Deploy on VPS](docs/DEPLOYMENT.md) | Docker, Nginx, TLS, standalone APK build |
+| [Deploy on VPS](docs/DEPLOYMENT.md) | Docker, Nginx, TLS, APK, website hosting |
 | [API reference](docs/API.md) | Auth, search, stream, library, playlists |
 | [Architecture](docs/ARCHITECTURE.md) | System design, provider pattern, data flow |
 | [Implementation](docs/IMPLEMENTATION.md) | Where to add features in the codebase |
 | [Design](docs/DESIGN.md) | UI tokens, typography, component patterns |
-| [Landing page](website/index.html) | Static marketing site (Android) |
-| [Roadmap](docs/ROADMAP.md) | Milestones and post-MVP backlog |
+| [Marketing site](website/) | React landing page — `bun run website:dev` |
+| [Roadmap](docs/ROADMAP.md) | Milestones (M1–M16 complete) |
 
 ---
 
@@ -174,7 +183,9 @@ All `/v1/*` routes except auth require a Bearer token. See **[API.md](docs/API.m
 
 ## Status
 
-**MVP complete** — search, playback, queue, downloads, library, universal import, and production deploy paths (Render + VPS) are documented and working.
+**MVP complete (M1–M14).** Post-MVP polish and marketing site are done (M15–M16): Render deploy guide, library navigation, lock-screen controls, playback history, adaptive icon, and React landing page with APK download.
+
+Search, playback, queue, downloads, library, universal import, API deploy (Render + VPS), local Android builds, and the marketing site are documented and working. See [ROADMAP.md](docs/ROADMAP.md) for future backlog only.
 
 ---
 

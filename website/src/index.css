@@ -658,6 +658,16 @@ h2 {
   right: -4%;
 }
 
+.feature-grid > .reveal,
+.vibe-grid > .reveal {
+  height: 100%;
+}
+
+.feature-grid > .reveal .feature-card,
+.vibe-grid > .reveal .vibe-card {
+  height: 100%;
+}
+
 /* Features — Lyra grid */
 .section-features {
   padding-top: 4rem;

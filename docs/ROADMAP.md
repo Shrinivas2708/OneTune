@@ -394,6 +394,26 @@ docs(infra): add Render + MongoDB Atlas deployment guide
 
 ---
 
+## M16 — Production Polish & Marketing Site ✅
+
+**Goal:** Ship-quality Android UX fixes and a public download landing page.
+
+### Tasks
+- [x] Library sub-screen back navigation + Library tab stack reset
+- [x] Lock-screen / notification controls (`react-native-track-player` new-arch patch)
+- [x] Playback history from all play paths (`player-sync` + `playback-history.ts`)
+- [x] Adaptive app icon generation script
+- [x] Marketing site: React + Vite in `website/` (replaces static HTML)
+- [x] APK sync script → `website/public/downloads/`
+- [x] Docs: local Android + website dev/deploy; EAS de-emphasized
+
+### Suggested commit
+```
+feat(website): add React landing page and document production polish
+```
+
+---
+
 ## Post-MVP Backlog
 
 | Feature | Status | Notes |
@@ -406,6 +426,12 @@ docs(infra): add Render + MongoDB Atlas deployment guide
 | Search performance | ✅ Done | Per-provider timeouts, 2min cache |
 | Web volume control | ✅ Done | Mini popover + Now Playing inline slider |
 | Artwork quality | ✅ Done | `upgradeArtworkUrl` in `@OneTune/utils` |
+| Library navigation polish | ✅ Done | Sub-screen back, tab stack pop |
+| Lock-screen media controls | ✅ Done | RNTP new-arch patch + native rebuild |
+| Playback history coverage | ✅ Done | History on track change in `player-sync` |
+| Adaptive launcher icon | ✅ Done | `generate-adaptive-icon.cjs` |
+| Marketing website (React) | ✅ Done | `website/` — Vite, APK download, static deploy |
+| Docs — local Android workflow | ✅ Done | DEVELOPMENT, DEPLOYMENT, no EAS primary path |
 | Proxied streaming fallback | Planned | Enable per-provider via feature flag |
 | Apple Music adapter | Planned | New provider adapter only |
 | Collaborative playlists | Planned | Shared playlist model |

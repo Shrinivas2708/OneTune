@@ -12,6 +12,7 @@
 | **Docker Compose (local)** | Development | [Local backend](#1-local-backend-development) |
 | **VPS + Nginx + TLS** | Self-hosted production API | [VPS production](#2-vps-production-backend) |
 | **Standalone Android APK** | Install app on phones | [Mobile APK (local build)](#3-mobile-apk-local-build) |
+| **Marketing website** | Public landing + APK download | [Website deploy](#4-marketing-website) |
 
 ---
 
@@ -292,7 +293,54 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full dev workflow.
 
 ---
 
-## 4. Docker services reference
+## 4. Marketing website
+
+The landing page is a **React + Vite** static site in `website/`. Build output goes to `website/dist/`.
+
+### 4.1 Local preview
+
+```powershell
+cd onetune
+bun run website:dev
+```
+
+### 4.2 Ship with the latest APK
+
+```powershell
+cd onetune\apps\mobile
+bun run build:android:standalone
+
+cd onetune
+bun run website:sync-apk
+bun run website:build
+```
+
+`website:sync-apk` copies `OneTune-1.0.0.apk` into `website/public/downloads/` (included in the Vite build).
+
+### 4.3 Configure download URL
+
+Edit `website/src/config.ts` or set env at build time (`website/.env`):
+
+```env
+VITE_APK_URL=https://yourdomain.com/downloads/OneTune-1.0.0.apk
+VITE_APK_FILE_NAME=OneTune-1.0.0.apk
+```
+
+### 4.4 Deploy static files
+
+Upload **`website/dist/`** to any static host (Nginx, Cloudflare Pages, Netlify, Vercel, GitHub Pages, etc.).
+
+| Host | Notes |
+|------|--------|
+| Same domain as API | e.g. `https://onetune.example.com` for site, `https://api.onetune.example.com` for API |
+| APK on CDN | Set `VITE_APK_URL` to the CDN URL before `website:build` |
+| Nginx | `root /var/www/onetune;` pointing at `dist/` contents |
+
+No server runtime required — pure HTML/CSS/JS after `vite build`.
+
+---
+
+## 5. Docker services reference
 
 ### Development (`docker-compose.yml`)
 
@@ -310,7 +358,7 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full dev workflow.
 
 ---
 
-## 5. Security checklist (production)
+## 6. Security checklist (production)
 
 - [ ] Strong `JWT_SECRET`
 - [ ] `NODE_ENV=production`
@@ -321,7 +369,7 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full dev workflow.
 
 ---
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
@@ -340,6 +388,7 @@ See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full dev workflow.
 
 | Doc | Purpose |
 |-----|---------|
-| [DEVELOPMENT.md](./DEVELOPMENT.md) | Daily dev, Metro, `expo run:android` |
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | Daily dev, Metro, `expo run:android`, website dev |
 | [DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md) | Render + Atlas |
 | [API.md](./API.md) | Endpoints |
+| [website/](../website/) | React landing page source |
