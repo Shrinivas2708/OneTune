@@ -1,7 +1,7 @@
 import { FlashList } from "@shopify/flash-list";
 import type { TrackMetadata } from "@vibevault/types";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { ProviderBadge } from "@/components/search/provider-badge";
@@ -13,6 +13,7 @@ import { ArtworkImage } from "@/components/ui/artwork-image";
 import { getTrackArtworkUri } from "@/lib/track-artwork";
 import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
+import { SubScreenHeader } from "@/components/ui/sub-screen-header";
 import { PlaylistDetailSkeleton } from "@/components/ui/skeleton";
 import { useDownloadStatus } from "@/hooks/use-download-status";
 import { usePlayTrack } from "@/hooks/use-play-track";
@@ -118,7 +119,6 @@ function PlaylistListHeader({
 }
 
 export default function PlaylistDetailScreen() {
-  const router = useRouter();
   const { playlistId } = useLocalSearchParams<{ playlistId: string }>();
   const { data, error, isLoading, refetch, isRefetching } = usePlaylist(playlistId ?? "");
   const playTrack = usePlayTrack();
@@ -171,14 +171,7 @@ export default function PlaylistDetailScreen() {
 
   return (
     <Screen className="pt-2" padded={false}>
-      <View className="flex-row items-center gap-3 px-4 py-2">
-        <Pressable accessibilityLabel="Go back" accessibilityRole="button" onPress={() => router.back()}>
-          <Ionicons color="#ffffff" name="chevron-back" size={28} />
-        </Pressable>
-        <Text className="flex-1 font-jakarta text-lg text-vault-text" numberOfLines={1}>
-          {data.name}
-        </Text>
-      </View>
+      <SubScreenHeader backHref="/(tabs)/library" title={data.name} />
 
       <View className="min-h-0 flex-1">
         <FlashList

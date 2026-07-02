@@ -1,6 +1,6 @@
 # OneTune — Deploy on Render + MongoDB Atlas
 
-> **Step-by-step production guide:** MongoDB Atlas → Render backend services → EAS mobile build → install on device.
+> **Step-by-step production guide:** MongoDB Atlas → Render backend services → **local Android APK** → install with ADB.
 
 Use this when you want **managed cloud** instead of a VPS. Each backend service runs as its own Render web service; the database lives on **MongoDB Atlas**.
 
@@ -17,10 +17,10 @@ Use this when you want **managed cloud** instead of a VPS. Each backend service 
 | Spotify scraper | Render | Yes |
 | JioSaavn API | Render | Yes |
 | **API (main)** | Render | **Yes — mobile points here** |
-| Mobile app | EAS Build → APK/AAB/IPA | Talks to API over HTTPS |
+| Mobile app | Local APK build → ADB install | Talks to API over HTTPS |
 
 ```
-  Phone (EAS build)
+  Phone (release APK)
         │
         ▼
   https://OneTune-api.onrender.com
@@ -40,8 +40,7 @@ Use this when you want **managed cloud** instead of a VPS. Each backend service 
 | [GitHub](https://github.com) account | Render deploys from Git |
 | [Render](https://render.com) account | Blueprint or manual services |
 | [MongoDB Atlas](https://www.mongodb.com/atlas) account | Free M0 cluster works for testing |
-| [Expo](https://expo.dev) account | EAS builds |
-| EAS CLI | `npm install -g eas-cli` |
+| Android Studio or ADB | Local APK build + install |
 | Repo pushed to GitHub | `git push origin main` |
 
 **Cost (rough):** Atlas M0 free; Render free tier spins down after idle (cold starts ~30–60s). For real use, budget **~$7/mo per Render service** (4 services + API ≈ $35/mo) or start on free and upgrade later.
@@ -192,80 +191,66 @@ Render free services **sleep after ~15 min idle**. The first API request can tak
 
 ## Part 5 — Configure the mobile app
 
-Your production API URL is:
+Your production API URL (example):
 
 ```
-https://OneTune-api.onrender.com
+https://onetune-api.onrender.com
 ```
 
-(Use your actual Render hostname.)
+Use your actual Render hostname. **No trailing slash.**
 
-### 5.1 Update EAS profiles
+### Step 1 — Set API URL for the build
 
-Edit `apps/mobile/eas.json` — set `EXPO_PUBLIC_API_URL` for **preview** and **production**:
+Edit `apps/mobile/.env`:
 
-```json
-"preview": {
-  "env": {
-    "EXPO_PUBLIC_API_URL": "https://OneTune-api.onrender.com"
-  }
-},
-"production": {
-  "env": {
-    "EXPO_PUBLIC_API_URL": "https://OneTune-api.onrender.com"
-  }
-}
+```env
+EXPO_PUBLIC_API_URL=https://onetune-api.onrender.com
+EXPO_NO_METRO_WORKSPACE_ROOT=1
 ```
 
-**HTTPS only** for store/preview builds — `app.config.js` disables Android cleartext when the URL uses `https://`.
-
-### 5.2 EAS secrets (alternative)
-
-Instead of committing URLs, use [EAS Secrets](https://docs.expo.dev/build-reference/variables/):
-
-```powershell
-cd apps\mobile
-eas secret:create --scope project --name EXPO_PUBLIC_API_URL --value https://OneTune-api.onrender.com
-```
+**HTTPS only** for release APKs — `app.config.js` disables Android cleartext when the URL uses `https://`.
 
 ---
 
-## Part 6 — Build the mobile app (EAS)
+## Part 6 — Build the mobile app (local)
 
-### 6.1 One-time EAS setup
+### Step 1 — Standalone release APK (CLI)
 
 ```powershell
 cd apps\mobile
-eas login
-eas init    # if not already linked (project ID in app.json)
+bun run build:android:standalone
 ```
 
-### 6.2 Internal test build (APK)
+Output: `android\app\build\outputs\apk\release\app-release.apk`
+
+First build: **15–30 minutes**.
+
+### Step 2 — Install with ADB
 
 ```powershell
-eas build --profile preview --platform android
+adb devices
+adb install -r android\app\build\outputs\apk\release\app-release.apk
 ```
 
-- Wait **10–20 min** on Expo’s build servers.
-- Download APK from [expo.dev](https://expo.dev) → your project → **Builds**.
-- Install on Android (enable “Install unknown apps”).
+Enable **Install unknown apps** on the phone if prompted.
 
-### 6.3 Production build (Play Store)
+### Alternative — Android Studio
+
+1. Run prebuild (if `android/` missing):
 
 ```powershell
-eas build --profile production --platform android
+cd apps\mobile
+$env:EXPO_STANDALONE_BUILD="1"
+$env:EXPO_NO_METRO_WORKSPACE_ROOT="1"
+$env:EXPO_PUBLIC_API_URL="https://onetune-api.onrender.com"
+npx expo prebuild --platform android --clean
 ```
 
-Produces an **AAB** for Google Play. For a sideload APK, add `"buildType": "apk"` under `production.android` in `eas.json`.
+2. Open `apps/mobile/android` in Android Studio.
+3. Build variant: **release** → **Build → Build APK(s)**.
+4. Install via ADB or drag onto emulator.
 
-### 6.4 iOS (optional)
-
-Requires Apple Developer account ($99/yr):
-
-```powershell
-eas build --profile production --platform ios
-eas submit --platform ios
-```
+Full details: [DEPLOYMENT.md — Mobile APK](./DEPLOYMENT.md#3-mobile-apk-local-build).
 
 ---
 
@@ -283,9 +268,9 @@ eas submit --platform ios
 
 | Build | When |
 |-------|------|
-| `development` + Metro | Daily coding on your PC |
-| `preview` | Test against production API without store |
-| `production` | Play Store / App Store release |
+| `npx expo run:android` + Metro | Daily coding on your PC |
+| `bun run build:android:standalone` | Test against production API on a real phone |
+| `bun run build:android:rebundle` | JS/API URL changed — faster than full prebuild |
 
 ---
 
@@ -301,21 +286,13 @@ git push origin main
 
 Or **Manual Deploy** in Render dashboard.
 
-### Mobile (JS-only changes)
+### Mobile
 
-```powershell
-cd apps\mobile
-eas update --branch production --message "fix: queue UI"
-```
-
-Requires EAS Update configured. **Native changes** (new packages, permissions) need a new `eas build`.
-
-### Play Store submit
-
-```powershell
-cd apps\mobile
-eas submit --platform android --latest
-```
+| Change type | Action |
+|-------------|--------|
+| JS / UI only | `bun run build:android:rebundle` → `adb install -r …` |
+| Native module, SDK, Kotlin patch | `bun run build:android:standalone` → `adb install -r …` |
+| Dev workflow | `npx expo start --dev-client` (Metro reload) |
 
 ---
 

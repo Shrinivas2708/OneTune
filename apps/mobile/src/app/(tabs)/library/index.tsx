@@ -67,27 +67,27 @@ export default function LibraryScreen() {
             subtitle={`${favorites?.length ?? 0} saved tracks`}
             tint="#f3727f"
             title="Likes"
-            onPress={() => router.push("/(tabs)/library/favorites")}
+            onPress={() => router.push("/library/favorites")}
           />
           <LibraryShortcut
             icon="time"
             subtitle={`${history?.length ?? 0} recently played`}
             tint="#ffa42b"
             title="History"
-            onPress={() => router.push("/(tabs)/library/history")}
+            onPress={() => router.push("/library/history")}
           />
           <LibraryShortcut
             icon="download-outline"
             subtitle={`${downloadCount} saved for offline`}
             tint="#539df5"
             title="Downloads"
-            onPress={() => router.push("/(tabs)/library/downloads")}
+            onPress={() => router.push("/library/downloads")}
           />
           <VaultButton
             label="Import music"
             variant="secondary"
             uppercase={false}
-            onPress={() => router.push("/(tabs)/library/import")}
+            onPress={() => router.push("/library/import")}
           />
         </View>
       </View>

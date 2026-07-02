@@ -57,6 +57,17 @@ export default function TabsLayout() {
             <Ionicons color={color} name="library" size={size} />
           ),
         }}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            const state = navigation.getState();
+            const libraryRoute = state.routes.find((route) => route.name === "library");
+            const stackIndex = libraryRoute?.state?.index ?? 0;
+
+            if (stackIndex > 0) {
+              navigation.navigate("library", { screen: "index" });
+            }
+          },
+        })}
       />
       <Tabs.Screen
         name="settings"

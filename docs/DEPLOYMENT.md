@@ -1,413 +1,345 @@
 # OneTune — Deployment Guide
 
-> How to run OneTune locally, on **Render + Atlas**, or on a VPS. Update this file when infrastructure changes.
+> Backend on Docker (local / VPS / Render) and **Android APK built locally** (CLI or Android Studio + ADB).
 
 ---
 
-## Choose your deployment
+## Choose your path
 
-| Path | Best for | Guide |
-|------|----------|--------|
-| **Render + MongoDB Atlas** | Managed cloud, no server admin | **[DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md)** ← start here |
-| **Docker Compose (local)** | Development | [Local deployment](#local-deployment-development) below |
-| **VPS + Nginx + TLS** | Self-hosted single server | [VPS deployment](#vps-deployment-production) below |
+| Path | Best for | Section |
+|------|----------|---------|
+| **Render + MongoDB Atlas** | Managed cloud API | [DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md) |
+| **Docker Compose (local)** | Development | [Local backend](#1-local-backend-development) |
+| **VPS + Nginx + TLS** | Self-hosted production API | [VPS production](#2-vps-production-backend) |
+| **Standalone Android APK** | Install app on phones | [Mobile APK (local build)](#3-mobile-apk-local-build) |
 
 ---
 
-## Overview
-
-OneTune backend runs as **Docker containers**. The mobile app is built with **Expo / EAS** and points at your public API URL.
-
-**Render (recommended for cloud):** 4 provider services + 1 API on Render, MongoDB on Atlas — see [DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md).
-
-**Local dev:** `docker compose up` (API on `:3000`, MongoDB exposed for tooling)
-
-**Production VPS:** `docker compose -f docker-compose.prod.yml up` (Nginx on `:80`/`:443`, internal services only)
+## Architecture
 
 ```
-  Mobile (EAS) ──► https://api.yourdomain.com
+  Phone (APK) ──► https://api.yourdomain.com
                            │
                     ┌──────▼──────┐
-                    │   Nginx     │  :80 / :443 (public)
+                    │   Nginx     │  :80 / :443 (VPS only)
                     └──────┬──────┘
                            │
                     ┌──────▼──────┐
-                    │  API :3000  │  (internal)
+                    │  API :3000  │
                     └──────┬──────┘
          ┌─────────────────┼─────────────────┐
          ▼                 ▼                 ▼
-   ┌──────────┐    ┌────────────┐    ┌──────────┐
-   │ MongoDB  │    │ Extractor  │    │ Spotify  │
-   └──────────┘    └────────────┘    └──────────┘
-                           │
-                    ┌────────────┐
-                    │ JioSaavn   │
-                    └────────────┘
-         (internal Docker network only)
+   MongoDB          Extractor          JioSaavn / Spotify
 ```
+
+The mobile app is **not** in Docker. Build the APK on your PC and install with **ADB** or Android Studio.
 
 ---
 
 ## Prerequisites
 
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| Docker | 24+ | Docker Desktop (Windows/Mac) or Docker Engine (Linux) |
-| Docker Compose | v2 | Included with modern Docker |
-| Bun | 1.2+ | Local dev / building API outside Docker (optional) |
-| Git | any | Clone repository |
-
-**VPS minimum (recommended):** 2 vCPU, 4 GB RAM, 40 GB SSD, Ubuntu 22.04+
+| Requirement | Notes |
+|-------------|-------|
+| Docker 24+ | Backend |
+| Bun 1.2+ | Optional local API dev |
+| Android Studio | SDK, emulator, optional GUI builds |
+| ADB | `platform-tools` on PATH |
+| JDK 17 | Bundled with Android Studio |
 
 ---
 
-## Environment Variables
+## Environment variables
 
-Copy `.env.example` to `.env` at the repository root:
+Copy root env:
 
-```sh
+```powershell
 cp .env.example .env
 ```
 
-### Required for production
+### Backend (production)
 
 | Variable | Example | Description |
 |----------|---------|-------------|
-| `JWT_SECRET` | `openssl rand -base64 48` | Signs access/refresh tokens — **never use default in prod** |
-| `NODE_ENV` | `production` | Set automatically in `docker-compose.prod.yml`; disables `/v1/internal/*` |
-| `MONGODB_URI` | `mongodb://mongodb:27017/OneTune` | Mongo connection (Docker service name) |
-| `OneTune_DOMAIN` | `api.yourdomain.com` | Public API hostname (DNS A record → VPS) |
-| `CERTBOT_EMAIL` | `you@example.com` | Let's Encrypt registration email |
-| `USE_HTTPS` | `false` → `true` | Enable TLS nginx config after certificates exist |
+| `JWT_SECRET` | `openssl rand -base64 48` | **Required** in prod |
+| `MONGODB_URI` | `mongodb://mongodb:27017/onetune` | Docker service name |
+| `OneTune_DOMAIN` | `api.yourdomain.com` | VPS TLS only |
+| `USE_HTTPS` | `true` | VPS TLS only |
 
-### Service URLs (Docker internal)
+### Mobile (baked into APK at build time)
 
-| Variable | Default (Compose) | Description |
-|----------|-------------------|-------------|
-| `EXTRACTOR_URL` | `http://extractor:8001` | yt-dlp Python service |
-| `JIOSAAVN_URL` | `http://jiosaavn:3000` | Self-hosted jiosaavn-api |
-| `SPOTIFY_URL` | `http://spotify:8003` | SpotifyScraper Python service |
-| `PORT` | `3000` | API listen port (internal) |
-| `LOG_LEVEL` | `info` | API log verbosity |
+| Variable | Example | Where |
+|----------|---------|-------|
+| `EXPO_PUBLIC_API_URL` | `https://api.onetune.shribuilds.in` | `apps/mobile/.env` or shell before build |
+| `EXPO_NO_METRO_WORKSPACE_ROOT` | `1` | Required on Windows monorepo |
+| `EXPO_STANDALONE_BUILD` | `1` | Set automatically by standalone script |
 
-### Mobile
+**No trailing slash** on the API URL.
 
-| Variable | Example | Description |
-|----------|---------|-------------|
-| `EXPO_PUBLIC_API_URL` | `https://OneTune-api.onrender.com` | API base URL baked into EAS builds (`eas.json` or EAS Secrets) |
-
-Set per profile in `apps/mobile/eas.json`:
-
-| Profile | Purpose | Typical `EXPO_PUBLIC_API_URL` |
-|---------|---------|-------------------------------|
-| `development` | Dev client | Set at **Metro start** (see [DEVELOPMENT.md](./DEVELOPMENT.md#api-url-by-target)) — not `localhost` on physical devices |
-| `preview` | Internal test builds | `https://OneTune-api.onrender.com` (or your Render/VPS URL) |
-| `production` | App Store / Play Store | `https://OneTune-api.onrender.com` (or your Render/VPS URL) |
-
-`apps/mobile/app.config.js` disables Android cleartext traffic when the URL uses `https://`.
-
-### Feature flags (optional)
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `FF_VIDEO_PLAYBACK` | `false` | Video player toggle (future) |
-| `FF_SPOTIFY_IMPORT` | `true` | Spotify playlist import |
-| `FF_PROXIED_STREAMING` | `false` | Proxy streams through VPS (future) |
+`apps/mobile/app.config.js` disables Android cleartext when the URL uses `https://`.
 
 ---
 
-## Local Deployment (Development)
+## 1. Local backend (development)
 
-### 1. Start the stack
+### Step 1 — Start stack
 
 ```powershell
 docker compose up --build -d
 ```
 
-### 2. Verify health
+### Step 2 — Verify
 
-```sh
+```powershell
 curl http://localhost:3000/health
 curl http://localhost:3000/health/deps
 ```
 
-### 3. Stop
+### Step 3 — Stop
 
-```sh
+```powershell
 docker compose down
 ```
 
-To remove MongoDB data: `docker compose down -v`
+Remove Mongo data: `docker compose down -v`
 
 ---
 
-## VPS Deployment (Production)
+## 2. VPS production (backend)
 
-### 1. Server setup
+### Step 1 — Server setup
 
 ```sh
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y git docker.io docker-compose-plugin curl
 sudo usermod -aG docker $USER
-# re-login for group to apply
 ```
 
-### 2. Clone and configure
+### Step 2 — Clone and configure
 
 ```sh
-git clone <your-repo-url> OneTune
-cd OneTune
+git clone <repo-url> onetune && cd onetune
 cp .env.example .env
 ```
 
-Edit `.env`:
+Edit `.env` — set `JWT_SECRET`, `OneTune_DOMAIN`, `CERTBOT_EMAIL`, `MONGODB_URI`.
 
-```env
-JWT_SECRET=<openssl rand -base64 48>
-OneTune_DOMAIN=api.yourdomain.com
-CERTBOT_EMAIL=you@example.com
-USE_HTTPS=false
-MONGODB_URI=mongodb://mongodb:27017/OneTune
-```
+DNS: **A record** `api.yourdomain.com` → VPS IP.
 
-Point DNS: **A record** `api.yourdomain.com` → your VPS public IP.
-
-### 3. Start production stack (HTTP bootstrap)
+### Step 3 — Start production stack
 
 ```sh
 docker compose -f docker-compose.prod.yml up --build -d
-```
-
-Verify (HTTP, before TLS):
-
-```sh
-curl http://localhost/health
 curl http://api.yourdomain.com/health
 ```
 
-### 4. Obtain TLS certificate
+### Step 4 — TLS
 
 ```sh
-chmod +x scripts/init-letsencrypt.sh scripts/renew-letsencrypt.sh scripts/deploy-prod.sh scripts/backup-mongodb.sh
+chmod +x scripts/init-letsencrypt.sh scripts/renew-letsencrypt.sh
 ./scripts/init-letsencrypt.sh
-# Test first: ./scripts/init-letsencrypt.sh --staging
-```
-
-Enable HTTPS:
-
-```sh
-# In .env:
-USE_HTTPS=true
-
+# Set USE_HTTPS=true in .env, then:
 docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
-curl https://api.yourdomain.com/health
 ```
 
-### 5. Firewall
+### Step 5 — Firewall
 
 ```sh
-sudo ufw allow 22
-sudo ufw allow 80
-sudo ufw allow 443
-# Do NOT open 27017, 3000, 8001, 8003 publicly
+sudo ufw allow 22 && sudo ufw allow 80 && sudo ufw allow 443
 sudo ufw enable
 ```
 
-### 6. Certificate renewal (cron)
+Do **not** expose MongoDB or provider ports publicly.
 
-```sh
-# Daily at 03:00
-0 3 * * * /home/ubuntu/OneTune/scripts/renew-letsencrypt.sh >> /var/log/OneTune-certbot.log 2>&1
-```
-
-### 7. MongoDB backups
-
-```sh
-./scripts/backup-mongodb.sh
-# Windows: .\scripts\backup-mongodb.ps1
-```
-
-Backups land in `./backups/OneTune-YYYY-MM-DD-HHMM/`. Copy off-server regularly.
-
-Schedule (cron example — weekly Sunday 04:00):
-
-```sh
-0 4 * * 0 /home/ubuntu/OneTune/scripts/backup-mongodb.sh >> /var/log/OneTune-backup.log 2>&1
-```
-
-### 8. Deploy updates
-
-```sh
-./scripts/deploy-prod.sh
-```
-
-Or manually:
+### Deploy updates
 
 ```sh
 git pull
 docker compose -f docker-compose.prod.yml up --build -d
-docker image prune -f
+```
+
+Backups: `./scripts/backup-mongodb.sh`
+
+Full Render walkthrough: [DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md).
+
+---
+
+## 3. Mobile APK (local build)
+
+Two build types:
+
+| Type | Command | Use case |
+|------|---------|----------|
+| **Dev client** | `npx expo run:android` | Daily dev + Metro hot reload |
+| **Standalone release** | `bun run build:android:standalone` | Production APK, no dev menu |
+
+---
+
+### 3.1 Standalone release APK (CLI) — recommended
+
+Use this for a **production-like APK** (no “Development build / connect to server” screen).
+
+#### Step 1 — Set production API URL
+
+Edit `apps/mobile/.env`:
+
+```env
+EXPO_PUBLIC_API_URL=https://api.onetune.shribuilds.in
+EXPO_NO_METRO_WORKSPACE_ROOT=1
+```
+
+Or pass for one build:
+
+```powershell
+$env:EXPO_PUBLIC_API_URL="https://api.onetune.shribuilds.in"
+```
+
+#### Step 2 — Build APK
+
+```powershell
+cd onetune\apps\mobile
+bun run build:android:standalone
+```
+
+This runs `expo prebuild` (standalone, no dev client) + `gradlew assembleRelease`.
+
+Output:
+
+```
+apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+```
+
+First build: **15–30 minutes**. Later builds are faster.
+
+#### Step 3 — Install via ADB
+
+```powershell
+adb devices
+adb install -r apps\mobile\android\app\build\outputs\apk\release\app-release.apk
+```
+
+Enable **Install unknown apps** on the phone if prompted.
+
+---
+
+### 3.2 Standalone release APK (Android Studio)
+
+#### Step 1 — Generate native project (if needed)
+
+```powershell
+cd onetune\apps\mobile
+$env:EXPO_STANDALONE_BUILD="1"
+$env:EXPO_NO_METRO_WORKSPACE_ROOT="1"
+$env:EXPO_PUBLIC_API_URL="https://api.onetune.shribuilds.in"
+npx expo prebuild --platform android --clean
+```
+
+#### Step 2 — Open in Android Studio
+
+- **File → Open** → `onetune/apps/mobile/android`
+- Wait for Gradle sync.
+
+#### Step 3 — Build release APK
+
+- **Build → Select Build Variant** → `release`
+- **Build → Build Bundle(s) / APK(s) → Build APK(s)**
+
+APK path: `android/app/build/outputs/apk/release/app-release.apk`
+
+> Use **Build APK(s)**, not the green **Run ▶** button (Run installs a debug/dev variant).
+
+#### Step 4 — Install
+
+Drag APK to emulator, or:
+
+```powershell
+adb install -r android\app\build\outputs\apk\release\app-release.apk
 ```
 
 ---
 
-## Docker Services Reference
+### 3.3 Rebundle APK after API URL or JS changes
 
-### Development (`docker-compose.yml`)
+Gradle caches the JS bundle. If you changed `.env` or JS but the APK still hits the old API:
 
-| Container | Host port | Notes |
-|-----------|-----------|-------|
-| `OneTune-api` | **3000** | Direct API access |
-| `OneTune-mongodb` | 27017 | Local tooling only |
-| Providers | — | Internal |
+```powershell
+cd onetune\apps\mobile
+bun run build:android:rebundle
+adb install -r android\app\build\outputs\apk\release\app-release.apk
+```
 
-### Production (`docker-compose.prod.yml`)
+Use this for **JS/config-only** changes when `android/` already exists.
 
-| Container | Host port | Notes |
-|-----------|-----------|-------|
-| `OneTune-nginx` | **80, 443** | Public entrypoint |
-| `OneTune-api` | — | Internal only |
-| `OneTune-mongodb` | — | **Never expose** |
-| Providers | — | Internal |
-
-First `docker compose up --build` can take **5–15 minutes** (JioSaavn + Spotify images).
+For **native** changes (new native module, Kotlin patches): run full `build:android:standalone` or `expo run:android`.
 
 ---
 
-## Nginx
+### 3.4 Dev client APK (Metro workflow)
 
-Config lives in `docker/nginx/`:
-
-| File | Purpose |
-|------|---------|
-| `nginx.conf` | Global settings, rate limits, upstream |
-| `conf.d/OneTune.conf` | HTTP bootstrap (default) |
-| `conf.d/OneTune.https.conf` | HTTPS template (used when `USE_HTTPS=true`) |
-| `proxy_params` | Forwarded headers for Hono |
-
-Rate limits: `/v1/search` 30 req/min per IP; other routes 120 req/min.
-
----
-
-## Mobile App Deployment (EAS)
-
-The mobile app is **not** in Docker Compose. It is built with [EAS Build](https://docs.expo.dev/build/introduction/) and talks to your API over HTTP(S).
-
-### Prerequisites
-
-- [Expo account](https://expo.dev/signup)
-- EAS CLI: `npm install -g eas-cli` (or `npx eas-cli`)
-- Run `eas init` once in `apps/mobile` if `app.json` still has `replace-with-eas-project-id`
-
-### Configure API URL
-
-| Build type | Where to set `EXPO_PUBLIC_API_URL` |
-|------------|-------------------------------------|
-| Dev client + Metro | `apps/mobile/.env` or shell when running `expo start --dev-client` |
-| Standalone EAS build | `apps/mobile/eas.json` per profile, or [EAS Secrets](https://docs.expo.dev/build-reference/variables/) |
-
-Profiles in `apps/mobile/eas.json`:
-
-| Profile | Purpose | Typical API URL |
-|---------|---------|-----------------|
-| `development` | Dev client (APK / iOS simulator) | Set at Metro time — see below |
-| `preview` | Internal test APK/IPA | `https://api.yourdomain.com` |
-| `production` | Store release | `https://api.yourdomain.com` |
-
-**Important:** `http://localhost:3000` in the `development` profile only works for **web** or **iOS Simulator on the same Mac**. Real devices need your PC’s LAN IP or a deployed API:
-
-| Target | URL |
-|--------|-----|
-| Android emulator | `http://10.0.2.2:3000` |
-| Physical phone (same Wi‑Fi) | `http://<lan-ip>:3000` |
-| Production / preview | `https://api.yourdomain.com` |
-
-`apps/mobile/app.config.js` enables Android cleartext traffic when the URL uses `http://`.
-
-### First-time EAS setup
+For development with hot reload:
 
 ```powershell
-cd apps\mobile
-eas login
-eas init
+cd onetune\apps\mobile
+npx expo run:android
 ```
 
-### Build profiles
+Installs debug dev client. Start Metro:
 
 ```powershell
-cd apps\mobile
-
-# Dev client — install APK, then use expo start --dev-client
-eas build --profile development --platform android
-
-# Internal test (HTTPS production API)
-eas build --profile preview --platform android
-
-# Store release
-eas build --profile production --platform android
-```
-
-iOS from Windows: cloud builds work, but **simulator** dev builds only run on a Mac; physical iPhone needs Apple Developer enrollment.
-
-### Run and test after install
-
-```powershell
-# Terminal 1 — backend
-docker compose up --build -d
-
-# Terminal 2 — Metro (set API URL for your device)
-cd apps\mobile
-$env:EXPO_PUBLIC_API_URL="http://192.168.1.42:3000"
 npx expo start --dev-client
 ```
 
-Download the APK from expo.dev → Builds, install, open the app, connect to Metro (QR or `a` for emulator).
-
-Full native test checklist: [DEVELOPMENT.md — Native test checklist](./DEVELOPMENT.md#native-test-checklist).
-
-### OTA updates (optional)
-
-```sh
-eas update --branch production
-```
+See [DEVELOPMENT.md](./DEVELOPMENT.md) for the full dev workflow.
 
 ---
 
-## Security Checklist (Production)
+## 4. Docker services reference
 
-- [ ] Strong `JWT_SECRET` (32+ random bytes)
-- [ ] `NODE_ENV=production` (enforced by prod compose)
-- [ ] MongoDB and provider ports not exposed publicly
-- [ ] HTTPS enabled (`USE_HTTPS=true`) before sharing with users
-- [ ] Firewall: only 22, 80, 443
-- [ ] SSH key auth, disable password login
+### Development (`docker-compose.yml`)
+
+| Service | Host port |
+|---------|-----------|
+| API | **3000** |
+| MongoDB | 27017 |
+
+### Production (`docker-compose.prod.yml`)
+
+| Service | Host port |
+|---------|-----------|
+| Nginx | **80, 443** |
+| API / Mongo / providers | internal only |
+
+---
+
+## 5. Security checklist (production)
+
+- [ ] Strong `JWT_SECRET`
+- [ ] `NODE_ENV=production`
+- [ ] MongoDB not exposed publicly
+- [ ] HTTPS before sharing with users
+- [ ] Firewall: 22, 80, 443 only
 - [ ] Scheduled cert renewal + MongoDB backups
-- [ ] Treat as **private use** — scraping carries ToS/legal risk
 
 ---
 
-## Troubleshooting
+## 6. Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| nginx won't start with `USE_HTTPS=true` | Certs missing | Run `init-letsencrypt.sh` first |
-| `JWT_SECRET` compose error | Empty secret in `.env` | Generate and set `JWT_SECRET` |
-| API stuck on `depends_on` | Slow provider build | `docker compose -f docker-compose.prod.yml logs jiosaavn` |
-| Mobile can't reach API | Wrong `EXPO_PUBLIC_API_URL` | Physical device: use LAN IP, not `localhost`. Preview/prod: `https://` domain |
-| EAS build fails on project ID | Placeholder in `app.json` | Run `eas init` in `apps/mobile` |
-| Dev client won't load JS | Network / firewall | Same Wi‑Fi; allow port 3000; try `expo start --dev-client --tunnel` |
-| Search very slow first time | Cold provider containers | Wait for `docker compose` health; rebuild API image after API changes |
-| `401` on `/v1/search` | No auth token | Register/login first |
-| certbot fails | DNS not propagated | Wait for A record; try `--staging` |
+| Symptom | Fix |
+|---------|-----|
+| APK says offline / wrong API | Rebake: `bun run build:android:rebundle`; check `EXPO_PUBLIC_API_URL` has no trailing `/` |
+| Dev client shows “connect to server” | Expected for dev build — use standalone script for prod APK |
+| `//v1/auth` route not found | Trailing slash on API URL — remove it |
+| Notification controls don't work | Native patch needs rebuild (`expo run:android` or standalone) |
+| Gradle Clean file lock | `gradlew --stop`; delete `android/app/build` |
+| `Unable to resolve ./index.js` | `EXPO_NO_METRO_WORKSPACE_ROOT=1` |
+| nginx won't start with HTTPS | Run `init-letsencrypt.sh` first |
+| Mobile can't reach API | HTTPS URL in release APK; LAN IP for local dev |
 
 ---
 
-## Related Docs
+## Related docs
 
 | Doc | Purpose |
 |-----|---------|
-| **[DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md)** | **Render + Atlas step-by-step (recommended)** |
-| [DEVELOPMENT.md](./DEVELOPMENT.md) | Local dev workflow |
-| [API.md](./API.md) | Endpoints and auth |
-| [IMPLEMENTATION.md](./IMPLEMENTATION.md) | Code structure |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | System design |
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | Daily dev, Metro, `expo run:android` |
+| [DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md) | Render + Atlas |
+| [API.md](./API.md) | Endpoints |

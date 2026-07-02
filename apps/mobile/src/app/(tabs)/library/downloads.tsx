@@ -2,28 +2,31 @@ import { FlashList } from "@shopify/flash-list";
 import { useEffect } from "react";
 import { Text, View } from "react-native";
 import { DownloadRow } from "@/components/downloads/download-row";
-import { VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
+import { SubScreenHeader } from "@/components/ui/sub-screen-header";
 import { TrackListSkeleton } from "@/components/ui/skeleton";
+import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { useDownloadStore } from "@/stores/download-store";
 
 export default function DownloadsScreen() {
   const hydrate = useDownloadStore((state) => state.hydrate);
   const isHydrated = useDownloadStore((state) => state.isHydrated);
   const records = useDownloadStore((state) => state.records);
+  const bottomInset = useScrollBottomInset();
 
   useEffect(() => {
     void hydrate();
   }, [hydrate]);
 
   return (
-    <Screen className="pt-4" padded={false}>
-      <View className="px-6">
-        <VaultHeading>Downloads</VaultHeading>
-        <VaultSubheading>Play offline — no network required.</VaultSubheading>
-      </View>
+    <Screen className="pt-2" padded={false}>
+      <SubScreenHeader
+        backHref="/(tabs)/library"
+        subtitle="Play offline — no network required."
+        title="Downloads"
+      />
 
-      <View className="mt-6 min-h-[200px] flex-1 px-4">
+      <View className="mt-4 min-h-[200px] flex-1 px-4">
         {!isHydrated ? <TrackListSkeleton /> : null}
 
         {isHydrated && records.length === 0 ? (
@@ -36,6 +39,7 @@ export default function DownloadsScreen() {
 
         {isHydrated && records.length > 0 ? (
           <FlashList
+            contentContainerStyle={{ paddingBottom: bottomInset }}
             data={records}
             ItemSeparatorComponent={() => <View className="h-2" />}
             keyExtractor={(item) => item.id}

@@ -26,27 +26,27 @@ export function LibraryHub() {
       icon: "heart",
       tint: "#f3727f",
       count: favorites?.length ?? 0,
-      href: "/(tabs)/library/favorites",
+      href: "/library/favorites",
     },
     {
       label: "History",
       icon: "time",
       tint: "#ffa42b",
       count: history?.length ?? 0,
-      href: "/(tabs)/library/history",
+      href: "/library/history",
     },
     {
       label: "Downloads",
       icon: "download-outline",
       tint: "#539df5",
       count: downloadCount,
-      href: "/(tabs)/library/downloads",
+      href: "/library/downloads",
     },
     {
       label: "Import",
       icon: "add-circle-outline",
       tint: "#1ed760",
-      href: "/(tabs)/library/import",
+      href: "/library/import",
     },
   ];
 
@@ -59,7 +59,7 @@ export function LibraryHub() {
           className="min-w-0 flex-1 items-center rounded-vault-lg bg-vault-surface px-2 py-3"
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push(item.href as never);
+            router.navigate(item.href as never);
           }}
         >
           <View

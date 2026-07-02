@@ -2,9 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { FlashList } from "@shopify/flash-list";
 import { Alert, Pressable, RefreshControl, Text, View } from "react-native";
 import { LibraryTrackRow } from "@/components/library/library-track-row";
-import { VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
+import { SubScreenHeader } from "@/components/ui/sub-screen-header";
 import { TrackListSkeleton } from "@/components/ui/skeleton";
 import { useClearHistory, useHistory } from "@/hooks/use-history";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
@@ -47,29 +47,27 @@ export default function HistoryScreen() {
   };
 
   return (
-    <Screen className="pt-4" padded={false}>
-      <View className="px-6">
-        <View className="flex-row items-start justify-between gap-3">
-          <View className="min-w-0 flex-1">
-            <VaultHeading>History</VaultHeading>
-            <VaultSubheading>Recently played tracks.</VaultSubheading>
-          </View>
-
-          {hasHistory ? (
+    <Screen className="pt-2" padded={false}>
+      <SubScreenHeader
+        backHref="/(tabs)/library"
+        right={
+          hasHistory ? (
             <Pressable
               accessibilityLabel="Clear history"
               accessibilityRole="button"
-              className="mt-1 rounded-vault-lg bg-vault-surface-elevated p-2.5"
+              className="rounded-vault-lg bg-vault-surface-elevated p-2.5"
               disabled={clearHistory.isPending}
               onPress={confirmClearHistory}
             >
               <Ionicons color="#f3727f" name="trash-outline" size={20} />
             </Pressable>
-          ) : null}
-        </View>
-      </View>
+          ) : null
+        }
+        subtitle="Recently played tracks."
+        title="History"
+      />
 
-      <View className="mt-6 min-h-0 flex-1 px-4">
+      <View className="mt-4 min-h-0 flex-1 px-4">
         {isLoading ? <TrackListSkeleton /> : null}
 
         {errorMessage ? (

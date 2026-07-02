@@ -1,9 +1,9 @@
 import { FlashList } from "@shopify/flash-list";
 import { RefreshControl, Text, View } from "react-native";
 import { LibraryTrackRow } from "@/components/library/library-track-row";
-import { VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
+import { SubScreenHeader } from "@/components/ui/sub-screen-header";
 import { TrackListSkeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
@@ -16,13 +16,14 @@ export default function FavoritesScreen() {
   const errorMessage = error ? getErrorMessage(error, "Could not load favorites.") : null;
 
   return (
-    <Screen className="pt-4" padded={false}>
-      <View className="px-6">
-        <VaultHeading>Likes</VaultHeading>
-        <VaultSubheading>Tracks you liked — tap ♥ on any song to save it here.</VaultSubheading>
-      </View>
+    <Screen className="pt-2" padded={false}>
+      <SubScreenHeader
+        backHref="/(tabs)/library"
+        subtitle="Tracks you liked — tap ♥ on any song to save it here."
+        title="Likes"
+      />
 
-      <View className="mt-6 min-h-0 flex-1 px-4">
+      <View className="mt-4 min-h-0 flex-1 px-4">
         {isLoading ? <TrackListSkeleton /> : null}
 
         {errorMessage ? (

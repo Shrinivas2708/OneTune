@@ -58,3 +58,24 @@ patched = patched.replace(
 
 fs.writeFileSync(modulePath, patched);
 console.log("[patch-track-player] applied TurboModule compatibility patch");
+
+const musicServicePath = path.join(
+  process.cwd(),
+  "node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt",
+);
+
+if (fs.existsSync(musicServicePath)) {
+  let musicService = fs.readFileSync(musicServicePath, "utf8");
+  const legacyEmit =
+    "reactNativeHost.reactInstanceManager.currentReactContext\n            ?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)";
+  const bridgelessEmit =
+    "reactContext\n            ?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)";
+
+  if (musicService.includes(legacyEmit)) {
+    musicService = musicService.replaceAll(legacyEmit, bridgelessEmit);
+    fs.writeFileSync(musicServicePath, musicService);
+    console.log(
+      "[patch-track-player] fixed MusicService.emit() for New Architecture",
+    );
+  }
+}

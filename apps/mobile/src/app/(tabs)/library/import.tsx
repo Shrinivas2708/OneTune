@@ -7,9 +7,10 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
 import { z } from "zod";
-import { VaultButton, VaultHeading, VaultSubheading } from "@/components/ui/button";
+import { VaultButton } from "@/components/ui/button";
 import { VaultInput } from "@/components/ui/input";
 import { Screen } from "@/components/ui/screen";
+import { SubScreenHeader } from "@/components/ui/sub-screen-header";
 import { ApiClientError } from "@/lib/api-client";
 import { playlistApi } from "@/lib/playlist-api";
 
@@ -75,14 +76,12 @@ export default function ImportPlaylistScreen() {
   const example = EXAMPLES[activeExample];
 
   return (
-    <Screen className="pt-4">
-      <Text className="font-inter text-sm uppercase tracking-[2px] text-vault-accent">
-        Library
-      </Text>
-      <VaultHeading>Import music</VaultHeading>
-      <VaultSubheading>
-        Paste a public Spotify, YouTube, or JioSaavn link — playlists, albums, or singles.
-      </VaultSubheading>
+    <Screen className="pt-2">
+      <SubScreenHeader
+        backHref="/(tabs)/library"
+        subtitle="Paste a public Spotify, YouTube, or JioSaavn link — playlists, albums, or singles."
+        title="Import music"
+      />
 
       <View className="mt-6 flex-row gap-2">
         {EXAMPLES.map((item, index) => (

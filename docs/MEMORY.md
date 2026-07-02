@@ -12,7 +12,7 @@ Self-hosted, multi-provider music + music-video app for **iOS & Android**. Frien
 
 | Area | Decision |
 |------|----------|
-| Mobile | Expo 54, EAS dev builds, NativeWind, TanStack Query, Zustand, track-player |
+| Mobile | Expo 54, local Android builds, NativeWind, TanStack Query, Zustand, track-player |
 | Backend | Node/Bun API (Hono) + Python extractor (yt-dlp) + self-hosted JioSaavn API |
 | Database | MongoDB (local Docker, **Atlas on Render**, or VPS) |
 | Monorepo | Turborepo + Bun workspaces |
@@ -97,7 +97,7 @@ scripts/dev.ps1       Windows dev bootstrap
 - Test script: `scripts/test-search.ps1`
 
 ### M6 — Mobile Shell ✅
-- EAS dev build config (`apps/mobile/eas.json`)
+- Local Android build scripts (`apps/mobile/scripts/`)
 - Expo Router: auth stack + tab shell (Home, Search, Library, Settings)
 - NativeWind + `@OneTune/ui` tokens; Inter + Plus Jakarta Sans via `expo-font`
 - TanStack Query provider + typed API client (`src/lib/api-client.ts`)
@@ -117,7 +117,7 @@ apps/mobile/src/
   providers/     app-providers
 ```
 
-**Note:** `react-native-mmkv` requires an **EAS dev build** (not Expo Go). Web dev uses `localStorage`.
+**Note:** `react-native-mmkv` requires a **native dev build** (`npx expo run:android`, not Expo Go). Web dev uses `localStorage`.
 
 ### M7 — Search UI ✅
 - Pill search input with debounced TanStack Query (`400ms`)
@@ -136,7 +136,7 @@ apps/mobile/src/
 ```
 
 ### M8 — Playback Engine ✅
-- `react-native-track-player` + `expo-dev-client` (requires EAS dev build)
+- `react-native-track-player` + `expo-dev-client` (requires `npx expo run:android`)
 - Custom entry `apps/mobile/index.js` registers background playback service
 - `player-engine` — setup, play, pause, seek, skip, queue, stream resolve
 - `playback-service` — lock screen / notification remote controls
@@ -222,7 +222,7 @@ apps/mobile/src/
 - Nginx reverse proxy + rate limits (`docker/nginx/`)
 - Let's Encrypt via `scripts/init-letsencrypt.sh` + `scripts/renew-letsencrypt.sh`
 - `scripts/backup-mongodb.sh` / `.ps1` + `scripts/deploy-prod.sh`
-- EAS profiles (development, preview, production) + `app.config.js` for HTTPS/cleartext
+- Local Android builds (`build-android-standalone.ps1`, `rebundle-release-apk.ps1`) + `app.config.js` for HTTPS/cleartext
 - Full guide: `docs/DEPLOYMENT.md`
 
 **Infra paths:**
@@ -230,7 +230,7 @@ apps/mobile/src/
 docker-compose.prod.yml
 docker/nginx/
 scripts/init-letsencrypt.sh, renew-letsencrypt.sh, backup-mongodb.sh, deploy-prod.sh
-apps/mobile/eas.json, app.config.js
+apps/mobile/scripts/build-android-standalone.ps1, rebundle-release-apk.ps1, app.config.js
 ```
 
 ### Post-MVP — Playback, Queue & Spotify Polish ✅
@@ -252,7 +252,7 @@ apps/mobile/src/components/library/playlist-actions.tsx
 packages/utils/src/image.ts
 ```
 
-**EAS / testing:** See `docs/DEVELOPMENT.md` — `eas init`, `eas build --profile development`, `expo start --dev-client`, API URL by device type.
+**Mobile / testing:** See `docs/DEVELOPMENT.md` — `npx expo run:android`, `expo start --dev-client`, ADB, API URL by device type.
 
 **Production deploy:** See `docs/DEPLOYMENT-RENDER.md` (Render + Atlas) or `docs/DEPLOYMENT.md` (VPS).
 
@@ -315,8 +315,12 @@ bun run dev --filter=@OneTune/mobile
 .\scripts\dev.ps1                     # full stack + mobile
 
 # Native dev build (once) + daily Metro
-cd apps/mobile && eas build --profile development --platform android
+cd apps/mobile && npx expo run:android
 cd apps/mobile && npx expo start --dev-client
+
+# Standalone release APK
+cd apps/mobile && bun run build:android:standalone
+adb install -r apps/mobile/android/app/build/outputs/apk/release/app-release.apk
 ```
 
 ---
@@ -329,7 +333,6 @@ cd apps/mobile && npx expo start --dev-client
 | Nginx + TLS | ✅ M14 |
 | Proxied streaming | Feature flag ready, not implemented |
 | react-native-track-player | ✅ M8 |
-| EAS project linking | Run `eas init` if `app.json` has placeholder `projectId` |
 
 ---
 
@@ -349,13 +352,12 @@ cd apps/mobile && npx expo start --dev-client
 | [MEMORY.md](./MEMORY.md) | Session handoff (this file) |
 | [DEVELOPMENT.md](./DEVELOPMENT.md) | Local dev workflow |
 | [IMPLEMENTATION.md](./IMPLEMENTATION.md) | Code structure and patterns |
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Docker, VPS, EAS |
+| [DEPLOYMENT.md](./DEPLOYMENT.md) | Docker, VPS, local APK |
 | [API.md](./API.md) | HTTP API reference |
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Living system design |
 | [DESIGN.md](./DESIGN.md) | UI/UX source of truth |
 | [DECISIONS.md](./DECISIONS.md) | ADR log |
 | [ROADMAP.md](./ROADMAP.md) | Milestones |
-| [INTERVIEW_PITCH.md](./INTERVIEW_PITCH.md) | Interview narrative |
 
 ---
 

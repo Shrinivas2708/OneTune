@@ -21,7 +21,7 @@
 | M11 Downloads | ✅ | Device downloads + offline playback |
 | M12 Library features | ✅ | Favorites + playback history |
 | M13 Polish | ✅ | Skeletons, toasts, pull-to-refresh, artwork placeholders |
-| M14 VPS deploy | ✅ | Production Docker, nginx, TLS, backups, EAS |
+| M14 VPS deploy | ✅ | Production Docker, nginx, TLS, backups, local APK |
 
 **MVP (M1–M14) is complete.** Post-MVP playback/search polish documented in MEMORY.md. Further backlog in ROADMAP.md.
 
@@ -233,18 +233,16 @@ Stack:
 | Server state | TanStack Query |
 | Client state | Zustand |
 | Forms | React Hook Form + Zod |
-| Playback | react-native-track-player (EAS dev build) |
+| Playback | react-native-track-player (native dev build) |
 | Storage | MMKV |
 
 **Env:** `EXPO_PUBLIC_API_URL` (default `http://localhost:3000`). See [DEVELOPMENT.md](./DEVELOPMENT.md#api-url-by-target) for emulator, physical device, and production URLs.
 
-**Dev builds:** MMKV and `react-native-track-player` need an EAS dev client. Full walkthrough: [DEVELOPMENT.md — EAS Dev Build](./DEVELOPMENT.md#eas-dev-build--native-testing).
+**Dev builds:** MMKV and `react-native-track-player` need a native build (`npx expo run:android`). Full walkthrough: [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ```powershell
 cd apps/mobile
-eas login
-eas init
-eas build --profile development --platform android
+npx expo run:android
 $env:EXPO_PUBLIC_API_URL="http://10.0.2.2:3000"   # emulator; use LAN IP on physical device
 npx expo start --dev-client
 ```

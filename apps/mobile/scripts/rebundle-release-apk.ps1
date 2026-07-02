@@ -4,7 +4,7 @@
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot\..
 
-$env:EXPO_PUBLIC_API_URL = "https://api.onetune.shribuilds.in/"
+  $env:EXPO_PUBLIC_API_URL = "https://api.onetune.shribuilds.in"
 $env:EXPO_NO_METRO_WORKSPACE_ROOT = "1"
 
 Write-Host "API URL: $env:EXPO_PUBLIC_API_URL"
@@ -31,10 +31,16 @@ Set-Location android
 Set-Location ..
 
 $apk = "android\app\build\outputs\apk\release\app-release.apk"
+$brandedApk = "android\app\build\outputs\apk\release\OneTune-1.0.0.apk"
 if (Test-Path $apk) {
+  Copy-Item -Force $apk $brandedApk
   Write-Host ""
-  Write-Host "Done. Install this APK:"
-  Write-Host (Resolve-Path $apk)
+  Write-Host "Done. Install:"
+  Write-Host (Resolve-Path $brandedApk)
+} elseif (Test-Path "android\app\build\outputs\apk\release\OneTune-1.0.0-release.apk") {
+  Write-Host ""
+  Write-Host "Done. Install:"
+  Write-Host (Resolve-Path "android\app\build\outputs\apk\release\OneTune-1.0.0-release.apk")
 } else {
   Write-Error "APK not found at $apk"
 }

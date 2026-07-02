@@ -76,9 +76,8 @@ OneTune/
 │   ├── MEMORY.md               # Session handoff
 │   ├── DEVELOPMENT.md          # Local dev guide
 │   ├── IMPLEMENTATION.md       # Code structure guide
-│   ├── DEPLOYMENT.md           # Docker / VPS / EAS
+│   ├── DEPLOYMENT.md           # Docker / VPS / local APK
 │   ├── API.md                  # HTTP API reference
-│   ├── INTERVIEW_PITCH.md      # Project narrative
 │   ├── ARCHITECTURE.md         # This file
 │   ├── DESIGN.md               # UI/UX source of truth
 │   ├── DECISIONS.md            # Architecture decision log
@@ -113,7 +112,7 @@ packages/*   →  Acyclic; lower layers never import from apps
 | Concern | Choice |
 |---------|--------|
 | Framework | Expo SDK (latest stable) |
-| Builds | EAS Development Builds |
+| Builds | Local Android APK (`expo run:android` / Gradle) |
 | Routing | Expo Router |
 | Styling | NativeWind (Tailwind CSS) |
 | Language | TypeScript |
@@ -487,7 +486,7 @@ Internal services (`extractor`, `jiosaavn`) are not exposed to the host. Only `a
 | Cross-device download sync | Out of scope — device-local only |
 | Web client | Out of scope for MVP |
 | Apple Music provider | Future adapter |
-| OTA updates via EAS | Enabled once mobile app is on EAS |
+| Mobile APK updates | Rebuild standalone APK or rebundle script |
 
 ---
 

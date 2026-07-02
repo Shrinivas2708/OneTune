@@ -6,9 +6,12 @@ const appJson = require("./app.json");
 module.exports = () => {
   const isStandaloneBuild = process.env.EXPO_STANDALONE_BUILD === "1";
   const defaultApiUrl = isStandaloneBuild
-    ? "https://api.onetune.shribuilds.in/"
+    ? "https://api.onetune.shribuilds.in"
     : "http://localhost:3000";
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? defaultApiUrl;
+  const apiUrl = (process.env.EXPO_PUBLIC_API_URL ?? defaultApiUrl).replace(
+    /\/+$/,
+    "",
+  );
   const usesCleartext = apiUrl.startsWith("http://");
 
   let plugins = (appJson.plugins ?? []).filter(
@@ -33,6 +36,7 @@ module.exports = () => {
     },
   ]);
   plugins.push("./plugins/with-worklets-monorepo.js");
+  plugins.push("./plugins/with-android-apk-name.js");
 
   return {
     ...appJson,

@@ -64,7 +64,7 @@ The mobile app only talks to **your API**. The API orchestrates provider microse
 | API | Bun, Hono, Zod, MongoDB |
 | Providers | Python (FastAPI + yt-dlp), self-hosted JioSaavn API, SpotifyScraper |
 | Monorepo | Turborepo, Bun workspaces |
-| Deploy | Docker Compose · Render Blueprint · EAS Build |
+| Deploy | Docker Compose · Render Blueprint · **local Android APK** |
 
 ---
 
@@ -74,59 +74,47 @@ The mobile app only talks to **your API**. The API orchestrates provider microse
 
 - [Bun](https://bun.sh) 1.2+
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [Expo account](https://expo.dev/signup) + EAS CLI for native builds (**Expo Go is not supported**)
+- [Android Studio](https://developer.android.com/studio) + ADB for native builds (**Expo Go is not supported**)
 
-### Local development (≈5 minutes)
+### Local development
 
 ```powershell
-git clone <your-repo-url> OneTune
-cd OneTune
+git clone <your-repo-url> onetune
+cd onetune
 bun install
 docker compose up --build -d
-```
-
-Verify the API:
-
-```powershell
 curl http://localhost:3000/health
 ```
 
-Start the mobile app:
+**Mobile (native dev build):**
 
 ```powershell
 cd apps/mobile
-npx expo start --dev-client
+# Set EXPO_PUBLIC_API_URL in apps/mobile/.env (see guide)
+npx expo run:android          # first time + after native changes
+npx expo start --dev-client   # later sessions — Metro hot reload
 ```
 
-Press `w` for quick UI work in the browser. For **playback, queue, and downloads**, install a dev build once:
+Press `w` in Metro for quick UI work in the browser. Playback and downloads require the native build above.
 
-```powershell
-npx expo run:android
-# or: eas build --profile development --platform android
-```
-
-Set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` — use your PC's LAN IP on a physical device, not `localhost`.
-
-Full workflow: **[Development guide](docs/DEVELOPMENT.md)**
+**Guides:** [Development](docs/DEVELOPMENT.md) · [Deployment / APK](docs/DEPLOYMENT.md)
 
 ---
 
 ## Deploy to production
 
-Pick one path:
-
 | Path | Best for | Guide |
 |------|----------|--------|
-| **Render + MongoDB Atlas** | Managed cloud, no server admin | **[→ Step-by-step guide](docs/DEPLOYMENT-RENDER.md)** |
-| **VPS + Docker + Nginx** | Full control on one machine | [Deployment guide](docs/DEPLOYMENT.md) |
+| **Render + MongoDB Atlas** | Managed cloud API | [→ Step-by-step](docs/DEPLOYMENT-RENDER.md) |
+| **VPS + Docker + Nginx** | Self-hosted API | [Deployment guide](docs/DEPLOYMENT.md) |
+| **Android APK (local)** | Install app on phones | [Build + ADB](docs/DEPLOYMENT.md#3-mobile-apk-local-build) |
 
-**Render quick path:**
+**Quick path (API on Render + APK on your PC):**
 
-1. Create a MongoDB Atlas cluster → copy `MONGODB_URI`
-2. Push repo to GitHub → Render **Blueprint** → apply `render.yaml`
-3. Paste Atlas URI into the `OneTune-api` service
-4. Set `EXPO_PUBLIC_API_URL` in `apps/mobile/eas.json` to your API URL
-5. `eas build --profile preview --platform android` → install APK
+1. Deploy backend — [DEPLOYMENT-RENDER.md](docs/DEPLOYMENT-RENDER.md)
+2. Set `EXPO_PUBLIC_API_URL` in `apps/mobile/.env` to your HTTPS API URL
+3. `cd apps/mobile && bun run build:android:standalone`
+4. `adb install -r android/app/build/outputs/apk/release/app-release.apk`
 
 ---
 
@@ -157,9 +145,9 @@ OneTune/
 
 | Document | What's inside |
 |----------|----------------|
-| [Development](docs/DEVELOPMENT.md) | Daily dev workflow, EAS dev builds, API URLs by device |
-| [Deploy on Render](docs/DEPLOYMENT-RENDER.md) | Atlas + Render + EAS — full production walkthrough |
-| [Deploy on VPS](docs/DEPLOYMENT.md) | Docker Compose, Nginx, TLS, backups |
+| [Development](docs/DEVELOPMENT.md) | Daily dev, Metro, `expo run:android`, ADB |
+| [Deploy on Render](docs/DEPLOYMENT-RENDER.md) | Atlas + Render API + local APK |
+| [Deploy on VPS](docs/DEPLOYMENT.md) | Docker, Nginx, TLS, standalone APK build |
 | [API reference](docs/API.md) | Auth, search, stream, library, playlists |
 | [Architecture](docs/ARCHITECTURE.md) | System design, provider pattern, data flow |
 | [Implementation](docs/IMPLEMENTATION.md) | Where to add features in the codebase |
