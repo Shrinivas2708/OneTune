@@ -1,4 +1,3 @@
-import "expo-router/entry";
 import { Platform } from "react-native";
 
 if (Platform.OS !== "web") {
@@ -7,3 +6,5 @@ if (Platform.OS !== "web") {
     require("./src/services/playback-service").playbackService,
   );
 }
+
+import "expo-router/entry";

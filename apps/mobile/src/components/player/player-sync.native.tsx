@@ -34,6 +34,17 @@ export function PlayerSync() {
   }, []);
 
   useEffect(() => {
+    const subscription = TrackPlayer.addEventListener(
+      Event.PlaybackActiveTrackChanged,
+      (event) => {
+        void playerEngine.handleNativeTrackChange(event.track?.id);
+      },
+    );
+
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
     playerEngine.syncPlaybackState(playbackState.state);
   }, [playbackState.state]);
 

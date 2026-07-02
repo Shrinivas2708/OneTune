@@ -1,5 +1,6 @@
 import { usePlayerStore } from "@/stores/player-store";
 import { preloadQueueTracks } from "@/lib/resolve-playable-track";
+import { playerEngine } from "@/services/player-engine";
 
 let started = false;
 
@@ -13,7 +14,9 @@ export function ensureQueuePreloader() {
     }
 
     void preloadQueueTracks(state.queue);
+    void playerEngine.syncNativeQueue();
   });
 
   void preloadQueueTracks(usePlayerStore.getState().queue);
+  void playerEngine.syncNativeQueue();
 }

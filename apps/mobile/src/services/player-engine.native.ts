@@ -8,6 +8,12 @@ import TrackPlayer, {
 } from "react-native-track-player";
 import { getErrorMessage } from "@/lib/error-message";
 import { downloadManager } from "@/services/download-manager";
+import { resolvePlayableTrack } from "@/lib/resolve-playable-track";
+import {
+  clearNativeTrackLinks,
+  linkNativeTrack,
+  takeNativeTrackLink,
+} from "@/services/native-queue-bridge";
 import {
   beginPlaybackTransition,
   isActivePlaybackGeneration,
@@ -73,11 +79,14 @@ let lastQueueAdvanceAt = 0;
 async function startNativePlayback(
   playable: TrackMetadata,
   manifest: PlaybackSource,
+  queueTrack?: TrackMetadata,
 ) {
   const playerTrack = toPlayerTrack(playable, manifest);
 
   await TrackPlayer.reset();
+  clearNativeTrackLinks();
   await TrackPlayer.setQueue([playerTrack]);
+  linkNativeTrack(playerTrack.id!, queueTrack ?? playable, playable);
   await TrackPlayer.play();
 
   usePlayerStore.setState({
@@ -87,6 +96,8 @@ async function startNativePlayback(
     isPlaying: true,
     resolveError: null,
   });
+
+  await playerEngine.syncNativeQueue();
 }
 
 async function transitionToTrack(
@@ -110,10 +121,14 @@ async function transitionToTrack(
           removeTrackAndSkippedFromQueue(track);
         }
 
-        await startNativePlayback(local.track, {
-          kind: "local",
-          fileUri: local.fileUri,
-        });
+        await startNativePlayback(
+          local.track,
+          {
+            kind: "local",
+            fileUri: local.fileUri,
+          },
+          track,
+        );
         return;
       }
     }
@@ -128,7 +143,7 @@ async function transitionToTrack(
     const source = await resolvePlaybackSource(prepared.playable);
     if (!isActivePlaybackGeneration(token)) return;
 
-    await startNativePlayback(prepared.playable, source);
+    await startNativePlayback(prepared.playable, source, track);
   } catch (error) {
     if (!isActivePlaybackGeneration(token)) return;
 
@@ -211,10 +226,14 @@ export const playerEngine = {
 
       if (!isActivePlaybackGeneration(token)) return;
 
-      await startNativePlayback(local.track, {
-        kind: "local",
-        fileUri: local.fileUri,
-      });
+      await startNativePlayback(
+        local.track,
+        {
+          kind: "local",
+          fileUri: local.fileUri,
+        },
+        track,
+      );
     } catch (error) {
       if (!isActivePlaybackGeneration(token)) return;
 
@@ -249,8 +268,79 @@ export const playerEngine = {
 
   async skipToPrevious() {
     await this.ensureSetup();
-    await TrackPlayer.seekTo(0);
-    usePlayerStore.getState().setProgress(0, usePlayerStore.getState().duration);
+
+    const progress = await TrackPlayer.getProgress();
+    if (progress.position > 3) {
+      await TrackPlayer.seekTo(0);
+      usePlayerStore.getState().setProgress(0, usePlayerStore.getState().duration);
+      return;
+    }
+
+    await TrackPlayer.skipToPrevious();
+  },
+
+  async syncNativeQueue() {
+    await this.ensureSetup();
+
+    const { queue } = usePlayerStore.getState();
+    const nextQueueTrack = queue[0];
+    if (!nextQueueTrack) {
+      return;
+    }
+
+    try {
+      const tpQueue = await TrackPlayer.getQueue();
+      const activeIndex = await TrackPlayer.getActiveTrackIndex() ?? 0;
+      const upcomingIds = new Set(
+        tpQueue.slice(activeIndex + 1).map((track) => track.id).filter(Boolean),
+      );
+
+      const playable = await resolvePlayableTrack(nextQueueTrack);
+      const nextId = trackKey(playable);
+      if (upcomingIds.has(nextId)) {
+        return;
+      }
+
+      const source = await resolvePlaybackSource(playable);
+      const playerTrack = toPlayerTrack(playable, source);
+      linkNativeTrack(playerTrack.id!, nextQueueTrack, playable);
+      await TrackPlayer.add(playerTrack);
+    } catch {
+      // Best-effort preload for lock-screen skip.
+    }
+  },
+
+  async handleNativeTrackChange(trackId: string | undefined) {
+    if (!trackId) {
+      return;
+    }
+
+    const { currentTrack } = usePlayerStore.getState();
+    if (currentTrack && trackKey(currentTrack) === trackId) {
+      return;
+    }
+
+    const link = takeNativeTrackLink(trackId);
+    if (!link) {
+      return;
+    }
+
+    removeTrackAndSkippedFromQueue(link.queueTrack);
+
+    const local = downloadManager.getLocalRecordForTrack(link.playable);
+    const isLocal = Boolean(local);
+
+    usePlayerStore.setState({
+      currentTrack: link.playable,
+      streamManifest: isLocal
+        ? null
+        : manifestCache.get(trackKey(link.playable)) ?? null,
+      isLocalPlayback: isLocal,
+      isPlaying: true,
+      resolveError: null,
+    });
+
+    await this.syncNativeQueue();
   },
 
   async playQueueIndex(index: number) {
