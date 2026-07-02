@@ -3,7 +3,6 @@ import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { Modal, Platform, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FavoriteButton } from "@/components/library/favorite-button";
 import { usePlaybackControls } from "@/hooks/use-playback-controls";
@@ -53,7 +52,7 @@ export function NowPlayingModal() {
 
   return (
     <Modal
-      animationType="none"
+      animationType="fade"
       presentationStyle="fullScreen"
       statusBarTranslucent
       transparent
@@ -72,10 +71,9 @@ export function NowPlayingModal() {
           <BlurView intensity={90} style={StyleSheet.absoluteFillObject} tint="dark" />
           <View className="absolute inset-0 bg-black/55" />
 
-          <Animated.View
+          <View
             className="flex-1"
-            entering={SlideInDown.duration(300)}
-            exiting={SlideOutDown.duration(250)}
+            collapsable={false}
             style={{ paddingTop: topInset, paddingBottom: bottomInset }}
           >
             <View className="flex-row items-center justify-between px-4 pb-2 pt-1">
@@ -125,11 +123,8 @@ export function NowPlayingModal() {
               </View>
             </View>
 
-            {isQueueOpen ? (
-              <Animated.View
-                entering={FadeIn.duration(200)}
-                exiting={FadeOut.duration(150)}
-              >
+            <View collapsable={false}>
+              {isQueueOpen ? (
                 <QueueSheet
                   queue={queue}
                   onClose={closeQueue}
@@ -138,27 +133,27 @@ export function NowPlayingModal() {
                     closeQueue();
                   }}
                 />
-              </Animated.View>
-            ) : (
-              <View className="gap-6 px-6 pt-2">
-                <ProgressBar
-                  duration={duration}
-                  large
-                  position={position}
-                  onSeek={seekTo}
-                />
-                <PlaybackButtons
-                  hasNext={hasNext}
-                  hasPrevious={hasPrevious}
-                  isPlaying={isPlaying}
-                  size="full"
-                  onNext={skipToNext}
-                  onPrevious={skipToPrevious}
-                  onToggle={toggle}
-                />
-              </View>
-            )}
-          </Animated.View>
+              ) : (
+                <View className="gap-6 px-6 pt-2">
+                  <ProgressBar
+                    duration={duration}
+                    large
+                    position={position}
+                    onSeek={seekTo}
+                  />
+                  <PlaybackButtons
+                    hasNext={hasNext}
+                    hasPrevious={hasPrevious}
+                    isPlaying={isPlaying}
+                    size="full"
+                    onNext={skipToNext}
+                    onPrevious={skipToPrevious}
+                    onToggle={toggle}
+                  />
+                </View>
+              )}
+            </View>
+          </View>
         </View>
       </GestureHandlerRootView>
     </Modal>
