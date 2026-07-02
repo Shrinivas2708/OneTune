@@ -39,7 +39,7 @@ export function AndroidSection() {
                 <span className="soon">Coming soon</span>
               </div>
             </div>
-            <ApkLink className="store-badge outline" href="#download">
+            <ApkLink className="store-badge outline">
               <span className="store-icon">⬇</span>
               <div>
                 <small>Direct install</small>

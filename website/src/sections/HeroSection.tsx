@@ -18,7 +18,7 @@ export function HeroSection() {
           backed by <em>your</em> API.
         </p>
         <div className="hero-actions">
-          <ApkLink className="btn btn-primary" href="#download">
+          <ApkLink className="btn btn-primary">
             Download for Android
           </ApkLink>
           <NavAnchor className="btn btn-ghost" href="#features">

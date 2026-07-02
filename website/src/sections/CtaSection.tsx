@@ -15,7 +15,7 @@ export function CtaSection() {
             music stack — finally in one tune.
           </p>
           <div className="cta-actions">
-            <ApkLink className="btn btn-primary btn-lg" href="#download">
+            <ApkLink className="btn btn-primary btn-lg" href={siteConfig.apkUrl}>
               Download APK
             </ApkLink>
             <NavAnchor className="btn btn-ghost btn-lg" href="#android">

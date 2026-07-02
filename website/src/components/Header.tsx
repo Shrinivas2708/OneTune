@@ -45,7 +45,7 @@ export function Header() {
               </NavAnchor>
             ))}
           </nav>
-          <ApkLink className="nav-cta" href="#download">
+          <ApkLink className="nav-cta" >
             <DownloadIcon />
             Download for Android
           </ApkLink>
