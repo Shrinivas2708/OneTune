@@ -7,6 +7,12 @@
     "dev": "expo start",
     "start": "expo start",
     "android": "expo run:android",
+    "android:release": "expo run:android --variant release --no-install",
+    "build:android:preview": "eas build --profile preview --platform android",
+    "build:android:production": "eas build --profile production --platform android",
+    "build:android:standalone": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-android-standalone.ps1",
+    "build:android:preview:local": "eas build --profile preview --platform android --local",
+    "build:android:production:local": "eas build --profile production --platform android --local",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
     "build": "expo export --platform ios --output-dir dist"

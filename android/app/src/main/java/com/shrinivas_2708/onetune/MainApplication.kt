@@ -1,4 +1,4 @@
-package com.onetune.app
+package com.shrinivas_2708.onetune
 
 import android.app.Application
 import android.content.res.Configuration
