@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Dump MongoDB to ./backups/vibevault-YYYY-MM-DD/
+# Dump MongoDB to ./backups/OneTune-YYYY-MM-DD/
 # Run from repository root on the VPS or any host with Docker access.
 
 set -euo pipefail
 
-CONTAINER="${MONGODB_CONTAINER:-vibevault-mongodb}"
-DB="${MONGO_INITDB_DATABASE:-vibevault}"
+CONTAINER="${MONGODB_CONTAINER:-OneTune-mongodb}"
+DB="${MONGO_INITDB_DATABASE:-OneTune}"
 STAMP="$(date +%F-%H%M)"
-OUT_DIR="backups/vibevault-${STAMP}"
+OUT_DIR="backups/OneTune-${STAMP}"
 
 mkdir -p "$OUT_DIR"
 

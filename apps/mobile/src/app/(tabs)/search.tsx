@@ -88,7 +88,7 @@ export default function SearchScreen() {
       </View>
 
       {resolveError ? (
-        <View className="mx-6 mt-3 rounded-vault-lg border border-vault-negative/30 bg-vault-negative/10 px-4 py-3">
+        <View className="mx-6 mt-3 rounded-vault-lg bg-vault-negative/10 px-4 py-3">
           <Text className="font-inter text-sm text-vault-negative">{resolveError}</Text>
         </View>
       ) : null}

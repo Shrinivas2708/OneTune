@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router as spotify_router
 
 app = FastAPI(
-    title="VibeVault Spotify Service",
-    description="SpotifyScraper wrapper for VibeVault",
+    title="OneTune Spotify Service",
+    description="SpotifyScraper wrapper for OneTune",
     version="0.1.0",
 )
 

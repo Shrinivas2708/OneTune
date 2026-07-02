@@ -32,5 +32,5 @@ if [ -f .env ]; then
   source .env
 fi
 curl -fsS "http://localhost/health" 2>/dev/null \
-  || curl -fsS "https://${VIBEVAULT_DOMAIN:-localhost}/health" 2>/dev/null \
+  || curl -fsS "https://${OneTune_DOMAIN:-localhost}/health" 2>/dev/null \
   || echo "(run curl manually once DNS/TLS is configured)"

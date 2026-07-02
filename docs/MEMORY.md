@@ -1,4 +1,4 @@
-# VibeVault — Session Memory
+# OneTune — Session Memory
 
 > **Read this first in every new session.** Living handoff document — update after every milestone.
 
@@ -6,7 +6,7 @@
 
 ---
 
-## What Is VibeVault?
+## What Is OneTune?
 
 Self-hosted, multi-provider music + music-video app for **iOS & Android**. Friends/household share a **VPS** with individual accounts. **Unified search** across providers is the product identity.
 
@@ -56,10 +56,10 @@ scripts/dev.ps1       Windows dev bootstrap
 - Requires **Docker Desktop** running for full stack
 
 ### M2 — Shared Packages ✅
-- Full Zod schemas in `@vibevault/types`
-- Server env validation in `@vibevault/config/server`
-- Complete `MusicProvider` contract in `@vibevault/provider-core`
-- Design tokens + Tailwind preset in `@vibevault/ui`
+- Full Zod schemas in `@OneTune/types`
+- Server env validation in `@OneTune/config/server`
+- Complete `MusicProvider` contract in `@OneTune/provider-core`
+- Design tokens + Tailwind preset in `@OneTune/ui`
 - Utils: duration formatting, track key normalization, pagination helpers
 
 ### M3 — API Foundation ✅
@@ -99,7 +99,7 @@ scripts/dev.ps1       Windows dev bootstrap
 ### M6 — Mobile Shell ✅
 - EAS dev build config (`apps/mobile/eas.json`)
 - Expo Router: auth stack + tab shell (Home, Search, Library, Settings)
-- NativeWind + `@vibevault/ui` tokens; Inter + Plus Jakarta Sans via `expo-font`
+- NativeWind + `@OneTune/ui` tokens; Inter + Plus Jakarta Sans via `expo-font`
 - TanStack Query provider + typed API client (`src/lib/api-client.ts`)
 - Zustand stores: `auth-store`, `player-store` (skeleton)
 - MMKV token storage (native) with web `localStorage` fallback
@@ -271,19 +271,19 @@ services/*   →  HTTP only; no TS imports from apps
 
 ## Key Architecture Contracts
 
-### Provider adapter (`@vibevault/provider-core`)
+### Provider adapter (`@OneTune/provider-core`)
 ```typescript
 MusicProvider { search, getMetadata, resolveStream, importPlaylist, resolveDownload? }
 ```
 Runtime (Node/Python) is invisible to mobile. Spotify is metadata-only — playback uses `POST /v1/tracks/match` then stream resolve on JioSaavn/YouTube.
 
-### Stream manifest (`@vibevault/types`)
+### Stream manifest (`@OneTune/types`)
 ```typescript
 StreamManifest { deliveryMode: 'direct' | 'proxied', url, expiresAt, ... }
 ```
 Client always plays `url`. Backend can switch to proxy without mobile API changes.
 
-### API envelope (`@vibevault/types`)
+### API envelope (`@OneTune/types`)
 ```typescript
 { data: T, meta? }  // success
 { error: { code, message, details? } }  // failure
@@ -311,7 +311,7 @@ docker compose up --build -d          # needs Docker Desktop
 curl http://localhost:3000/health
 bun run typecheck
 bun run build
-bun run dev --filter=@vibevault/mobile
+bun run dev --filter=@OneTune/mobile
 .\scripts\dev.ps1                     # full stack + mobile
 
 # Native dev build (once) + daily Metro

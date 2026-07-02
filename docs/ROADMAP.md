@@ -1,4 +1,4 @@
-# VibeVault Roadmap
+# OneTune Roadmap
 
 > Milestones are sequential. Each must be independently runnable before moving to the next. Every milestone ends with a Git commit and documentation update.
 
@@ -6,7 +6,7 @@
 
 ## MVP Definition
 
-The first usable version of VibeVault includes **all** of the following:
+The first usable version of OneTune includes **all** of the following:
 
 - [ ] Authentication (individual accounts)
 - [ ] Unified search across providers
@@ -89,7 +89,7 @@ feat(repo): initialize turborepo monorepo and docker infrastructure
 - [x] `packages/provider-core` — MusicProvider interface, registry, capabilities
 - [x] `packages/utils` — shared pure helpers
 - [x] `packages/ui` — design tokens from DESIGN.md (colors, typography, spacing, radii)
-- [x] Wire Tailwind config in mobile to use `@vibevault/ui` tokens
+- [x] Wire Tailwind config in mobile to use `@OneTune/ui` tokens
 
 ### Done when
 - API and mobile both import from shared packages without circular deps
@@ -179,7 +179,7 @@ feat(search): add unified cross-provider search and stream resolution
 ### Tasks
 - [x] EAS dev build configuration
 - [x] Expo Router tab navigation (Home, Search, Library, Settings)
-- [x] Apply `@vibevault/ui` tokens via NativeWind
+- [x] Apply `@OneTune/ui` tokens via NativeWind
 - [x] Load Inter + Plus Jakarta Sans via `expo-font`
 - [x] TanStack Query provider + API client
 - [x] Zustand stores (auth, player — skeleton)
@@ -405,7 +405,7 @@ docs(infra): add Render + MongoDB Atlas deployment guide
 | Queue / skip hardening | ✅ Done | Upcoming-only queue, playback generation token, preloader |
 | Search performance | ✅ Done | Per-provider timeouts, 2min cache |
 | Web volume control | ✅ Done | Mini popover + Now Playing inline slider |
-| Artwork quality | ✅ Done | `upgradeArtworkUrl` in `@vibevault/utils` |
+| Artwork quality | ✅ Done | `upgradeArtworkUrl` in `@OneTune/utils` |
 | Proxied streaming fallback | Planned | Enable per-provider via feature flag |
 | Apple Music adapter | Planned | New provider adapter only |
 | Collaborative playlists | Planned | Shared playlist model |

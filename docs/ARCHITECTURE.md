@@ -1,10 +1,10 @@
-# VibeVault Architecture
+# OneTune Architecture
 
 > **Living document.** Update this file whenever architecture, APIs, folder structure, or infrastructure changes.
 
 ## Overview
 
-VibeVault is a self-hosted, multi-user music and music-video platform for iOS and Android. Users authenticate against a shared VPS deployment, search across multiple providers through a unified interface, stream and download content to their devices, and manage favorites, history, and playlists.
+OneTune is a self-hosted, multi-user music and music-video platform for iOS and Android. Users authenticate against a shared VPS deployment, search across multiple providers through a unified interface, stream and download content to their devices, and manage favorites, history, and playlists.
 
 The system is designed as a **Turborepo monorepo** with **Bun workspaces**, clear package boundaries, and a **provider adapter architecture** that hides implementation runtime (Node, Python, etc.) from the application layer.
 
@@ -59,7 +59,7 @@ The system is designed as a **Turborepo monorepo** with **Bun workspaces**, clea
 ## Repository Structure
 
 ```
-vibevault/
+OneTune/
 ├── apps/
 │   ├── mobile/                 # Expo app (iOS + Android)
 │   └── api/                    # Node/TypeScript HTTP API
@@ -135,10 +135,10 @@ packages/*   →  Acyclic; lower layers never import from apps
 | Runtime | Node.js + TypeScript |
 | Package manager | Bun |
 | Database | MongoDB |
-| Validation | Zod (shared schemas from `@vibevault/types`) |
+| Validation | Zod (shared schemas from `@OneTune/types`) |
 | Auth | JWT (access + refresh tokens) |
 | Logging | Structured JSON logging (pino or equivalent) |
-| Feature flags | `@vibevault/config` — env + DB-backed flags |
+| Feature flags | `@OneTune/config` — env + DB-backed flags |
 
 ### Services
 
@@ -234,7 +234,7 @@ API: SearchOrchestrator
 
 ### Normalized Domain Models
 
-All provider responses are mapped to shared DTOs in `@vibevault/types`:
+All provider responses are mapped to shared DTOs in `@OneTune/types`:
 
 - `TrackRef` — stable reference: `{ providerId, externalId, url? }`
 - `TrackMetadata` — title, artist, album, artwork, duration, isVideo
@@ -270,7 +270,7 @@ interface StreamManifest {
 }
 ```
 
-When `deliveryMode` switches to `proxied`, the API returns a VibeVault-hosted URL in `url` — the mobile player code path stays identical.
+When `deliveryMode` switches to `proxied`, the API returns a OneTune-hosted URL in `url` — the mobile player code path stays identical.
 
 ### Stream Lifecycle
 
@@ -357,7 +357,7 @@ All routes prefixed with `/v1/`.
 
 ### Validation
 
-- Request bodies validated with Zod schemas from `@vibevault/types`
+- Request bodies validated with Zod schemas from `@OneTune/types`
 - Invalid requests return `400` with structured error details
 - All API handlers return typed responses
 
@@ -389,13 +389,13 @@ All routes prefixed with `/v1/`.
 
 ### Configuration
 
-- All environment variables parsed in `@vibevault/config`
+- All environment variables parsed in `@OneTune/config`
 - `.env.example` committed; `.env` gitignored
 - No hardcoded URLs, secrets, or feature toggles in application code
 
 ### Feature Flags
 
-Defined in `@vibevault/config`:
+Defined in `@OneTune/config`:
 
 ```typescript
 interface FeatureFlags {

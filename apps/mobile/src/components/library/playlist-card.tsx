@@ -4,7 +4,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { Pressable, Text, View } from "react-native";
 import { ProviderBadge } from "@/components/search/provider-badge";
 import { ArtworkImage } from "@/components/ui/artwork-image";
-import { GlassCard } from "@/components/ui/glass-card";
 
 interface PlaylistCardProps {
   playlist: SavedPlaylistSummary;
@@ -13,9 +12,8 @@ interface PlaylistCardProps {
 export function PlaylistCard({ playlist }: PlaylistCardProps) {
   return (
     <Link asChild href={`/(tabs)/library/${playlist.id}`}>
-      <Pressable accessibilityRole="button" className="mb-2">
-        <GlassCard>
-          <View className="flex-row items-center gap-3 p-3">
+      <Pressable accessibilityRole="button" className="mb-1 rounded-vault-md active:bg-vault-surface-elevated">
+        <View className="flex-row items-center gap-3 px-1 py-2.5">
             <ArtworkImage
               label={`${playlist.name} artwork`}
               radius={12}
@@ -35,9 +33,8 @@ export function PlaylistCard({ playlist }: PlaylistCardProps) {
               </View>
             </View>
 
-            <Ionicons color="#666" name="chevron-forward" size={18} />
+            <Ionicons color="#b3b3b3" name="chevron-forward" size={18} />
           </View>
-        </GlassCard>
       </Pressable>
     </Link>
   );

@@ -1,14 +1,14 @@
-# VibeVault
+# OneTune
 
-**Your music. Your stack. One app.**
+**Your music. Your stack. One tune.**
 
-VibeVault is a self-hosted music platform for **iOS and Android**. Search once across **YouTube, JioSaavn, and Spotify**, build a personal library, stream with background playback, download for offline, and import playlists, albums, or singles from a link — all behind accounts you control.
+OneTune is a self-hosted music platform for **iOS and Android**. Search once across **YouTube, JioSaavn, and Spotify**, build a personal library, stream with background playback, download for offline, and import playlists, albums, or singles from a link — all behind accounts you control.
 
 No Spotify Premium required for discovery. No vendor lock-in. Deploy on **Render + MongoDB Atlas** in an afternoon, or run everything on your own VPS with Docker.
 
 ---
 
-## Why VibeVault?
+## Why OneTune?
 
 | | |
 |---|---|
@@ -43,7 +43,7 @@ No Spotify Premium required for discovery. No vendor lock-in. Deploy on **Render
            │ HTTPS / JSON
            ▼
 ┌─────────────────────┐
-│   VibeVault API     │  Bun · Hono · MongoDB
+│   OneTune API     │  Bun · Hono · MongoDB
 └──────────┬──────────┘
            │
      ┌─────┼─────┬─────────────┐
@@ -79,8 +79,8 @@ The mobile app only talks to **your API**. The API orchestrates provider microse
 ### Local development (≈5 minutes)
 
 ```powershell
-git clone <your-repo-url> vibevault
-cd vibevault
+git clone <your-repo-url> OneTune
+cd OneTune
 bun install
 docker compose up --build -d
 ```
@@ -124,7 +124,7 @@ Pick one path:
 
 1. Create a MongoDB Atlas cluster → copy `MONGODB_URI`
 2. Push repo to GitHub → Render **Blueprint** → apply `render.yaml`
-3. Paste Atlas URI into the `vibevault-api` service
+3. Paste Atlas URI into the `OneTune-api` service
 4. Set `EXPO_PUBLIC_API_URL` in `apps/mobile/eas.json` to your API URL
 5. `eas build --profile preview --platform android` → install APK
 
@@ -133,7 +133,7 @@ Pick one path:
 ## Project structure
 
 ```
-vibevault/
+OneTune/
 ├── apps/
 │   ├── mobile/          # Expo app (iOS + Android)
 │   └── api/             # Hono API on Bun

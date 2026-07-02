@@ -1,15 +1,12 @@
-# Render Blueprint — VibeVault backend (API + providers)
+# Render Blueprint — OneTune backend (API + providers)
 # https://render.com/docs/blueprint-spec
 #
 # Deploy: Render Dashboard → New → Blueprint → connect this repo
-# Set MONGODB_URI manually in the API service after Atlas is ready.
-#
-# Recommended plan: Starter ($7/mo per service) to avoid free-tier cold starts.
-# JioSaavn first build can take 10–15 minutes.
+# Set MONGODB_URI manually on the onetune-api service after Atlas is ready.
 
 services:
   - type: web
-    name: vibevault-extractor
+    name: onetune-extractor
     runtime: docker
     dockerfilePath: ./docker/extractor.Dockerfile
     dockerContext: .
@@ -18,7 +15,7 @@ services:
     autoDeploy: true
 
   - type: web
-    name: vibevault-spotify
+    name: onetune-spotify
     runtime: docker
     dockerfilePath: ./docker/spotify.Dockerfile
     dockerContext: .
@@ -27,7 +24,7 @@ services:
     autoDeploy: true
 
   - type: web
-    name: vibevault-jiosaavn
+    name: onetune-jiosaavn
     runtime: docker
     dockerfilePath: ./docker/jiosaavn.Dockerfile
     dockerContext: .
@@ -36,7 +33,7 @@ services:
     autoDeploy: true
 
   - type: web
-    name: vibevault-api
+    name: onetune-api
     runtime: docker
     dockerfilePath: ./docker/api.Dockerfile
     dockerContext: .
@@ -55,15 +52,15 @@ services:
       - key: EXTRACTOR_URL
         fromService:
           type: web
-          name: vibevault-extractor
+          name: onetune-extractor
           envVarKey: RENDER_EXTERNAL_URL
       - key: SPOTIFY_URL
         fromService:
           type: web
-          name: vibevault-spotify
+          name: onetune-spotify
           envVarKey: RENDER_EXTERNAL_URL
       - key: JIOSAAVN_URL
         fromService:
           type: web
-          name: vibevault-jiosaavn
+          name: onetune-jiosaavn
           envVarKey: RENDER_EXTERNAL_URL

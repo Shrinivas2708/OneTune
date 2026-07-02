@@ -109,9 +109,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.vibevault.app'
+    namespace 'com.onetune.app'
     defaultConfig {
-        applicationId 'com.vibevault.app'
+        applicationId 'com.onetune.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

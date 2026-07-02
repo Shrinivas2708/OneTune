@@ -1,6 +1,6 @@
-# VibeVault — Development Guide
+# OneTune — Development Guide
 
-> Day-to-day workflow for working on VibeVault locally.
+> Day-to-day workflow for working on OneTune locally.
 
 ---
 
@@ -22,8 +22,8 @@ For native mobile: [Expo account](https://expo.dev/signup), [EAS CLI](https://do
 ## First-Time Setup
 
 ```sh
-git clone <repo-url> vibevault
-cd vibevault
+git clone <repo-url> OneTune
+cd OneTune
 bun install
 cp .env.example .env
 ```
@@ -56,7 +56,7 @@ curl http://localhost:3000/health
 ./scripts/dev.sh
 ```
 
-Starts Docker, waits for API health, runs `bun run dev --filter=@vibevault/mobile`.
+Starts Docker, waits for API health, runs `bun run dev --filter=@OneTune/mobile`.
 
 ### Option B — Manual (recommended while backend-only)
 
@@ -73,12 +73,12 @@ cd apps/api
 bun run dev
 ```
 
-Uses local MongoDB at `mongodb://localhost:27017/vibevault` if you set that in `.env` instead of the Docker hostname.
+Uses local MongoDB at `mongodb://localhost:27017/OneTune` if you set that in `.env` instead of the Docker hostname.
 
 **Terminal 3 — Mobile:**
 
 ```sh
-bun run dev --filter=@vibevault/mobile
+bun run dev --filter=@OneTune/mobile
 ```
 
 Set `EXPO_PUBLIC_API_URL` when starting Metro (see [API URL by target](#api-url-by-target) below). Expo reads `.env` from `apps/mobile/` (not the repo root).
@@ -100,7 +100,7 @@ eas login
 eas init                  # links project — replaces placeholder projectId in app.json
 ```
 
-First `eas build` will prompt for Android package name (e.g. `com.yourname.vibevault`). Let EAS manage the keystore unless you already have one.
+First `eas build` will prompt for Android package name (e.g. `com.yourname.OneTune`). Let EAS manage the keystore unless you already have one.
 
 ### Build the dev client
 
@@ -139,7 +139,7 @@ Rebuild with EAS only when **native** dependencies change (new native module, SD
 | Web (`expo start --web`) | `http://localhost:3000` |
 | Android emulator | `http://10.0.2.2:3000` |
 | Physical phone (same Wi‑Fi) | `http://<your-pc-lan-ip>:3000` |
-| Preview / production EAS build | `https://vibevault-api.onrender.com` (Render) or `https://api.yourdomain.com` (VPS) |
+| Preview / production EAS build | `https://OneTune-api.onrender.com` (Render) or `https://api.yourdomain.com` (VPS) |
 
 Find LAN IP: `ipconfig` (Windows) or `ip addr` (Linux). Allow inbound TCP **3000** through Windows Firewall if the phone cannot reach the API.
 
@@ -166,8 +166,8 @@ After installing the dev client APK and connecting to Metro:
 | `bun install` | Install all workspace dependencies |
 | `bun run typecheck` | TypeScript check all packages |
 | `bun run build` | Build all packages |
-| `bun run dev --filter=@vibevault/api` | API with watch mode |
-| `bun run dev --filter=@vibevault/mobile` | Expo dev server |
+| `bun run dev --filter=@OneTune/api` | API with watch mode |
+| `bun run dev --filter=@OneTune/mobile` | Expo dev server |
 | `docker compose up -d` | Start backend in background |
 | `docker compose down` | Stop backend |
 | `docker compose logs -f api` | Follow API logs |
@@ -253,7 +253,7 @@ Copy root env: `cp .env.example .env`. For mobile, create `apps/mobile/.env` or 
 **Local API outside Docker** — use:
 
 ```env
-MONGODB_URI=mongodb://localhost:27017/vibevault
+MONGODB_URI=mongodb://localhost:27017/OneTune
 EXTRACTOR_URL=http://localhost:8001
 JIOSAAVN_URL=http://localhost:3001
 SPOTIFY_URL=http://localhost:8003
@@ -268,8 +268,8 @@ You must expose provider ports in `docker-compose.yml` for host networking, or r
 Shared packages live in `packages/`. After changing one:
 
 ```sh
-bun run typecheck --filter=@vibevault/types
-bun run build --filter=@vibevault/utils
+bun run typecheck --filter=@OneTune/types
+bun run build --filter=@OneTune/utils
 ```
 
 Turbo caches builds — run from repo root.

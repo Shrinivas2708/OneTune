@@ -9,7 +9,7 @@ export function TabBarWithPlayer(props: BottomTabBarProps) {
   return (
     <View className="bg-vault-background" style={{ overflow: "visible", paddingBottom: insets.bottom }}>
       <PlayerChrome />
-      <View className="border-t border-vault-border bg-vault-backgroundSoft/95">
+      <View className="bg-vault-background">
         <BottomTabBar {...props} />
       </View>
     </View>

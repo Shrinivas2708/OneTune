@@ -1,6 +1,6 @@
-# VibeVault — Deployment Guide
+# OneTune — Deployment Guide
 
-> How to run VibeVault locally, on **Render + Atlas**, or on a VPS. Update this file when infrastructure changes.
+> How to run OneTune locally, on **Render + Atlas**, or on a VPS. Update this file when infrastructure changes.
 
 ---
 
@@ -16,7 +16,7 @@
 
 ## Overview
 
-VibeVault backend runs as **Docker containers**. The mobile app is built with **Expo / EAS** and points at your public API URL.
+OneTune backend runs as **Docker containers**. The mobile app is built with **Expo / EAS** and points at your public API URL.
 
 **Render (recommended for cloud):** 4 provider services + 1 API on Render, MongoDB on Atlas — see [DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md).
 
@@ -75,8 +75,8 @@ cp .env.example .env
 |----------|---------|-------------|
 | `JWT_SECRET` | `openssl rand -base64 48` | Signs access/refresh tokens — **never use default in prod** |
 | `NODE_ENV` | `production` | Set automatically in `docker-compose.prod.yml`; disables `/v1/internal/*` |
-| `MONGODB_URI` | `mongodb://mongodb:27017/vibevault` | Mongo connection (Docker service name) |
-| `VIBEVAULT_DOMAIN` | `api.yourdomain.com` | Public API hostname (DNS A record → VPS) |
+| `MONGODB_URI` | `mongodb://mongodb:27017/OneTune` | Mongo connection (Docker service name) |
+| `OneTune_DOMAIN` | `api.yourdomain.com` | Public API hostname (DNS A record → VPS) |
 | `CERTBOT_EMAIL` | `you@example.com` | Let's Encrypt registration email |
 | `USE_HTTPS` | `false` → `true` | Enable TLS nginx config after certificates exist |
 
@@ -94,15 +94,15 @@ cp .env.example .env
 
 | Variable | Example | Description |
 |----------|---------|-------------|
-| `EXPO_PUBLIC_API_URL` | `https://vibevault-api.onrender.com` | API base URL baked into EAS builds (`eas.json` or EAS Secrets) |
+| `EXPO_PUBLIC_API_URL` | `https://OneTune-api.onrender.com` | API base URL baked into EAS builds (`eas.json` or EAS Secrets) |
 
 Set per profile in `apps/mobile/eas.json`:
 
 | Profile | Purpose | Typical `EXPO_PUBLIC_API_URL` |
 |---------|---------|-------------------------------|
 | `development` | Dev client | Set at **Metro start** (see [DEVELOPMENT.md](./DEVELOPMENT.md#api-url-by-target)) — not `localhost` on physical devices |
-| `preview` | Internal test builds | `https://vibevault-api.onrender.com` (or your Render/VPS URL) |
-| `production` | App Store / Play Store | `https://vibevault-api.onrender.com` (or your Render/VPS URL) |
+| `preview` | Internal test builds | `https://OneTune-api.onrender.com` (or your Render/VPS URL) |
+| `production` | App Store / Play Store | `https://OneTune-api.onrender.com` (or your Render/VPS URL) |
 
 `apps/mobile/app.config.js` disables Android cleartext traffic when the URL uses `https://`.
 
@@ -155,8 +155,8 @@ sudo usermod -aG docker $USER
 ### 2. Clone and configure
 
 ```sh
-git clone <your-repo-url> vibevault
-cd vibevault
+git clone <your-repo-url> OneTune
+cd OneTune
 cp .env.example .env
 ```
 
@@ -164,10 +164,10 @@ Edit `.env`:
 
 ```env
 JWT_SECRET=<openssl rand -base64 48>
-VIBEVAULT_DOMAIN=api.yourdomain.com
+OneTune_DOMAIN=api.yourdomain.com
 CERTBOT_EMAIL=you@example.com
 USE_HTTPS=false
-MONGODB_URI=mongodb://mongodb:27017/vibevault
+MONGODB_URI=mongodb://mongodb:27017/OneTune
 ```
 
 Point DNS: **A record** `api.yourdomain.com` → your VPS public IP.
@@ -217,7 +217,7 @@ sudo ufw enable
 
 ```sh
 # Daily at 03:00
-0 3 * * * /home/ubuntu/vibevault/scripts/renew-letsencrypt.sh >> /var/log/vibevault-certbot.log 2>&1
+0 3 * * * /home/ubuntu/OneTune/scripts/renew-letsencrypt.sh >> /var/log/OneTune-certbot.log 2>&1
 ```
 
 ### 7. MongoDB backups
@@ -227,12 +227,12 @@ sudo ufw enable
 # Windows: .\scripts\backup-mongodb.ps1
 ```
 
-Backups land in `./backups/vibevault-YYYY-MM-DD-HHMM/`. Copy off-server regularly.
+Backups land in `./backups/OneTune-YYYY-MM-DD-HHMM/`. Copy off-server regularly.
 
 Schedule (cron example — weekly Sunday 04:00):
 
 ```sh
-0 4 * * 0 /home/ubuntu/vibevault/scripts/backup-mongodb.sh >> /var/log/vibevault-backup.log 2>&1
+0 4 * * 0 /home/ubuntu/OneTune/scripts/backup-mongodb.sh >> /var/log/OneTune-backup.log 2>&1
 ```
 
 ### 8. Deploy updates
@@ -257,17 +257,17 @@ docker image prune -f
 
 | Container | Host port | Notes |
 |-----------|-----------|-------|
-| `vibevault-api` | **3000** | Direct API access |
-| `vibevault-mongodb` | 27017 | Local tooling only |
+| `OneTune-api` | **3000** | Direct API access |
+| `OneTune-mongodb` | 27017 | Local tooling only |
 | Providers | — | Internal |
 
 ### Production (`docker-compose.prod.yml`)
 
 | Container | Host port | Notes |
 |-----------|-----------|-------|
-| `vibevault-nginx` | **80, 443** | Public entrypoint |
-| `vibevault-api` | — | Internal only |
-| `vibevault-mongodb` | — | **Never expose** |
+| `OneTune-nginx` | **80, 443** | Public entrypoint |
+| `OneTune-api` | — | Internal only |
+| `OneTune-mongodb` | — | **Never expose** |
 | Providers | — | Internal |
 
 First `docker compose up --build` can take **5–15 minutes** (JioSaavn + Spotify images).
@@ -281,8 +281,8 @@ Config lives in `docker/nginx/`:
 | File | Purpose |
 |------|---------|
 | `nginx.conf` | Global settings, rate limits, upstream |
-| `conf.d/vibevault.conf` | HTTP bootstrap (default) |
-| `conf.d/vibevault.https.conf` | HTTPS template (used when `USE_HTTPS=true`) |
+| `conf.d/OneTune.conf` | HTTP bootstrap (default) |
+| `conf.d/OneTune.https.conf` | HTTPS template (used when `USE_HTTPS=true`) |
 | `proxy_params` | Forwarded headers for Hono |
 
 Rate limits: `/v1/search` 30 req/min per IP; other routes 120 req/min.

@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { APP_NAME } from "@vibevault/config";
 import { ImportPlaylistRequestSchema } from "@vibevault/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
@@ -129,7 +130,7 @@ export default function ImportPlaylistScreen() {
 
         <Text className="font-inter text-xs leading-5 text-vault-muted">
           Spotify imports are metadata-only (play via JioSaavn/YouTube search). YouTube and
-          JioSaavn links can be played directly in VibeVault.
+          {`JioSaavn links can be played directly in ${APP_NAME}.`}
         </Text>
       </View>
     </Screen>

@@ -1,4 +1,4 @@
-const STORAGE_KEY = "vibevault-volume";
+const STORAGE_KEY = "onetune-volume";
 
 function getVolumeStorage(): Storage | null {
   if (typeof window === "undefined") return null;

@@ -24,7 +24,7 @@ function createStorage(): StringStorage {
   }
 
   const { MMKV } = require("react-native-mmkv") as typeof import("react-native-mmkv");
-  const mmkv = new MMKV({ id: "vibevault-downloads" });
+  const mmkv = new MMKV({ id: "onetune-downloads" });
 
   return {
     getString: (key) => mmkv.getString(key),

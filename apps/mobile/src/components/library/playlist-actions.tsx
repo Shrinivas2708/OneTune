@@ -111,7 +111,7 @@ export function PlaylistActions({ tracks }: PlaylistActionsProps) {
       <Pressable
         accessibilityLabel="Shuffle playlist"
         accessibilityRole="button"
-        className="h-12 w-12 items-center justify-center rounded-vault-xl border border-vault-border bg-vault-surface-card"
+        className="h-12 w-12 items-center justify-center rounded-full bg-vault-surface-elevated"
         disabled={isPlaying || tracks.length === 0}
         onPress={() => void handlePlay(true)}
       >
@@ -122,7 +122,7 @@ export function PlaylistActions({ tracks }: PlaylistActionsProps) {
         <Pressable
           accessibilityLabel="Download playlist"
           accessibilityRole="button"
-          className="h-12 w-12 items-center justify-center rounded-vault-xl border border-vault-border bg-vault-surface-card"
+          className="h-12 w-12 items-center justify-center rounded-full bg-vault-surface-elevated"
           disabled={isDownloading || tracks.length === 0}
           onPress={() => void handleDownloadAll()}
         >

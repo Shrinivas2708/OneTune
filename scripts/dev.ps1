@@ -20,9 +20,9 @@ do {
   }
 } until ($healthy)
 
-Write-Host "==> VibeVault stack is ready."
+Write-Host "==> OneTune stack is ready."
 Write-Host "    API:       http://localhost:3000/health"
 Write-Host "    MongoDB:   localhost:27017"
 Write-Host ""
 Write-Host "==> Starting mobile dev server..."
-bun run dev --filter=@vibevault/mobile
+bun run dev --filter=@OneTune/mobile

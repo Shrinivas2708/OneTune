@@ -14,7 +14,7 @@ export function SearchMessage({
 }: SearchMessageProps) {
   return (
     <View className="flex-1 items-center justify-center px-8 py-16">
-      <View className="mb-5 h-20 w-20 items-center justify-center rounded-full border border-vault-border-light bg-vault-surface-elevated">
+      <View className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-vault-surface-elevated">
         <Ionicons color="#1ed760" name={icon} size={34} />
       </View>
       <Text className="text-center font-jakarta text-xl text-vault-text">{title}</Text>

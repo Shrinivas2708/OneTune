@@ -1,15 +1,15 @@
 # Production Docker Compose — VPS deployment
 # Usage: docker compose -f docker-compose.prod.yml up --build -d
 #
-# Requires .env with JWT_SECRET, VIBEVAULT_DOMAIN, CERTBOT_EMAIL (see .env.example)
+# Requires .env with JWT_SECRET, OneTune_DOMAIN, CERTBOT_EMAIL (see .env.example)
 
 services:
   mongodb:
     image: mongo:7
-    container_name: vibevault-mongodb
+    container_name: OneTune-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-vibevault}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE:-OneTune}
     volumes:
       - mongodb_data:/data/db
     healthcheck:
@@ -23,7 +23,7 @@ services:
     build:
       context: .
       dockerfile: docker/extractor.Dockerfile
-    container_name: vibevault-extractor
+    container_name: OneTune-extractor
     restart: unless-stopped
     environment:
       PORT: ${EXTRACTOR_PORT:-8001}
@@ -44,7 +44,7 @@ services:
     build:
       context: .
       dockerfile: docker/jiosaavn.Dockerfile
-    container_name: vibevault-jiosaavn
+    container_name: OneTune-jiosaavn
     restart: unless-stopped
     healthcheck:
       test:
@@ -63,7 +63,7 @@ services:
     build:
       context: .
       dockerfile: docker/spotify.Dockerfile
-    container_name: vibevault-spotify
+    container_name: OneTune-spotify
     restart: unless-stopped
     healthcheck:
       test:
@@ -82,12 +82,12 @@ services:
     build:
       context: .
       dockerfile: docker/api.Dockerfile
-    container_name: vibevault-api
+    container_name: OneTune-api
     restart: unless-stopped
     environment:
       PORT: ${PORT:-3000}
       NODE_ENV: production
-      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/vibevault}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongodb:27017/OneTune}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       EXTRACTOR_URL: ${EXTRACTOR_URL:-http://extractor:8001}
       JIOSAAVN_URL: ${JIOSAAVN_URL:-http://jiosaavn:3000}
@@ -119,13 +119,13 @@ services:
     build:
       context: .
       dockerfile: docker/nginx/Dockerfile
-    container_name: vibevault-nginx
+    container_name: OneTune-nginx
     restart: unless-stopped
     ports:
       - "80:80"
       - "443:443"
     environment:
-      VIBEVAULT_DOMAIN: ${VIBEVAULT_DOMAIN:-}
+      OneTune_DOMAIN: ${OneTune_DOMAIN:-}
       USE_HTTPS: ${USE_HTTPS:-false}
     volumes:
       - certbot_www:/var/www/certbot:ro

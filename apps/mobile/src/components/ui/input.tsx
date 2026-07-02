@@ -14,8 +14,8 @@ export function VaultInput({ label, error, className = "", ...props }: VaultInpu
       </Text>
       <TextInput
         autoCapitalize="none"
-        className={`rounded-vault-pill border border-vault-border-light bg-vault-surface-elevated px-4 py-3.5 font-inter text-base text-vault-text ${className}`}
-        placeholderTextColor="#7c7c7c"
+        className={`rounded-vault-pill bg-vault-surface-elevated px-4 py-3.5 font-inter text-base text-vault-text ${className}`}
+        placeholderTextColor="#727272"
         {...props}
       />
       {error ? (

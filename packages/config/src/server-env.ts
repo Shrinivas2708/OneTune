@@ -8,7 +8,7 @@ export const ServerEnvSchema = z.object({
   MONGODB_URI: z
     .string()
     .min(1)
-    .default("mongodb://localhost:27017/vibevault"),
+    .default("mongodb://localhost:27017/onetune"),
   JWT_SECRET: z.string().min(16).default("dev-secret-change-me-in-production"),
   EXTRACTOR_URL: z.string().url().default("http://localhost:8001"),
   JIOSAAVN_URL: z.string().url().default("http://localhost:3001"),

@@ -21,7 +21,7 @@ export function QuickTile({
   return (
     <Pressable
       accessibilityRole="button"
-      className="flex-1 overflow-hidden rounded-vault-xl border border-vault-border bg-vault-surface-card/90 p-4"
+      className="flex-1 overflow-hidden rounded-vault-lg bg-vault-surface p-4"
       onPress={() => {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress();

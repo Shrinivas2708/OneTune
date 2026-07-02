@@ -2,7 +2,7 @@
 # Usage: .\scripts\test-search.ps1
 
 $BaseUrl = if ($env:API_URL) { $env:API_URL } else { "http://localhost:3000" }
-$Email = if ($env:TEST_EMAIL) { $env:TEST_EMAIL } else { "search@vibevault.local" }
+$Email = if ($env:TEST_EMAIL) { $env:TEST_EMAIL } else { "search@OneTune.local" }
 $Password = if ($env:TEST_PASSWORD) { $env:TEST_PASSWORD } else { "password123" }
 
 function Get-AccessToken {

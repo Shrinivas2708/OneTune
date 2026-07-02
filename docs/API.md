@@ -1,6 +1,6 @@
-# VibeVault — API Reference
+# OneTune — API Reference
 
-> HTTP API for the VibeVault backend. Base URL: `http://localhost:3000` (dev) or your VPS URL (prod).
+> HTTP API for the OneTune backend. Base URL: `http://localhost:3000` (dev) or your VPS URL (prod).
 
 **Version prefix:** `/v1`
 

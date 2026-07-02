@@ -1,4 +1,4 @@
-export const APP_NAME = "VibeVault" as const;
+export const APP_NAME = "OneTune" as const;
 
 export const API_VERSION = "v1" as const;
 

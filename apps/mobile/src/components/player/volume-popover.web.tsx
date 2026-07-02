@@ -18,7 +18,7 @@ export function VolumePopover() {
   return (
     <View className="relative">
       {open ? (
-        <View className="absolute bottom-9 right-0 z-30 w-56 rounded-vault-xl border border-vault-border bg-vault-surface-elevated p-3 shadow-vault-medium">
+        <View className="absolute bottom-9 right-0 z-30 w-56 rounded-vault-xl bg-vault-surface-elevated p-3 shadow-vault-medium">
           <VolumeSlider showLabel />
         </View>
       ) : null}

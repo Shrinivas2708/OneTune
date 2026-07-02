@@ -59,7 +59,7 @@ export default function HistoryScreen() {
             <Pressable
               accessibilityLabel="Clear history"
               accessibilityRole="button"
-              className="mt-1 rounded-vault-lg border border-vault-border bg-vault-surface-elevated p-2.5"
+              className="mt-1 rounded-vault-lg bg-vault-surface-elevated p-2.5"
               disabled={clearHistory.isPending}
               onPress={confirmClearHistory}
             >

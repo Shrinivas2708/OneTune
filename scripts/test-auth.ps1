@@ -5,7 +5,7 @@ $BaseUrl = if ($env:API_URL) { $env:API_URL } else { "http://localhost:3000" }
 
 Write-Host "==> Register"
 $registerBody = @{
-  email = "test@vibevault.local"
+  email = "test@OneTune.local"
   password = "password123"
   displayName = "Test User"
 } | ConvertTo-Json
@@ -15,7 +15,7 @@ try {
 } catch {
   Write-Host "Register failed (user may exist), trying login..."
   $loginBody = @{
-    email = "test@vibevault.local"
+    email = "test@OneTune.local"
     password = "password123"
   } | ConvertTo-Json
   $register = Invoke-RestMethod -Uri "$BaseUrl/v1/auth/login" -Method POST -Body $loginBody -ContentType "application/json"

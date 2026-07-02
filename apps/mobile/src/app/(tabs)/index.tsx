@@ -1,3 +1,4 @@
+import { APP_NAME } from "@vibevault/config";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { QuickTile } from "@/components/home/quick-tile";
@@ -35,13 +36,13 @@ export default function HomeScreen() {
       >
         <View className="px-6 pt-2">
           <Text className="font-inter text-sm uppercase tracking-[2px] text-vault-accent">
-            VibeVault
+            {APP_NAME}
           </Text>
           <VaultHeading>{getGreeting()}</VaultHeading>
           <VaultSubheading>
             {user?.displayName
               ? `Back on the decks, ${user.displayName}`
-              : "Your music, every provider, one vault"}
+              : "Your music, every provider, one tune"}
           </VaultSubheading>
         </View>
 
@@ -96,7 +97,7 @@ export default function HomeScreen() {
               <Pressable
                 key={term}
                 accessibilityRole="button"
-                className="rounded-vault-pill border border-vault-border-light bg-vault-surface-elevated px-4 py-2.5"
+                className="rounded-vault-pill bg-vault-surface-elevated px-4 py-2.5"
                 onPress={() =>
                   router.push({
                     pathname: "/(tabs)/search",
@@ -115,7 +116,7 @@ export default function HomeScreen() {
         {currentTrack ? (
           <View className="mt-8 px-6">
             <Text className="font-jakarta text-lg text-vault-text">Now playing</Text>
-            <GlassCard active className="mt-3">
+            <GlassCard active className="mt-3 bg-vault-surface">
               <View className="flex-row items-center gap-3 p-3">
                 <ArtworkImage
                   label={`${currentTrack.title} artwork`}

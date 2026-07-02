@@ -1,22 +1,26 @@
 {
-  "scheme": "vibevault",
+  "scheme": "onetune",
   "userInterfaceStyle": "dark",
   "orientation": "portrait",
-  "icon": "./assets/icon.png",
-  "backgroundColor": "#121212",
+  "icon": "./assets/logo.png",
+  "backgroundColor": "#000000",
   "splash": {
-    "image": "./assets/splash-icon.png",
-    "backgroundColor": "#121212",
+    "image": "./assets/logo.png",
+    "backgroundColor": "#000000",
     "resizeMode": "contain"
   },
   "ios": {
-    "bundleIdentifier": "com.vibevault.app",
+    "bundleIdentifier": "com.onetune.app",
     "infoPlist": {
       "UIBackgroundModes": ["audio"]
     }
   },
   "android": {
-    "package": "com.vibevault.app",
+    "package": "com.onetune.app",
+    "adaptiveIcon": {
+      "foregroundImage": "./assets/logo.png",
+      "backgroundColor": "#000000"
+    },
     "permissions": [
       "FOREGROUND_SERVICE",
       "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
@@ -34,9 +38,9 @@
     [
       "expo-splash-screen",
       {
-        "backgroundColor": "#121212",
-        "image": "./assets/splash-icon.png",
-        "imageWidth": 200
+        "backgroundColor": "#000000",
+        "image": "./assets/logo.png",
+        "imageWidth": 280
       }
     ],
     [
@@ -48,12 +52,12 @@
       }
     ]
   ],
-  "name": "VibeVault",
-  "slug": "vibevault",
+  "name": "OneTune",
+  "slug": "onetune",
   "version": "1.0.0",
   "extra": {
     "router": {
-      "origin": "https://vibevault.app"
+      "origin": "https://onetune.app"
     },
     "eas": {
       "projectId": "122c1b04-d383-4bc5-8eed-15c308ac28b6"

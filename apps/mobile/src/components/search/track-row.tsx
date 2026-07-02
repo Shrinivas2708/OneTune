@@ -36,8 +36,8 @@ export function TrackRow({
   const track = searchResultToTrack(result);
 
   return (
-    <GlassCard active={isActive} className="mb-2">
-      <View className="flex-row items-center gap-2 p-3">
+    <GlassCard active={isActive} className="mb-0.5">
+      <View className="flex-row items-center gap-2 px-1 py-2">
         <Pressable
           accessibilityRole="button"
           className="min-w-0 flex-1 flex-row items-center gap-3"

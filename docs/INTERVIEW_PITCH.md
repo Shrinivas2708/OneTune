@@ -1,4 +1,4 @@
-# VibeVault — Interview Pitch
+# OneTune — Interview Pitch
 
 > How to talk about this project in interviews, portfolio reviews, and technical discussions.
 
@@ -6,7 +6,7 @@
 
 ## The Elevator Pitch (30 seconds)
 
-**VibeVault** is a self-hosted music platform I’m building as a production-grade monorepo — think Spotify’s UX meets a personal media server. Users on iOS and Android search across multiple music providers through one unified interface, stream tracks, download for offline playback, and manage favorites and playlists. The backend runs on a VPS via Docker Compose, with a clean provider-adapter architecture so adding a new source is plug-and-play, not a rewrite.
+**OneTune** is a self-hosted music platform I’m building as a production-grade monorepo — think Spotify’s UX meets a personal media server. Users on iOS and Android search across multiple music providers through one unified interface, stream tracks, download for offline playback, and manage favorites and playlists. The backend runs on a VPS via Docker Compose, with a clean provider-adapter architecture so adding a new source is plug-and-play, not a rewrite.
 
 ---
 
@@ -46,11 +46,11 @@ Music is fragmented across YouTube, Spotify playlists, regional catalogs like Ji
 - MongoDB user repository with bcrypt passwords
 
 ### Milestone 2 — Shared Foundation
-- **`@vibevault/types`** — Zod schemas as single source of truth for all API contracts (TrackRef, StreamManifest, search results, auth DTOs)
-- **`@vibevault/provider-core`** — `MusicProvider` interface + registry; runtime-agnostic adapter pattern
-- **`@vibevault/config`** — validated server env, feature flags, shared constants
-- **`@vibevault/ui`** — design tokens from a Spotify-inspired design system + Tailwind preset
-- **`@vibevault/utils`** — duration formatting, dedup keys, pagination helpers
+- **`@OneTune/types`** — Zod schemas as single source of truth for all API contracts (TrackRef, StreamManifest, search results, auth DTOs)
+- **`@OneTune/provider-core`** — `MusicProvider` interface + registry; runtime-agnostic adapter pattern
+- **`@OneTune/config`** — validated server env, feature flags, shared constants
+- **`@OneTune/ui`** — design tokens from a Spotify-inspired design system + Tailwind preset
+- **`@OneTune/utils`** — duration formatting, dedup keys, pagination helpers
 
 ---
 
@@ -80,7 +80,7 @@ Mobile → API → ProviderRegistry → [Spotify | JioSaavn | YouTube adapters]
 
 ### 3. Zod-First Shared Types
 
-Schemas live in `@vibevault/types` and are imported by both API (validation) and mobile (form validation, type safety). One definition, zero drift.
+Schemas live in `@OneTune/types` and are imported by both API (validation) and mobile (form validation, type safety). One definition, zero drift.
 
 ### 4. Monorepo Boundaries
 
@@ -88,7 +88,7 @@ Strict dependency rules: `packages/` never imports `apps/`. Services communicate
 
 ### 5. Design System as Code
 
-`docs/DESIGN.md` defines the visual language. `@vibevault/ui` encodes tokens (colors, typography, spacing, shadows) consumed by NativeWind — no hardcoded hex in components.
+`docs/DESIGN.md` defines the visual language. `@OneTune/ui` encodes tokens (colors, typography, spacing, shadows) consumed by NativeWind — no hardcoded hex in components.
 
 ---
 
@@ -165,4 +165,4 @@ A: For a larger team, I’d add contract tests between packages earlier. I’d a
 
 ## One-Liner for Resume
 
-> Built VibeVault — a self-hosted, multi-provider music platform (Expo, Hono, Python/yt-dlp, Docker) with unified search, provider-adapter architecture, and Zod-validated shared contracts in a Turborepo monorepo.
+> Built OneTune — a self-hosted, multi-provider music platform (Expo, Hono, Python/yt-dlp, Docker) with unified search, provider-adapter architecture, and Zod-validated shared contracts in a Turborepo monorepo.

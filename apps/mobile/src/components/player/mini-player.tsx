@@ -37,7 +37,7 @@ export function MiniPlayer() {
   };
 
   return (
-    <View className="rounded-t-vault-xl border-t border-vault-border bg-vault-surface-card/95">
+    <View className="rounded-t-vault-lg bg-vault-surface">
       <View className="px-3 pt-1.5">
         <ProgressBar compact duration={duration} position={position} onSeek={seekTo} />
       </View>

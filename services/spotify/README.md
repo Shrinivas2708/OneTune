@@ -1,1 +1,1 @@
-# VibeVault Spotify service — SpotifyScraper wrapper (see docker/spotify.Dockerfile)
+# OneTune Spotify service — SpotifyScraper wrapper (see docker/spotify.Dockerfile)

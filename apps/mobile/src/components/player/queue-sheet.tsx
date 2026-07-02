@@ -13,7 +13,7 @@ interface QueueSheetProps {
 
 export function QueueSheet({ queue, onSelect, onClose }: QueueSheetProps) {
   return (
-    <View className="max-h-72 rounded-t-vault-xl border-t border-vault-border bg-vault-surface-elevated px-4 pb-2 pt-3">
+    <View className="max-h-72 rounded-t-vault-lg bg-vault-surface px-4 pb-2 pt-3">
       <View className="mb-4 flex-row items-center justify-between">
         <Text className="font-jakarta text-lg text-vault-text">Up next</Text>
         <Pressable accessibilityLabel="Close queue" accessibilityRole="button" onPress={onClose}>

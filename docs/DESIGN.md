@@ -1,6 +1,6 @@
 # Design System Inspired by Spotify
 
-> **VibeVault implementation guide:** See [Section 10](#10-vibevault-implementation) for font substitutes, token locations, and mobile-specific rules. This document is the single source of truth for all UI work.
+> **OneTune implementation guide:** See [Section 10](#10-OneTune-implementation) for font substitutes, token locations, and mobile-specific rules. This document is the single source of truth for all UI work.
 
 ## 1. Visual Theme & Atmosphere
 
@@ -249,9 +249,9 @@ What distinguishes Spotify is its pill-and-circle geometry. Primary buttons use 
 
 ---
 
-## 10. VibeVault Implementation
+## 10. OneTune Implementation
 
-This section maps the design language above to VibeVault's codebase. **All UI code must use tokens from `@vibevault/ui` — never hardcode hex values in components.**
+This section maps the design language above to OneTune's codebase. **All UI code must use tokens from `@OneTune/ui` — never hardcode hex values in components.**
 
 ### Brand Naming in Code
 
@@ -265,7 +265,7 @@ This section maps the design language above to VibeVault's codebase. **All UI co
 
 ### Font Mapping (Open Source)
 
-| Design role | VibeVault font | Weight | Package |
+| Design role | OneTune font | Weight | Package |
 |-------------|----------------|--------|---------|
 | Title (SpotifyMixUITitle) | **Plus Jakarta Sans** | 700 | `@expo-google-fonts/plus-jakarta-sans` |
 | UI / Body (SpotifyMixUI) | **Inter** | 400, 600, 700 | `@expo-google-fonts/inter` |
@@ -275,7 +275,7 @@ Never reference SpotifyMixUI or CircularSp in code. The visual rhythm (compact s
 
 ### Mobile Layout (iOS + Android)
 
-VibeVault is mobile-first. Adapt Section 8 as follows:
+OneTune is mobile-first. Adapt Section 8 as follows:
 
 - **Navigation:** Bottom tab bar (not sidebar) — Home, Search, Library, Settings
 - **Now Playing:** Persistent mini-player above tab bar; full-screen overlay on tap

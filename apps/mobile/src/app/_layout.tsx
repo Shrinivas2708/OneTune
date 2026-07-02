@@ -49,7 +49,7 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView className="flex-1">
+    <GestureHandlerRootView className="flex-1 bg-vault-background">
       <AppProviders>
         <PlayerSync />
         <ToastHost />
@@ -57,7 +57,7 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: "#0a0a0a" },
+            contentStyle: { backgroundColor: "#121212" },
             animation: "fade",
           }}
         >

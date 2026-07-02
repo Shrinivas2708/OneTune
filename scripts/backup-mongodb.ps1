@@ -1,9 +1,9 @@
 $ErrorActionPreference = "Stop"
 
-$container = if ($env:MONGODB_CONTAINER) { $env:MONGODB_CONTAINER } else { "vibevault-mongodb" }
-$db = if ($env:MONGO_INITDB_DATABASE) { $env:MONGO_INITDB_DATABASE } else { "vibevault" }
+$container = if ($env:MONGODB_CONTAINER) { $env:MONGODB_CONTAINER } else { "OneTune-mongodb" }
+$db = if ($env:MONGO_INITDB_DATABASE) { $env:MONGO_INITDB_DATABASE } else { "OneTune" }
 $stamp = Get-Date -Format "yyyy-MM-dd-HHmm"
-$outDir = "backups/vibevault-$stamp"
+$outDir = "backups/OneTune-$stamp"
 
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 

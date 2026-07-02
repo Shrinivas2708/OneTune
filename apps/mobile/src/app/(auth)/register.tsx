@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { APP_NAME } from "@vibevault/config";
 import { RegisterRequestSchema } from "@vibevault/types";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -60,7 +61,7 @@ export default function RegisterScreen() {
             <View>
               <VaultHeading>Create account</VaultHeading>
               <VaultSubheading>
-                Join your household VibeVault server.
+                Join your household {APP_NAME} server.
               </VaultSubheading>
             </View>
 

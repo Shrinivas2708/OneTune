@@ -1,11 +1,11 @@
 $ErrorActionPreference = "Stop"
 $baseUrl = if ($env:API_URL) { $env:API_URL } else { "http://localhost:3000" }
 
-Write-Host "VibeVault playlist import test" -ForegroundColor Cyan
+Write-Host "OneTune playlist import test" -ForegroundColor Cyan
 Write-Host "API: $baseUrl"
 
 $registerBody = @{
-  email = "playlist-test@vibevault.local"
+  email = "playlist-test@OneTune.local"
   password = "password123"
   displayName = "Playlist Tester"
 } | ConvertTo-Json
@@ -14,7 +14,7 @@ try {
   $auth = Invoke-RestMethod -Method Post -Uri "$baseUrl/v1/auth/register" -ContentType "application/json" -Body $registerBody
 } catch {
   $loginBody = @{
-    email = "playlist-test@vibevault.local"
+    email = "playlist-test@OneTune.local"
     password = "password123"
   } | ConvertTo-Json
   $auth = Invoke-RestMethod -Method Post -Uri "$baseUrl/v1/auth/login" -ContentType "application/json" -Body $loginBody

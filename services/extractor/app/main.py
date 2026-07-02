@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router as extract_router
 
 app = FastAPI(
-    title="VibeVault Extractor",
-    description="yt-dlp extraction service for VibeVault",
+    title="OneTune Extractor",
+    description="yt-dlp extraction service for OneTune",
     version="0.1.0",
 )
 

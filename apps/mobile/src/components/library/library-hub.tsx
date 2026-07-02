@@ -56,7 +56,7 @@ export function LibraryHub() {
         <Pressable
           key={item.label}
           accessibilityRole="button"
-          className="min-w-0 flex-1 items-center rounded-vault-xl border border-vault-border bg-vault-surface-card/90 px-2 py-3"
+          className="min-w-0 flex-1 items-center rounded-vault-lg bg-vault-surface px-2 py-3"
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             router.push(item.href as never);

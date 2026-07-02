@@ -25,7 +25,7 @@ fi
 
 echo "==> Verify workspace links"
 for pkg in api mobile config provider-core types ui utils; do
-  target="$REPO_ROOT/node_modules/@vibevault/$pkg"
+  target="$REPO_ROOT/node_modules/@OneTune/$pkg"
   if [[ ! -e "$target" ]]; then
     echo "Missing workspace link: $target"
     exit 1

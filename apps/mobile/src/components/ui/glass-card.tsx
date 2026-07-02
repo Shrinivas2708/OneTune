@@ -14,10 +14,8 @@ export function GlassCard({
   onPress,
   ...props
 }: GlassCardProps) {
-  const baseClass = `overflow-hidden rounded-vault-xl border bg-vault-surface-card/90 ${
-    active
-      ? "border-vault-accent/35 bg-vault-surface-elevated"
-      : "border-vault-border"
+  const baseClass = `overflow-hidden rounded-vault-md ${
+    active ? "bg-vault-surface-elevated" : ""
   } ${className}`;
 
   if (onPress) {

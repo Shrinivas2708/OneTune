@@ -1,4 +1,4 @@
-# VibeVault — Architecture Decision Log
+# OneTune — Architecture Decision Log
 
 > Record of significant technical decisions. Each entry is immutable once accepted; superseded decisions are marked, not deleted.
 
@@ -114,7 +114,7 @@
 
 **Context:** Multiple music sources with different capabilities, runtimes, and APIs.
 
-**Decision:** All providers implement a shared contract in `@vibevault/provider-core`. Application code never branches on provider-specific logic.
+**Decision:** All providers implement a shared contract in `@OneTune/provider-core`. Application code never branches on provider-specific logic.
 
 **Initial providers:**
 | Provider | Library/Service | Runtime |
@@ -169,7 +169,7 @@
 **Decision:** Use open-source alternatives. Never ship proprietary fonts without explicit licensed copies from the project owner.
 
 **Mapping:**
-| Design reference | VibeVault implementation |
+| Design reference | OneTune implementation |
 |-----------------|---------------------------|
 | SpotifyMixUITitle | **Plus Jakarta Sans** (700) |
 | SpotifyMixUI | **Inter** (400, 600, 700) |
@@ -240,11 +240,11 @@ Tokens defined in `packages/ui`.
 **Date:** 2025-06-25
 
 **Decision:** From day one, enforce:
-- Feature flags (`@vibevault/config`)
+- Feature flags (`@OneTune/config`)
 - Environment-based configuration (no hardcoded values)
 - Centralized structured logging
 - Typed API responses with Zod validation
-- Shared design tokens (`@vibevault/ui`)
+- Shared design tokens (`@OneTune/ui`)
 - Clean package dependency boundaries
 
 ---
@@ -269,17 +269,17 @@ Update docs as part of every milestone, not as an afterthought.
 **Status:** Accepted  
 **Date:** 2025-06-25
 
-**Decision:** All API contracts defined as Zod schemas in `@vibevault/types`. Server env validated in `@vibevault/config/server` (API-only export). Provider contract completed in `@vibevault/provider-core`.
+**Decision:** All API contracts defined as Zod schemas in `@OneTune/types`. Server env validated in `@OneTune/config/server` (API-only export). Provider contract completed in `@OneTune/provider-core`.
 
 **Package exports:**
 | Package | Key exports |
 |---------|-------------|
-| `@vibevault/types` | TrackRef, StreamManifest, SearchResult, auth DTOs, apiSuccessSchema |
-| `@vibevault/config` | constants, featureFlags |
-| `@vibevault/config/server` | parseServerEnv, env |
-| `@vibevault/provider-core` | MusicProvider, ProviderRegistry, ProviderError |
-| `@vibevault/ui` | design tokens, tailwind preset |
-| `@vibevault/utils` | formatDuration, normalizeTrackKey, buildPaginationMeta |
+| `@OneTune/types` | TrackRef, StreamManifest, SearchResult, auth DTOs, apiSuccessSchema |
+| `@OneTune/config` | constants, featureFlags |
+| `@OneTune/config/server` | parseServerEnv, env |
+| `@OneTune/provider-core` | MusicProvider, ProviderRegistry, ProviderError |
+| `@OneTune/ui` | design tokens, tailwind preset |
+| `@OneTune/utils` | formatDuration, normalizeTrackKey, buildPaginationMeta |
 
 **Consequences:**
 - Mobile imports types + ui + config (never config/server)
@@ -319,7 +319,7 @@ Update docs as part of every milestone, not as an afterthought.
 - `services/spotify` — SpotifyScraper (metadata, search, playlist import)
 - `services/jiosaavn` — upstream jiosaavn-api (catalog, stream URLs)
 
-Node adapters in `apps/api/src/providers/` normalize all responses to `@vibevault/types` DTOs.
+Node adapters in `apps/api/src/providers/` normalize all responses to `@OneTune/types` DTOs.
 
 **Internal routes** (`/v1/internal/providers/*`) exposed only when `NODE_ENV !== production`.
 

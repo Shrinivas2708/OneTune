@@ -22,7 +22,7 @@ export function SearchInput({
   };
 
   return (
-    <View className="flex-row items-center rounded-vault-pill border border-vault-border-light bg-vault-surface-card/90 px-4 py-3.5 shadow-vault-soft">
+    <View className="flex-row items-center rounded-vault-pill bg-vault-surface-elevated px-4 py-3.5">
       <View className="h-9 w-9 items-center justify-center rounded-full bg-vault-accent-soft">
         <Ionicons color="#1ed760" name="search" size={18} />
       </View>

@@ -18,7 +18,7 @@ interface VaultButtonProps extends PressableProps {
 
 const variantClasses: Record<VaultButtonVariant, string> = {
   primary: "bg-vault-accent",
-  secondary: "bg-vault-surface-elevated border border-vault-border-light",
+  secondary: "bg-vault-surface-elevated",
   ghost: "bg-transparent",
 };
 

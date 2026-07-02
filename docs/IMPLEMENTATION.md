@@ -1,4 +1,4 @@
-# VibeVault — Implementation Guide
+# OneTune — Implementation Guide
 
 > How the codebase is organized, how features are built, and where to add code. Update when structure or patterns change.
 
@@ -30,7 +30,7 @@
 ## Repository Structure
 
 ```
-vibevault/
+OneTune/
 ├── apps/
 │   ├── mobile/                 # Expo 54 + NativeWind (iOS/Android)
 │   └── api/                    # Hono API on Bun
@@ -92,7 +92,7 @@ vibevault/
 
 1. **Routes** are thin — validate input, call service, return `{ data }`.
 2. **Services** contain business logic — no HTTP framework types in providers.
-3. **Providers** normalize external data to `@vibevault/types` DTOs.
+3. **Providers** normalize external data to `@OneTune/types` DTOs.
 4. **Python services** return provider-specific JSON; adapters map to shared types.
 5. **Packages** never import from `apps/`.
 
@@ -105,7 +105,7 @@ vibevault/
 3. **Adapter**: `apps/api/src/providers/<name>.adapter.ts` — implement `MusicProvider`.
 4. **Mappers**: extend `apps/api/src/providers/mappers.ts`.
 5. **Register**: `apps/api/src/providers/index.ts`.
-6. **Types**: add provider ID to `ProviderIdSchema` in `@vibevault/types`.
+6. **Types**: add provider ID to `ProviderIdSchema` in `@OneTune/types`.
 7. **Docs**: update `ARCHITECTURE.md`, `API.md`, this file.
 
 No changes required in search orchestrator or mobile if the adapter implements the contract.
@@ -172,7 +172,7 @@ Zod schemas are the **single source of truth**. API validates requests/responses
 ### Design system (`packages/ui` + `docs/DESIGN.md`)
 
 - Tokens: colors, typography, spacing, shadows
-- Tailwind preset: `@vibevault/ui/tailwind`
+- Tailwind preset: `@OneTune/ui/tailwind`
 - Fonts: Inter + Plus Jakarta Sans (open source)
 - **Read `DESIGN.md` before any UI work**
 
@@ -263,8 +263,8 @@ Web (`w` in Expo) supports auth/search UI; web audio playback works via `web-aud
 | Env vars | `SCREAMING_SNAKE` |
 | Commits | Conventional: `feat(api): ...`, `fix(mobile): ...` |
 | Errors | Typed `AppError` / `ProviderError` with stable `code` |
-| Config | No hardcoded URLs — use `@vibevault/config` |
-| UI colors | No hardcoded hex — use `@vibevault/ui` tokens |
+| Config | No hardcoded URLs — use `@OneTune/config` |
+| UI colors | No hardcoded hex — use `@OneTune/ui` tokens |
 
 ---
 

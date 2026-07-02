@@ -23,10 +23,9 @@ export function ProviderBadge({ providerId }: ProviderBadgeProps) {
 
   return (
     <View
-      className="self-start rounded-vault-pill border px-2 py-0.5"
+      className="self-start rounded-vault-pill px-2 py-0.5"
       style={{
-        backgroundColor: `${color}18`,
-        borderColor: `${color}44`,
+        backgroundColor: `${color}22`,
       }}
     >
       <Text

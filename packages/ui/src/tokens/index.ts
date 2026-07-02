@@ -1,26 +1,26 @@
 /**
- * VibeVault design tokens — sourced from docs/DESIGN.md
+ * OneTune design tokens — sourced from docs/DESIGN.md
  */
 
 export const colors = {
   background: "#121212",
   surface: "#181818",
-  surfaceElevated: "#1f1f1f",
-  surfaceCard: "#252525",
-  surfaceCardAlt: "#272727",
-  accent: "#1ed760",
-  accentBorder: "#1db954",
+  surfaceElevated: "#282828",
+  surfaceCard: "#181818",
+  surfaceCardAlt: "#282828",
+  accent: "#1db954",
+  accentBorder: "#1ed760",
   text: "#ffffff",
   textMuted: "#b3b3b3",
-  textSubtle: "#cbcbcb",
-  textEmphasis: "#fdfdfd",
+  textSubtle: "#a7a7a7",
+  textEmphasis: "#ffffff",
   negative: "#f3727f",
   warning: "#ffa42b",
   announcement: "#539df5",
-  border: "#4d4d4d",
-  borderLight: "#7c7c7c",
-  separator: "#b3b3b3",
-  lightSurface: "#eeeeee",
+  border: "rgba(255, 255, 255, 0.1)",
+  borderLight: "rgba(255, 255, 255, 0.16)",
+  separator: "#282828",
+  lightSurface: "#282828",
   artworkPlaceholder: "#282828",
 } as const;
 
@@ -52,10 +52,9 @@ export const radii = {
 } as const;
 
 export const shadows = {
-  medium: "0px 8px 8px rgba(0, 0, 0, 0.3)",
-  heavy: "0px 8px 24px rgba(0, 0, 0, 0.5)",
-  insetBorder:
-    "rgb(18, 18, 18) 0px 1px 0px, rgb(124, 124, 124) 0px 0px 0px 1px inset",
+  medium: "0px 8px 24px rgba(0, 0, 0, 0.5)",
+  heavy: "0px 12px 32px rgba(0, 0, 0, 0.6)",
+  insetBorder: "rgba(255, 255, 255, 0.08) 0px 0px 0px 1px inset",
 } as const;
 
 export const typography = {

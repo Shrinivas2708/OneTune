@@ -1,4 +1,4 @@
-package com.vibevault.app
+package com.onetune.app
 
 import android.app.Application
 import android.content.res.Configuration

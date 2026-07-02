@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Renew Let's Encrypt certificates and reload nginx.
-# Add to cron: 0 3 * * * /path/to/vibevault/scripts/renew-letsencrypt.sh
+# Add to cron: 0 3 * * * /path/to/OneTune/scripts/renew-letsencrypt.sh
 
 set -euo pipefail
 

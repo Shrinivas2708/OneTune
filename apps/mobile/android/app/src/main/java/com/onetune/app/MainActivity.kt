@@ -1,4 +1,4 @@
-package com.vibevault.app
+package com.onetune.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

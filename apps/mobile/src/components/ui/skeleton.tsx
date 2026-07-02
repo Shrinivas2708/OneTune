@@ -6,7 +6,7 @@ interface SkeletonBoxProps {
 }
 
 export function SkeletonBox({ className = "", style }: SkeletonBoxProps) {
-  return <View className={`rounded-vault-sm bg-vault-surface-card ${className}`} style={style} />;
+  return <View className={`rounded-vault-sm bg-vault-surface-elevated ${className}`} style={style} />;
 }
 
 function TrackSkeletonRow() {

@@ -14,7 +14,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://vibevault-api.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://onetune-api.onrender.com"
       }
     },
     "preview": {
@@ -27,14 +27,14 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://vibevault-api.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://onetune-api.onrender.com"
       }
     },
     "production": {
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://vibevault-api.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://onetune-api.onrender.com"
       }
     }
   },

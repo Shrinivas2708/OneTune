@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { APP_NAME } from "@vibevault/config";
 import { LoginRequestSchema } from "@vibevault/types";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
@@ -59,7 +60,7 @@ export default function LoginScreen() {
           <View className="gap-8">
             <View>
               <VaultHeading>Welcome back</VaultHeading>
-              <VaultSubheading>Sign in to your VibeVault account.</VaultSubheading>
+              <VaultSubheading>Sign in to your {APP_NAME} account.</VaultSubheading>
             </View>
 
             <View className="gap-4">

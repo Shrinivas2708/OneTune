@@ -15,9 +15,9 @@ until curl -sf http://localhost:3000/health > /dev/null; do
   sleep 2
 done
 
-echo "==> VibeVault stack is ready."
+echo "==> OneTune stack is ready."
 echo "    API:       http://localhost:3000/health"
 echo "    MongoDB:   localhost:27017"
 echo ""
 echo "==> Starting mobile dev server..."
-bun run dev --filter=@vibevault/mobile
+bun run dev --filter=@OneTune/mobile
