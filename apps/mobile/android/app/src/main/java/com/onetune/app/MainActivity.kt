@@ -6,7 +6,6 @@ import android.os.Bundle
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
-import com.facebook.react.ReactApplication
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
@@ -41,10 +40,13 @@ class MainActivity : ReactActivity() {
       fabricEnabled
     ) {}
 
-    val app = application as ReactApplication
-    if (app.reactNativeHost.hasInstance()) {
+    // createReactActivityDelegate runs during Activity construction — application is not
+    // available yet, so only use a process-level flag (no application/reactNativeHost access).
+    if (MainApplication.hasCompletedInitialLaunch) {
       return defaultDelegate
     }
+
+    MainApplication.hasCompletedInitialLaunch = true
 
     return ReactActivityDelegateWrapper(
       this,

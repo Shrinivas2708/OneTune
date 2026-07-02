@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const DownloadRecordSchema = z.object({
   id: z.string().min(1),
+  sourceTrackId: z.string().min(1).optional(),
   track: TrackMetadataSchema,
   localPath: z.string().min(1),
   fileUri: z.string().min(1),

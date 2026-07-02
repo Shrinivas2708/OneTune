@@ -35,7 +35,7 @@ async function resolvePlaybackSource(
   track: TrackMetadata,
 ): Promise<PlaybackSource> {
   const key = trackKey(track);
-  const local = downloadManager.getLocalRecord(key);
+  const local = downloadManager.getLocalRecordForTrack(track);
 
   if (local) {
     const info = await FileSystem.getInfoAsync(local.localPath);
@@ -44,15 +44,27 @@ async function resolvePlaybackSource(
     }
   }
 
-  const cached = manifestCache.get(key);
-  let manifest = cached && !isStreamExpired(cached.expiresAt) ? cached : null;
+  try {
+    const cached = manifestCache.get(key);
+    let manifest = cached && !isStreamExpired(cached.expiresAt) ? cached : null;
 
-  if (!manifest) {
-    manifest = await musicApi.resolveStream({ trackRef: track.ref });
-    manifestCache.set(key, manifest);
+    if (!manifest) {
+      manifest = await musicApi.resolveStream({ trackRef: track.ref });
+      manifestCache.set(key, manifest);
+    }
+
+    return { kind: "stream", manifest };
+  } catch (error) {
+    const fallback = downloadManager.getLocalRecordForTrack(track);
+    if (fallback) {
+      const info = await FileSystem.getInfoAsync(fallback.localPath);
+      if (info.exists) {
+        return { kind: "local", fileUri: fallback.fileUri };
+      }
+    }
+
+    throw error;
   }
-
-  return { kind: "stream", manifest };
 }
 
 let queueAdvanceInFlight = false;
@@ -87,6 +99,25 @@ async function transitionToTrack(
 
   try {
     await TrackPlayer.pause();
+
+    const local = downloadManager.getLocalRecordForTrack(track);
+    if (local) {
+      const info = await FileSystem.getInfoAsync(local.localPath);
+      if (info.exists) {
+        if (!isActivePlaybackGeneration(token)) return;
+
+        if (options.syncQueue) {
+          removeTrackAndSkippedFromQueue(track);
+        }
+
+        await startNativePlayback(local.track, {
+          kind: "local",
+          fileUri: local.fileUri,
+        });
+        return;
+      }
+    }
+
     const prepared = await prepareTrackTransition(track, token);
     if (!prepared) return;
 
@@ -158,6 +189,44 @@ export const playerEngine = {
     await transitionToTrack(searchResultToTrack(result), token, {
       syncQueue: false,
     });
+  },
+
+  async playDownloadedTrack(track: TrackMetadata) {
+    const token = beginPlaybackTransition();
+    await this.ensureSetup();
+    usePlayerStore.setState({ isResolving: true, resolveError: null });
+
+    try {
+      await TrackPlayer.pause();
+
+      const local = downloadManager.getLocalRecordForTrack(track);
+      if (!local) {
+        throw new Error("Downloaded file not found. Download the track again.");
+      }
+
+      const info = await FileSystem.getInfoAsync(local.localPath);
+      if (!info.exists) {
+        throw new Error("Downloaded file is missing. Download the track again.");
+      }
+
+      if (!isActivePlaybackGeneration(token)) return;
+
+      await startNativePlayback(local.track, {
+        kind: "local",
+        fileUri: local.fileUri,
+      });
+    } catch (error) {
+      if (!isActivePlaybackGeneration(token)) return;
+
+      const message = getErrorMessage(error, "Could not start offline playback.");
+      usePlayerStore.getState().setIsPlaying(false);
+      usePlayerStore.getState().setResolveError(message);
+      showToast(message);
+    } finally {
+      if (isActivePlaybackGeneration(token)) {
+        usePlayerStore.getState().setIsResolving(false);
+      }
+    }
   },
 
   async addToQueue(result: SearchResult) {

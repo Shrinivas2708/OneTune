@@ -25,6 +25,32 @@ export class ApiClientError extends Error {
 
 let refreshPromise: Promise<string | null> | null = null;
 
+function toNetworkError(error: unknown): ApiClientError {
+  if (error instanceof ApiClientError) {
+    return error;
+  }
+
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Network request failed";
+
+  const isOffline =
+    /network request failed/i.test(message) ||
+    /failed to fetch/i.test(message) ||
+    /networkerror/i.test(message);
+
+  if (isOffline) {
+    return new ApiClientError(
+      "You're offline. Open Downloads to play saved music.",
+      "OFFLINE",
+      0,
+    );
+  }
+
+  return new ApiClientError("Request failed", "REQUEST_FAILED", 0);
+}
+
 async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = tokenStorage.getRefreshToken();
   if (!refreshToken) return null;
@@ -80,13 +106,22 @@ export async function apiRequest<T>(
     headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  let response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  } catch (error) {
+    throw toNetworkError(error);
+  }
 
   if (response.status === 401 && accessToken) {
     const newToken = await ensureRefreshedToken();
     if (newToken) {
       headers.set("Authorization", `Bearer ${newToken}`);
-      response = await fetch(`${API_URL}${path}`, { ...options, headers });
+      try {
+        response = await fetch(`${API_URL}${path}`, { ...options, headers });
+      } catch (error) {
+        throw toNetworkError(error);
+      }
     }
   }
 

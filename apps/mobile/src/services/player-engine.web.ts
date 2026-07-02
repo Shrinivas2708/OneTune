@@ -65,6 +65,11 @@ export const playerEngine = {
     });
   },
 
+  async playDownloadedTrack(track: TrackMetadata) {
+    showToast("Offline downloads are available in the mobile app.", "info");
+    throw new Error("Offline downloads are available in the mobile app.");
+  },
+
   async addToQueue(result: SearchResult) {
     const added = usePlayerStore.getState().addToQueue(searchResultToTrack(result));
     if (added) {

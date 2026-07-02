@@ -4,10 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { DownloadButton } from "@/components/downloads/download-button";
+import { DownloadProgressBar } from "@/components/downloads/download-progress-bar";
 import { AddToQueueButton } from "@/components/player/add-to-queue-button";
 import { FavoriteButton } from "@/components/library/favorite-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
 import { GlassCard } from "@/components/ui/glass-card";
+import { useDownloadStatus } from "@/hooks/use-download-status";
 import { searchResultToTrack } from "@/stores/player-store";
 import { ProviderBadge } from "./provider-badge";
 
@@ -34,6 +36,7 @@ export function TrackRow({
   };
 
   const track = searchResultToTrack(result);
+  const { isDownloaded, isDownloading, progress } = useDownloadStatus(track);
 
   return (
     <GlassCard active={isActive} className="mb-0.5">
@@ -64,7 +67,12 @@ export function TrackRow({
             <Text className="font-inter text-sm text-vault-muted" numberOfLines={1}>
               {artistLine(result)}
             </Text>
-            <ProviderBadge providerId={result.providerId} />
+            <View className="flex-row items-center gap-2">
+              <ProviderBadge providerId={result.providerId} />
+              {isDownloaded ? (
+                <Text className="font-inter-semibold text-[11px] text-vault-accent">Offline</Text>
+              ) : null}
+            </View>
           </View>
         </Pressable>
 
@@ -72,7 +80,7 @@ export function TrackRow({
           <View className="flex-row items-center gap-1.5">
             <AddToQueueButton result={result} />
             <FavoriteButton track={track} />
-            <DownloadButton track={result} />
+            <DownloadButton showProgress track={track} />
           </View>
           {isResolving ? (
             <ActivityIndicator color="#1ed760" size="small" />
@@ -83,6 +91,12 @@ export function TrackRow({
           ) : null}
         </View>
       </View>
+
+      {isDownloading ? (
+        <View className="px-3 pb-2">
+          <DownloadProgressBar progress={progress} showPercent />
+        </View>
+      ) : null}
     </GlassCard>
   );
 }

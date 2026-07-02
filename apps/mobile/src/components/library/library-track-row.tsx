@@ -3,10 +3,12 @@ import { formatDuration } from "@vibevault/utils";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Text, View } from "react-native";
 import { DownloadButton } from "@/components/downloads/download-button";
+import { DownloadProgressBar } from "@/components/downloads/download-progress-bar";
 import { AddToQueueButton } from "@/components/player/add-to-queue-button";
 import { FavoriteButton } from "@/components/library/favorite-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
 import { GlassCard } from "@/components/ui/glass-card";
+import { useDownloadStatus } from "@/hooks/use-download-status";
 import { usePlayTrack } from "@/hooks/use-play-track";
 import { formatArtists } from "@/lib/track-format";
 import { trackToSearchResult } from "@/lib/track-to-search-result";
@@ -26,6 +28,7 @@ export function LibraryTrackRow({
   showDownload = true,
 }: LibraryTrackRowProps) {
   const playTrack = usePlayTrack();
+  const { isDownloaded, isDownloading, progress } = useDownloadStatus(track);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isResolving = usePlayerStore((state) => state.isResolving);
 
@@ -57,12 +60,15 @@ export function LibraryTrackRow({
           <Text className="font-inter text-sm text-vault-muted" numberOfLines={1}>
             {subtitle ?? formatArtists(track)}
           </Text>
+          {isDownloaded ? (
+            <Text className="font-inter-semibold text-[11px] text-vault-accent">Offline</Text>
+          ) : null}
         </View>
 
         <View className="flex-row items-center gap-1">
           <AddToQueueButton result={trackToSearchResult(track)} />
           {showFavorite ? <FavoriteButton track={track} /> : null}
-          {showDownload ? <DownloadButton track={track} /> : null}
+          {showDownload ? <DownloadButton showProgress track={track} /> : null}
           {isResolvingThis ? (
             <ActivityIndicator color="#1ed760" size="small" />
           ) : track.durationMs !== undefined && !showFavorite && !showDownload ? (
@@ -72,6 +78,12 @@ export function LibraryTrackRow({
           ) : null}
         </View>
       </View>
+
+      {isDownloading ? (
+        <View className="px-3 pb-2">
+          <DownloadProgressBar progress={progress} showPercent />
+        </View>
+      ) : null}
     </GlassCard>
   );
 }

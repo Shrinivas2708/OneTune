@@ -6,6 +6,7 @@ import { useCallback, useMemo } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
 import { ProviderBadge } from "@/components/search/provider-badge";
 import { DownloadButton } from "@/components/downloads/download-button";
+import { DownloadProgressBar } from "@/components/downloads/download-progress-bar";
 import { PlaylistActions } from "@/components/library/playlist-actions";
 import { AddToQueueButton } from "@/components/player/add-to-queue-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
@@ -13,6 +14,7 @@ import { getTrackArtworkUri } from "@/lib/track-artwork";
 import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
 import { PlaylistDetailSkeleton } from "@/components/ui/skeleton";
+import { useDownloadStatus } from "@/hooks/use-download-status";
 import { usePlayTrack } from "@/hooks/use-play-track";
 import { usePlaylist } from "@/hooks/use-playlists";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
@@ -34,36 +36,51 @@ function PlaylistTrackRow({
   isResolving: boolean;
   onPress: () => void;
 }) {
+  const { isDownloaded, isDownloading, progress } = useDownloadStatus(track);
+
   return (
-    <Pressable
-      accessibilityRole="button"
-      className={`flex-row items-center gap-3 rounded-vault-lg px-2 py-2.5 ${isActive ? "bg-vault-surface-elevated" : ""}`}
-      onPress={onPress}
-    >
-      <ArtworkImage label={`${track.title} artwork`} radius={8} size={48} uri={getTrackArtworkUri(track)} />
+    <View className="px-2">
+      <Pressable
+        accessibilityRole="button"
+        className={`flex-row items-center gap-3 rounded-vault-lg px-2 py-2.5 ${isActive ? "bg-vault-surface-elevated" : ""}`}
+        onPress={onPress}
+      >
+        <ArtworkImage label={`${track.title} artwork`} radius={8} size={48} uri={getTrackArtworkUri(track)} />
 
-      <View className="min-w-0 flex-1 gap-1">
-        <Text className="font-inter-semibold text-base text-vault-text" numberOfLines={1}>
-          {track.title}
-        </Text>
-        <Text className="font-inter text-sm text-vault-muted" numberOfLines={1}>
-          {formatArtists(track)}
-        </Text>
-        <ProviderBadge providerId={track.ref.providerId} />
-      </View>
-
-      <View className="min-w-[44px] items-end flex-row gap-1">
-        <AddToQueueButton result={trackToSearchResult(track)} size={20} />
-        <DownloadButton track={track} />
-        {isResolving ? (
-          <ActivityIndicator color="#1ed760" size="small" />
-        ) : track.durationMs !== undefined ? (
-          <Text className="font-inter text-sm text-vault-muted">
-            {formatDuration(track.durationMs)}
+        <View className="min-w-0 flex-1 gap-1">
+          <Text className="font-inter-semibold text-base text-vault-text" numberOfLines={1}>
+            {track.title}
           </Text>
-        ) : null}
-      </View>
-    </Pressable>
+          <Text className="font-inter text-sm text-vault-muted" numberOfLines={1}>
+            {formatArtists(track)}
+          </Text>
+          <View className="flex-row items-center gap-2">
+            <ProviderBadge providerId={track.ref.providerId} />
+            {isDownloaded ? (
+              <Text className="font-inter-semibold text-[11px] text-vault-accent">Offline</Text>
+            ) : null}
+          </View>
+        </View>
+
+        <View className="min-w-[44px] items-end flex-row gap-1">
+          <AddToQueueButton result={trackToSearchResult(track)} size={20} />
+          <DownloadButton showProgress track={track} />
+          {isResolving ? (
+            <ActivityIndicator color="#1ed760" size="small" />
+          ) : track.durationMs !== undefined ? (
+            <Text className="font-inter text-sm text-vault-muted">
+              {formatDuration(track.durationMs)}
+            </Text>
+          ) : null}
+        </View>
+      </Pressable>
+
+      {isDownloading ? (
+        <View className="px-4 pb-2">
+          <DownloadProgressBar progress={progress} showPercent />
+        </View>
+      ) : null}
+    </View>
   );
 }
 

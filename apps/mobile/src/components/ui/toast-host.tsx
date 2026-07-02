@@ -9,10 +9,28 @@ const ICON: Record<ToastType, keyof typeof Ionicons.glyphMap> = {
   info: "information-circle",
 };
 
-const COLOR: Record<ToastType, string> = {
-  error: "#f3727f",
-  success: "#1ed760",
-  info: "#539df5",
+const STYLES: Record<
+  ToastType,
+  { accent: string; background: string; border: string; text: string }
+> = {
+  error: {
+    accent: "#ff6b7a",
+    background: "#2a1218",
+    border: "#f3727f",
+    text: "#ffffff",
+  },
+  success: {
+    accent: "#1ed760",
+    background: "#102418",
+    border: "#1db954",
+    text: "#ffffff",
+  },
+  info: {
+    accent: "#6eb6ff",
+    background: "#101d2e",
+    border: "#539df5",
+    text: "#ffffff",
+  },
 };
 
 export function ToastHost() {
@@ -23,19 +41,36 @@ export function ToastHost() {
 
   if (!message) return null;
 
+  const palette = STYLES[type];
+
   return (
     <View
       className="absolute inset-x-4 z-50"
       pointerEvents="box-none"
-      style={{ top: insets.top + 8 }}
+      style={{ top: insets.top + 12 }}
     >
       <Pressable
         accessibilityRole="button"
-        className="flex-row items-center gap-3 rounded-vault-lg bg-vault-surface-elevated px-4 py-3"
+        className="flex-row items-center gap-3 rounded-vault-lg px-4 py-3.5"
+        style={{
+          backgroundColor: palette.background,
+          borderColor: palette.border,
+          borderWidth: 1,
+          shadowColor: "#000000",
+          shadowOpacity: 0.45,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 8,
+        }}
         onPress={dismiss}
       >
-        <Ionicons color={COLOR[type]} name={ICON[type]} size={22} />
-        <Text className="flex-1 font-inter text-sm text-vault-text">{message}</Text>
+        <Ionicons color={palette.accent} name={ICON[type]} size={22} />
+        <Text
+          className="flex-1 font-inter-semibold text-sm leading-5"
+          style={{ color: palette.text }}
+        >
+          {message}
+        </Text>
       </Pressable>
     </View>
   );

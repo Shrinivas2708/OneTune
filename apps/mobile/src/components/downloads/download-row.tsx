@@ -4,9 +4,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { ArtworkImage } from "@/components/ui/artwork-image";
 import * as Haptics from "expo-haptics";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
-import { usePlayTrack } from "@/hooks/use-play-track";
+import { usePlayDownloadedTrack } from "@/hooks/use-play-downloaded-track";
 import { formatArtists } from "@/lib/track-format";
-import { trackToSearchResult } from "@/lib/track-to-search-result";
 import { trackKey, usePlayerStore } from "@/stores/player-store";
 import { useDownloadStore } from "@/stores/download-store";
 
@@ -17,19 +16,19 @@ interface DownloadRowProps {
 export function DownloadRow({ record }: DownloadRowProps) {
   const deleteDownload = useDownloadStore((state) => state.deleteDownload);
   const job = useDownloadStore((state) => state.jobs[record.id]);
-  const playTrack = usePlayTrack();
+  const playDownloaded = usePlayDownloadedTrack();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isResolving = usePlayerStore((state) => state.isResolving);
 
   const isActive = currentTrack ? trackKey(currentTrack) === record.id : false;
   const isResolvingThis =
-    isResolving && playTrack.variables
-      ? trackKey(trackToSearchResult(playTrack.variables)) === record.id
+    isResolving && playDownloaded.variables
+      ? trackKey(playDownloaded.variables) === record.id
       : false;
 
   const handlePlay = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    playTrack.mutate(trackToSearchResult(record.track));
+    playDownloaded.mutate(record.track);
   };
 
   const handleDelete = () => {

@@ -1,5 +1,8 @@
 import type { TrackMetadata } from "@vibevault/types";
 import { create } from "zustand";
+import { findDownloadJob, findDownloadRecord } from "@/lib/download-lookup";
+import { getErrorMessage } from "@/lib/error-message";
+import { resolvePlayableTrack } from "@/lib/resolve-playable-track";
 import { downloadManager } from "@/services/download-manager";
 import { trackKey } from "@/services/player-helpers";
 import type { DownloadJobState, DownloadRecord } from "@/types/download-record";
@@ -11,8 +14,13 @@ interface DownloadState {
   hydrate: () => Promise<void>;
   startDownload: (track: TrackMetadata) => Promise<void>;
   deleteDownload: (trackId: string) => Promise<void>;
+  getDownloadRecord: (track: TrackMetadata) => DownloadRecord | null;
   isDownloaded: (track: TrackMetadata) => boolean;
   getJob: (track: TrackMetadata) => DownloadJobState | undefined;
+}
+
+function jobKeyForTrack(track: TrackMetadata) {
+  return trackKey(track);
 }
 
 export const useDownloadStore = create<DownloadState>((set, get) => ({
@@ -25,49 +33,59 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
     set({ records, isHydrated: true });
   },
 
-  startDownload: async (track) => {
-    const id = trackKey(track);
+  startDownload: async (sourceTrack) => {
+    const uiKey = jobKeyForTrack(sourceTrack);
+    let playable = sourceTrack;
 
     set((state) => ({
       jobs: {
         ...state.jobs,
-        [id]: { trackId: id, status: "downloading", progress: 0 },
+        [uiKey]: { trackId: uiKey, status: "downloading", progress: 0 },
       },
     }));
 
     try {
-      const record = await downloadManager.startDownload(track, (progress) => {
-        set((state) => ({
-          jobs: {
-            ...state.jobs,
-            [id]: {
-              trackId: id,
-              status: "downloading",
-              progress,
+      playable = await resolvePlayableTrack(sourceTrack);
+      const downloadId = trackKey(playable);
+
+      const record = await downloadManager.startDownload(
+        playable,
+        (progress) => {
+          set((state) => ({
+            jobs: {
+              ...state.jobs,
+              [uiKey]: {
+                trackId: uiKey,
+                status: "downloading",
+                progress,
+              },
             },
-          },
-        }));
-      });
+          }));
+        },
+        trackKey(sourceTrack),
+      );
 
       set((state) => ({
-        records: [record, ...state.records.filter((item) => item.id !== id)],
+        records: [
+          record,
+          ...state.records.filter(
+            (item) => item.id !== record.id && item.sourceTrackId !== uiKey,
+          ),
+        ],
         jobs: {
           ...state.jobs,
-          [id]: { trackId: id, status: "completed", progress: 1 },
+          [uiKey]: { trackId: uiKey, status: "completed", progress: 1 },
         },
       }));
     } catch (error) {
       set((state) => ({
         jobs: {
           ...state.jobs,
-          [id]: {
-            trackId: id,
+          [uiKey]: {
+            trackId: uiKey,
             status: "failed",
             progress: 0,
-            error:
-              error instanceof Error
-                ? error.message
-                : "Download failed",
+            error: getErrorMessage(error, "Download failed"),
           },
         },
       }));
@@ -76,22 +94,27 @@ export const useDownloadStore = create<DownloadState>((set, get) => ({
   },
 
   deleteDownload: async (trackId) => {
-    await downloadManager.deleteDownload(trackId);
+    const record = get().records.find(
+      (item) => item.id === trackId || item.sourceTrackId === trackId,
+    );
+    const storageId = record?.id ?? trackId;
+
+    await downloadManager.deleteDownload(storageId);
     set((state) => ({
-      records: state.records.filter((record) => record.id !== trackId),
+      records: state.records.filter(
+        (item) => item.id !== storageId && item.sourceTrackId !== trackId,
+      ),
       jobs: Object.fromEntries(
-        Object.entries(state.jobs).filter(([key]) => key !== trackId),
+        Object.entries(state.jobs).filter(
+          ([key]) => key !== trackId && key !== storageId && key !== record?.sourceTrackId,
+        ),
       ),
     }));
   },
 
-  isDownloaded: (track) => {
-    const id = trackKey(track);
-    return get().records.some((record) => record.id === id);
-  },
+  getDownloadRecord: (track) => findDownloadRecord(get().records, track),
 
-  getJob: (track) => {
-    const id = trackKey(track);
-    return get().jobs[id];
-  },
+  isDownloaded: (track) => findDownloadRecord(get().records, track) !== null,
+
+  getJob: (track) => findDownloadJob(get().jobs, get().records, track),
 }));

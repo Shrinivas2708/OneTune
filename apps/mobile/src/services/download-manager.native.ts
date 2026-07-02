@@ -38,6 +38,23 @@ export const downloadManager = {
     return downloadIndex.getById(trackId);
   },
 
+  getLocalRecordForTrack(track: TrackMetadata): DownloadRecord | null {
+    const id = trackKey(track);
+    const direct = downloadIndex.getById(id);
+    if (direct) return direct;
+
+    return (
+      downloadIndex
+        .loadAll()
+        .find(
+          (record) =>
+            record.sourceTrackId === id ||
+            (record.track.title === track.title &&
+              record.track.artists[0]?.name === track.artists[0]?.name),
+        ) ?? null
+    );
+  },
+
   isDownloaded(trackId: string) {
     return downloadIndex.getById(trackId) !== null;
   },
@@ -45,6 +62,7 @@ export const downloadManager = {
   async startDownload(
     track: TrackMetadata,
     onProgress?: (progress: number) => void,
+    sourceTrackId?: string,
   ): Promise<DownloadRecord> {
     const id = trackKey(track);
     const existing = downloadIndex.getById(id);
@@ -90,6 +108,7 @@ export const downloadManager = {
 
       const record: DownloadRecord = {
         id,
+        sourceTrackId,
         track,
         localPath: result.uri,
         fileUri: result.uri,

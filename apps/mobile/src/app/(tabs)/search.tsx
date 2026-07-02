@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Keyboard, Text, View } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SearchInput } from "@/components/search/search-input";
 import { SearchMessage } from "@/components/search/search-message";
 import { SearchResultsList } from "@/components/search/search-results-list";
-import { VaultHeading, VaultSubheading } from "@/components/ui/button";
+import { VaultButton, VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { Screen } from "@/components/ui/screen";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { usePlayTrack } from "@/hooks/use-play-track";
@@ -13,6 +13,7 @@ import {
   useUnifiedSearch,
 } from "@/hooks/use-unified-search";
 import { getErrorMessage } from "@/lib/error-message";
+import { ApiClientError } from "@/lib/api-client";
 import { usePlayerStore } from "@/stores/player-store";
 
 import type { TrackMetadata } from "@vibevault/types";
@@ -26,6 +27,7 @@ function activeTrackKey(track: TrackMetadata | null) {
 }
 
 export default function SearchScreen() {
+  const router = useRouter();
   const params = useLocalSearchParams<{ q?: string }>();
   const [query, setQuery] = useState(
     typeof params.q === "string" ? params.q : "",
@@ -73,6 +75,10 @@ export default function SearchScreen() {
     isError && trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH
       ? getErrorMessage(error, "Search failed. Check your connection and try again.")
       : null;
+  const isOfflineError =
+    error instanceof ApiClientError
+      ? error.code === "OFFLINE"
+      : /network request failed|failed to fetch/i.test(errorMessage ?? "");
 
   return (
     <Screen className="pt-2" padded={false}>
@@ -88,8 +94,15 @@ export default function SearchScreen() {
       </View>
 
       {resolveError ? (
-        <View className="mx-6 mt-3 rounded-vault-lg bg-vault-negative/10 px-4 py-3">
-          <Text className="font-inter text-sm text-vault-negative">{resolveError}</Text>
+        <View
+          className="mx-6 mt-3 rounded-vault-lg px-4 py-3"
+          style={{
+            backgroundColor: "#2a1218",
+            borderColor: "#f3727f",
+            borderWidth: 1,
+          }}
+        >
+          <Text className="font-inter-semibold text-sm text-white">{resolveError}</Text>
         </View>
       ) : null}
 
@@ -116,9 +129,23 @@ export default function SearchScreen() {
         {errorMessage && trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH ? (
           <SearchMessage
             icon="cloud-offline-outline"
-            subtitle="Check that the API is running and try again."
-            title={errorMessage}
+            subtitle={
+              isOfflineError
+                ? "You're offline. Open Downloads to listen without internet."
+                : "Check that the API is running and try again."
+            }
+            title={isOfflineError ? "You're offline" : errorMessage}
           />
+        ) : null}
+
+        {isOfflineError && trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH ? (
+          <View className="mt-2 px-4">
+            <VaultButton
+              label="Open Downloads"
+              uppercase={false}
+              onPress={() => router.push("/(tabs)/library/downloads")}
+            />
+          </View>
         ) : null}
 
         {!showHint &&

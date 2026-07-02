@@ -11,6 +11,10 @@ export const downloadManager = {
     return downloadIndex.getById(trackId);
   },
 
+  getLocalRecordForTrack(_track: TrackMetadata): DownloadRecord | null {
+    return null;
+  },
+
   isDownloaded(trackId: string) {
     return downloadIndex.getById(trackId) !== null;
   },
@@ -18,6 +22,7 @@ export const downloadManager = {
   async startDownload(
     _track: TrackMetadata,
     _onProgress?: (progress: number) => void,
+    _sourceTrackId?: string,
   ): Promise<DownloadRecord> {
     throw new Error("Downloads are not supported on web.");
   },

@@ -5,8 +5,8 @@ import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { getErrorMessage } from "@/lib/error-message";
 import { isNativePlaybackSupported } from "@/lib/platform";
-import { resolvePlayableTrack } from "@/lib/resolve-playable-track";
 import { trackToSearchResult } from "@/lib/track-to-search-result";
+import { downloadManager } from "@/services/download-manager";
 import { playerEngine } from "@/services/player-engine";
 import { usePlayerStore } from "@/stores/player-store";
 import { showToast } from "@/stores/toast-store";
@@ -41,7 +41,12 @@ export function PlaylistActions({ tracks }: PlaylistActionsProps) {
       const [first, ...rest] = ordered;
 
       usePlayerStore.getState().setQueue(rest);
-      await playerEngine.playSearchResult(trackToSearchResult(first));
+      const local = downloadManager.getLocalRecordForTrack(first);
+      if (local) {
+        await playerEngine.playDownloadedTrack(local.track);
+      } else {
+        await playerEngine.playSearchResult(trackToSearchResult(first));
+      }
       showToast(
         rest.length > 0
           ? `Playing — ${rest.length} more in queue`
@@ -68,8 +73,7 @@ export function PlaylistActions({ tracks }: PlaylistActionsProps) {
     try {
       for (const track of tracks) {
         try {
-          const playable = await resolvePlayableTrack(track);
-          await startDownload(playable);
+          await startDownload(track);
           started += 1;
         } catch {
           failed += 1;
