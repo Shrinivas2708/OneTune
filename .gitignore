@@ -13,7 +13,7 @@ dist/
 # Expo
 .expo/
 apps/mobile/.expo/
-apps/mobile/dist/
+apps/mobile/
 web-build/
 expo-env.d.ts
 
@@ -57,6 +57,9 @@ venv/
 # Docker
 docker-data/
 backups/
+
+# Website release binaries (copy locally with bun run website:sync-apk)
+website/downloads/*.apk
 
 app-example
 steps.txt

@@ -152,6 +152,7 @@ OneTune/
 | [Architecture](docs/ARCHITECTURE.md) | System design, provider pattern, data flow |
 | [Implementation](docs/IMPLEMENTATION.md) | Where to add features in the codebase |
 | [Design](docs/DESIGN.md) | UI tokens, typography, component patterns |
+| [Landing page](website/index.html) | Static marketing site (Android) |
 | [Roadmap](docs/ROADMAP.md) | Milestones and post-MVP backlog |
 
 ---

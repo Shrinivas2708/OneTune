@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="OneTune — your music, your stack. Search, stream, download offline, and import playlists on Android."
+    />
+    <title>OneTune — Your music. Your stack. One tune.</title>
+    <link rel="icon" href="./assets/icon.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true">
+      <div class="orb orb-a"></div>
+      <div class="orb orb-b"></div>
+    </div>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#top">
+          <img src="./assets/icon.png" alt="" width="32" height="32" class="brand-icon" />
+          <span>OneTune</span>
+        </a>
+
+        <div class="header-right">
+          <nav class="site-nav" aria-label="Primary">
+            <a href="#features">Features</a>
+            <a href="#vibes">Discover</a>
+            <a href="#android">Android</a>
+          </nav>
+          <a class="nav-cta" data-apk-download href="#download">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 3v12m0 0l4-4m-4 4L8 11M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Download for Android
+          </a>
+          <button class="menu-btn" type="button" aria-label="Open menu" aria-expanded="false">
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+      <nav class="mobile-nav" aria-label="Mobile" hidden>
+        <a href="#features">Features</a>
+        <a href="#vibes">Discover</a>
+        <a href="#android">Android</a>
+        <a class="nav-cta nav-cta-mobile" data-apk-download href="#download">Download for Android</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero section">
+        <div class="hero-copy reveal">
+          <p class="eyebrow">Android · Self-hosted · No lock-in</p>
+          <h1>
+            Meet <span class="accent">OneTune.</span><br />
+            Live for sound.
+          </h1>
+          <p class="lead">
+            Search YouTube, JioSaavn, and Spotify in one place. Build your library,
+            import any playlist link, download for offline, and keep playback alive
+            on the lock screen — all backed by <em>your</em> API.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" data-apk-download href="#download">Download for Android</a>
+            <a class="btn btn-ghost" href="#features">Explore features</a>
+          </div>
+          <ul class="hero-stats">
+            <li><strong>3</strong><span>providers unified</span></li>
+            <li><strong>∞</strong><span>playlists to import</span></li>
+            <li><strong>0</strong><span>vendor lock-in</span></li>
+          </ul>
+        </div>
+
+        <div class="hero-visual reveal delay-1" aria-hidden="true">
+          <div class="phone-glow"></div>
+          <div class="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <div class="app-header">
+                <span class="app-greeting">Good evening</span>
+                <span class="app-pill">Now playing</span>
+              </div>
+              <div class="app-artwork">
+                <img
+                  class="app-artwork-img"
+                  src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&q=80&w=400"
+                  alt="OneTune now playing artwork"
+                  width="220"
+                  height="220"
+                />
+                <div class="artwork-shine"></div>
+              </div>
+              <div class="app-meta">
+                <h3>Secrets</h3>
+                <p>UV Jain · Talha Anjum</p>
+              </div>
+              <div class="app-progress">
+                <div class="app-progress-fill"></div>
+              </div>
+              <div class="app-times">
+                <span>1:19</span><span>4:38</span>
+              </div>
+              <div class="app-controls">
+                <button type="button" class="ctrl small" aria-label="Previous">⏮</button>
+                <button type="button" class="ctrl play" aria-label="Play">▶</button>
+                <button type="button" class="ctrl small" aria-label="Next">⏭</button>
+              </div>
+              <div class="app-tabs">
+                <span class="active">Home</span>
+                <span>Search</span>
+                <span>Library</span>
+              </div>
+            </div>
+          </div>
+          <div class="float-card float-card-a">
+            <span class="float-icon">♥</span>
+            <div>
+              <strong>Likes synced</strong>
+              <p>Across your library</p>
+            </div>
+          </div>
+          <div class="float-card float-card-b">
+            <span class="float-icon green">⬇</span>
+            <div>
+              <strong>Offline ready</strong>
+              <p>Downloads on device</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" class="section section-features">
+        <div class="section-head center reveal">
+          <h2>Everything you need.<br /><span class="muted">Nothing you don't.</span></h2>
+          <p class="section-sub center">
+            A real native Android player — not a web wrapper. Dark, fast, and tuned for
+            long listening sessions.
+          </p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card reveal">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <h3>Unified search</h3>
+            <p>One query hits every provider. Results deduped, ranked, and ready to play.</p>
+          </article>
+          <article class="feature-card reveal delay-1">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4M7 10l5-5 5 5M12 5v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Background playback</h3>
+            <p>Queue, skip, scrub, and control playback from the notification shade.</p>
+          </article>
+          <article class="feature-card reveal delay-2">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0l4-4m-4 4L8 11M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Offline downloads</h3>
+            <p>Save tracks to your phone and listen without a network connection.</p>
+          </article>
+          <article class="feature-card reveal">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <h3>Import anything</h3>
+            <p>Paste a Spotify, YouTube, or JioSaavn playlist, album, or track URL.</p>
+          </article>
+          <article class="feature-card reveal delay-1">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" stroke-width="2"/></svg>
+            </div>
+            <h3>Your library</h3>
+            <p>Favorites, history, playlists, and imports — all in one place.</p>
+          </article>
+          <article class="feature-card reveal delay-2">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Your infrastructure</h3>
+            <p>Self-host the API. Your data, your rules, your deployment.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="vibes" class="section">
+        <div class="section-head row reveal">
+          <div>
+            <p class="eyebrow">Discover</p>
+            <h2>Curated for <span class="accent">every vibe</span></h2>
+          </div>
+          <a class="text-link" href="#download">View all playlists →</a>
+        </div>
+        <div class="vibe-grid">
+          <article class="vibe-card reveal">
+            <div class="vibe-cover">
+              <img src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&q=80&w=600" alt="" loading="lazy" />
+            </div>
+            <div class="vibe-body">
+              <h3>Chill nights</h3>
+              <p>Lo-fi, acoustic, and slow burns for winding down.</p>
+              <div class="vibe-meta">
+                <span class="vibe-likes">82K likes</span>
+                <button type="button" class="vibe-more" aria-label="More options">⋯</button>
+              </div>
+            </div>
+          </article>
+          <article class="vibe-card reveal delay-1">
+            <div class="vibe-cover">
+              <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&q=80&w=400" alt="" loading="lazy" />
+            </div>
+            <div class="vibe-body">
+              <h3>Focus flow</h3>
+              <p>Instrumentals and ambient sets that stay out of your way.</p>
+              <div class="vibe-meta">
+                <span class="vibe-likes">64K likes</span>
+                <button type="button" class="vibe-more" aria-label="More options">⋯</button>
+              </div>
+            </div>
+          </article>
+          <article class="vibe-card reveal delay-2">
+            <div class="vibe-cover">
+              <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=600" alt="" loading="lazy" />
+            </div>
+            <div class="vibe-body">
+              <h3>Workout pump</h3>
+              <p>High-energy tracks when you need a push.</p>
+              <div class="vibe-meta">
+                <span class="vibe-likes">125K likes</span>
+                <button type="button" class="vibe-more" aria-label="More options">⋯</button>
+              </div>
+            </div>
+          </article>
+          <article class="vibe-card reveal delay-3">
+            <div class="vibe-cover">
+              <img src="https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&q=80&w=600" alt="" loading="lazy" />
+            </div>
+            <div class="vibe-body">
+              <h3>Road trip</h3>
+              <p>Download the queue before you lose signal.</p>
+              <div class="vibe-meta">
+                <span class="vibe-likes">91K likes</span>
+                <button type="button" class="vibe-more" aria-label="More options">⋯</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section split-section">
+        <div class="story-card reveal">
+          <p class="eyebrow">Import</p>
+          <h2>Stories that <span class="gradient-text">speak to you.</span></h2>
+          <p class="section-sub">
+            Bring your existing playlists from Spotify, YouTube, or JioSaavn. OneTune
+            resolves metadata and finds playable matches automatically.
+          </p>
+          <div class="featured-episode">
+            <img
+              class="featured-thumb"
+              src="https://images.unsplash.com/photo-1478737270239-2f02b77fc618?auto=format&fit=crop&q=80&w=200"
+              alt=""
+              loading="lazy"
+            />
+            <div class="featured-info">
+              <span class="featured-tag">Featured</span>
+              <strong>Import from Spotify</strong>
+              <p>Paste a link · instant library</p>
+            </div>
+            <button type="button" class="featured-play" aria-label="Play preview">▶</button>
+          </div>
+        </div>
+        <div class="trending-card reveal delay-1">
+          <div class="trending-head">
+            <h3>Trending now</h3>
+            <a class="trending-link" href="#vibes">Top charts</a>
+          </div>
+          <ol class="trending-list">
+            <li>
+              <span class="rank">1</span>
+              <img class="trend-thumb" src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=300" alt="" loading="lazy" />
+              <div class="trend-meta">
+                <strong>Secrets</strong>
+                <span>UV Jain</span>
+              </div>
+              <span class="trend-tag">Hip-hop</span>
+            </li>
+            <li>
+              <span class="rank">2</span>
+              <img class="trend-thumb" src="https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80&w=400" alt="" loading="lazy" />
+              <div class="trend-meta">
+                <strong>Believer</strong>
+                <span>Imagine Dragons</span>
+              </div>
+              <span class="trend-tag">Rock</span>
+            </li>
+            <li>
+              <span class="rank">3</span>
+              <img class="trend-thumb" src="https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&q=80&w=300" alt="" loading="lazy" />
+              <div class="trend-meta">
+                <strong>Starboy</strong>
+                <span>The Weeknd</span>
+              </div>
+              <span class="trend-tag">Pop</span>
+            </li>
+          </ol>
+          <a class="btn btn-outline full" href="#features">Browse categories</a>
+        </div>
+      </section>
+
+      <section id="android" class="section android-section reveal">
+        <div class="android-inner">
+          <div class="android-copy">
+            <p class="eyebrow">Android only</p>
+            <h2>Built for Android.<br />Nothing else required.</h2>
+            <p class="section-sub">
+              Native playback with lock-screen controls, offline storage, and a dev
+              workflow you own — local APK builds, ADB install, no cloud build lock-in.
+            </p>
+            <ul class="android-list">
+              <li>Notification & lock-screen media controls</li>
+              <li>MMKV-fast session & offline library</li>
+              <li>Standalone release APK for sideloading</li>
+              <li>Connects to your self-hosted API</li>
+            </ul>
+          </div>
+          <div class="android-badge-stack">
+            <div class="store-badge primary">
+              <span class="store-icon">▶</span>
+              <div>
+                <small>Get it on</small>
+                <strong>Google Play</strong>
+                <span class="soon">Coming soon</span>
+              </div>
+            </div>
+            <a class="store-badge outline" data-apk-download href="#download">
+              <span class="store-icon">⬇</span>
+              <div>
+                <small>Direct install</small>
+                <strong>Android APK</strong>
+                <span class="ready">Available now</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="download" class="section cta-section reveal">
+        <div class="cta-card">
+          <img class="cta-logo" src="./assets/icon.png" alt="" width="48" height="48" />
+          <h2>Ready to vibe?</h2>
+          <p>
+            Install the APK on your phone, point the app at your API, and start
+            listening. Your music stack — finally in one tune.
+          </p>
+          <div class="cta-actions">
+            <a class="btn btn-primary btn-lg" data-apk-download href="#download">Download APK</a>
+            <a class="btn btn-ghost btn-lg" href="#android">How to install</a>
+          </div>
+          <p class="cta-note">
+            Requires Android 8+. Self-hosted API recommended for full features.
+          </p>
+          <p class="cta-apk-path" id="apk-path-note"></p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-top">
+          <div class="footer-brand">
+            <a class="footer-logo" href="#top">
+              <img src="./assets/icon.png" alt="" width="36" height="36" />
+              <span>OneTune</span>
+            </a>
+            <p>Your music. Your stack. One tune.</p>
+          </div>
+
+          <div class="footer-links">
+            <div class="footer-col">
+              <h4>Product</h4>
+              <a href="#features">Features</a>
+              <a href="#vibes">Discover</a>
+              <a data-apk-download href="#download">Download APK</a>
+            </div>
+            <div class="footer-col">
+              <h4>Platform</h4>
+              <a href="#android">Android app</a>
+              <a data-apk-download href="#download">Direct install</a>
+              <span class="footer-muted">iOS · not available</span>
+            </div>
+            <div class="footer-col">
+              <h4>Legal</h4>
+              <span class="footer-muted">Private / household use</span>
+              <span class="footer-muted">Respect provider ToS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <span>© 2026 OneTune. All rights reserved.</span>
+          <span class="footer-tag">Android · Self-hosted</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="./config.js"></script>
+    <script src="./script.js"></script>
+  </body>
+</html>

@@ -14,6 +14,8 @@
     "docker:up": "docker compose up --build -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
+    "website:serve": "npx serve website",
+    "website:sync-apk": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/sync-website-apk.ps1",
     "postinstall": "patch-package && node scripts/patch-track-player-turbo.mjs"
   },
   "devDependencies": {

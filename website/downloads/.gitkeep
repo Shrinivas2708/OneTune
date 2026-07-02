@@ -1,0 +1,2 @@
+# Drop your release APK here (not committed to git).
+# Run from repo root: bun run website:sync-apk
