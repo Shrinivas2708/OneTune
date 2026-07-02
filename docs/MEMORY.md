@@ -2,7 +2,7 @@
 
 > **Read this first in every new session.** Living handoff document — update after every milestone.
 
-**Last updated:** 2026-06-29 · **Current milestone:** M14 complete + post-MVP playback/search polish
+**Last updated:** 2026-06-29 · **Current milestone:** M15 Render deploy docs + production polish
 
 ---
 
@@ -14,7 +14,7 @@ Self-hosted, multi-provider music + music-video app for **iOS & Android**. Frien
 |------|----------|
 | Mobile | Expo 54, EAS dev builds, NativeWind, TanStack Query, Zustand, track-player |
 | Backend | Node/Bun API (Hono) + Python extractor (yt-dlp) + self-hosted JioSaavn API |
-| Database | MongoDB |
+| Database | MongoDB (local Docker, **Atlas on Render**, or VPS) |
 | Monorepo | Turborepo + Bun workspaces |
 | Streaming | **Option A** — direct client URLs; `StreamManifest.deliveryMode` allows future proxy |
 | Downloads | Device-only; server orchestrates |
@@ -36,8 +36,9 @@ packages/
   provider-core/      MusicProvider interface + ProviderRegistry
   ui/                 Design tokens + Tailwind preset
   utils/              Shared pure helpers
-docs/                 ARCHITECTURE, DESIGN, DECISIONS, ROADMAP, MEMORY, DEVELOPMENT, IMPLEMENTATION, DEPLOYMENT, API
+docs/                 ARCHITECTURE, DESIGN, DECISIONS, ROADMAP, MEMORY, DEVELOPMENT, IMPLEMENTATION, DEPLOYMENT, DEPLOYMENT-RENDER, API
 docker/               Dockerfiles
+render.yaml           Render Blueprint (API + providers)
 scripts/dev.ps1       Windows dev bootstrap
 ```
 
@@ -252,6 +253,8 @@ packages/utils/src/image.ts
 ```
 
 **EAS / testing:** See `docs/DEVELOPMENT.md` — `eas init`, `eas build --profile development`, `expo start --dev-client`, API URL by device type.
+
+**Production deploy:** See `docs/DEPLOYMENT-RENDER.md` (Render + Atlas) or `docs/DEPLOYMENT.md` (VPS).
 
 ---
 

@@ -139,7 +139,7 @@ Rebuild with EAS only when **native** dependencies change (new native module, SD
 | Web (`expo start --web`) | `http://localhost:3000` |
 | Android emulator | `http://10.0.2.2:3000` |
 | Physical phone (same Wi‑Fi) | `http://<your-pc-lan-ip>:3000` |
-| Preview / production EAS build | `https://api.yourdomain.com` |
+| Preview / production EAS build | `https://vibevault-api.onrender.com` (Render) or `https://api.yourdomain.com` (VPS) |
 
 Find LAN IP: `ipconfig` (Windows) or `ip addr` (Linux). Allow inbound TCP **3000** through Windows Firewall if the phone cannot reach the API.
 

@@ -1,0 +1,69 @@
+# Render Blueprint — VibeVault backend (API + providers)
+# https://render.com/docs/blueprint-spec
+#
+# Deploy: Render Dashboard → New → Blueprint → connect this repo
+# Set MONGODB_URI manually in the API service after Atlas is ready.
+#
+# Recommended plan: Starter ($7/mo per service) to avoid free-tier cold starts.
+# JioSaavn first build can take 10–15 minutes.
+
+services:
+  - type: web
+    name: vibevault-extractor
+    runtime: docker
+    dockerfilePath: ./docker/extractor.Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: vibevault-spotify
+    runtime: docker
+    dockerfilePath: ./docker/spotify.Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: vibevault-jiosaavn
+    runtime: docker
+    dockerfilePath: ./docker/jiosaavn.Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /api/search/songs?query=test
+    autoDeploy: true
+
+  - type: web
+    name: vibevault-api
+    runtime: docker
+    dockerfilePath: ./docker/api.Dockerfile
+    dockerContext: .
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false
+      - key: EXTRACTOR_URL
+        fromService:
+          type: web
+          name: vibevault-extractor
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: SPOTIFY_URL
+        fromService:
+          type: web
+          name: vibevault-spotify
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: JIOSAAVN_URL
+        fromService:
+          type: web
+          name: vibevault-jiosaavn
+          envVarKey: RENDER_EXTERNAL_URL

@@ -505,6 +505,18 @@ Record a play event (mobile calls this after successful playback start).
 
 ---
 
+### `DELETE /v1/library/history`
+
+Clear all playback history for the authenticated user.
+
+**Response:**
+
+```json
+{ "data": { "success": true, "deletedCount": 42 } }
+```
+
+---
+
 ## Internal Routes (Development Only)
 
 Available when `NODE_ENV !== production`. **No authentication required.**

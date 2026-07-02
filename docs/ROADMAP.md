@@ -374,11 +374,34 @@ feat(infra): add production docker compose and nginx deployment
 
 ---
 
+## M15 — Render + Atlas Deploy ✅
+
+**Goal:** Managed cloud deployment without a VPS.
+
+### Tasks
+- [x] `render.yaml` Blueprint (API + extractor + spotify + jiosaavn)
+- [x] `docs/DEPLOYMENT-RENDER.md` step-by-step guide
+- [x] API Docker `bun install --ignore-scripts` for cloud builds
+- [x] Provider Dockerfiles use `$PORT` for Render
+- [x] `.env.example` Atlas + Render variables
+- [x] Universal import (playlist / album / track)
+- [x] Clear history API + mobile UI
+
+### Suggested commit
+```
+docs(infra): add Render + MongoDB Atlas deployment guide
+```
+
+---
+
 ## Post-MVP Backlog
 
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Spotify → playable match | ✅ Done | `POST /v1/tracks/match`, playlist Play/Shuffle |
+| Universal import (playlist/album/track) | ✅ Done | Spotify, YouTube, JioSaavn |
+| Clear playback history | ✅ Done | `DELETE /v1/library/history` |
+| Render + Atlas deploy guide | ✅ Done | `docs/DEPLOYMENT-RENDER.md`, `render.yaml` |
 | Queue / skip hardening | ✅ Done | Upcoming-only queue, playback generation token, preloader |
 | Search performance | ✅ Done | Per-provider timeouts, 2min cache |
 | Web volume control | ✅ Done | Mini popover + Now Playing inline slider |

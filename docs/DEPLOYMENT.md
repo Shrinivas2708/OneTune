@@ -1,12 +1,24 @@
 # VibeVault — Deployment Guide
 
-> How to run VibeVault locally and on a VPS. Update this file when infrastructure changes.
+> How to run VibeVault locally, on **Render + Atlas**, or on a VPS. Update this file when infrastructure changes.
+
+---
+
+## Choose your deployment
+
+| Path | Best for | Guide |
+|------|----------|--------|
+| **Render + MongoDB Atlas** | Managed cloud, no server admin | **[DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md)** ← start here |
+| **Docker Compose (local)** | Development | [Local deployment](#local-deployment-development) below |
+| **VPS + Nginx + TLS** | Self-hosted single server | [VPS deployment](#vps-deployment-production) below |
 
 ---
 
 ## Overview
 
-VibeVault runs as a **Docker Compose** stack. All backend services are containerized; the mobile app is built separately with **Expo / EAS** and points at your API URL.
+VibeVault backend runs as **Docker containers**. The mobile app is built with **Expo / EAS** and points at your public API URL.
+
+**Render (recommended for cloud):** 4 provider services + 1 API on Render, MongoDB on Atlas — see [DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md).
 
 **Local dev:** `docker compose up` (API on `:3000`, MongoDB exposed for tooling)
 
@@ -82,15 +94,15 @@ cp .env.example .env
 
 | Variable | Example | Description |
 |----------|---------|-------------|
-| `EXPO_PUBLIC_API_URL` | `https://api.yourdomain.com` | API base URL baked into EAS builds (`eas.json` or EAS Secrets) |
+| `EXPO_PUBLIC_API_URL` | `https://vibevault-api.onrender.com` | API base URL baked into EAS builds (`eas.json` or EAS Secrets) |
 
 Set per profile in `apps/mobile/eas.json`:
 
 | Profile | Purpose | Typical `EXPO_PUBLIC_API_URL` |
 |---------|---------|-------------------------------|
 | `development` | Dev client | Set at **Metro start** (see [DEVELOPMENT.md](./DEVELOPMENT.md#api-url-by-target)) — not `localhost` on physical devices |
-| `preview` | Internal test builds | `https://api.yourdomain.com` |
-| `production` | App Store / Play Store | `https://api.yourdomain.com` |
+| `preview` | Internal test builds | `https://vibevault-api.onrender.com` (or your Render/VPS URL) |
+| `production` | App Store / Play Store | `https://vibevault-api.onrender.com` (or your Render/VPS URL) |
 
 `apps/mobile/app.config.js` disables Android cleartext traffic when the URL uses `https://`.
 
@@ -394,6 +406,7 @@ eas update --branch production
 
 | Doc | Purpose |
 |-----|---------|
+| **[DEPLOYMENT-RENDER.md](./DEPLOYMENT-RENDER.md)** | **Render + Atlas step-by-step (recommended)** |
 | [DEVELOPMENT.md](./DEVELOPMENT.md) | Local dev workflow |
 | [API.md](./API.md) | Endpoints and auth |
 | [IMPLEMENTATION.md](./IMPLEMENTATION.md) | Code structure |
