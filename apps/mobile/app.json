@@ -2,7 +2,7 @@
   "scheme": "onetune",
   "userInterfaceStyle": "dark",
   "orientation": "portrait",
-  "icon": "./assets/logo.png",
+  "icon": "./assets/adaptive-icon.png",
   "backgroundColor": "#000000",
   "splash": {
     "image": "./assets/logo.png",
@@ -18,7 +18,7 @@
   "android": {
     "package": "com.onetune.app",
     "adaptiveIcon": {
-      "foregroundImage": "./assets/logo.png",
+      "foregroundImage": "./assets/adaptive-icon.png",
       "backgroundColor": "#000000"
     },
     "permissions": [

@@ -12,6 +12,8 @@ $env:EXPO_STANDALONE_BUILD = "1"
 $env:EXPO_NO_METRO_WORKSPACE_ROOT = "1"
 
 Write-Host "API URL: $env:EXPO_PUBLIC_API_URL"
+Write-Host "Generating padded launcher icon..."
+node ./scripts/generate-adaptive-icon.cjs
 Write-Host "Regenerating native Android project (standalone, no dev client)..."
 
 npx expo prebuild --platform android --clean

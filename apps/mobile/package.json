@@ -7,6 +7,7 @@
     "dev": "expo start",
     "start": "expo start",
     "android": "expo run:android",
+    "android:icons": "node ./scripts/generate-adaptive-icon.cjs",
     "android:release": "expo run:android --variant release --no-install",
     "build:android:standalone": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/build-android-standalone.ps1",
     "build:android:rebundle": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/rebundle-release-apk.ps1",
