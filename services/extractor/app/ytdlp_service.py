@@ -18,16 +18,29 @@ YOUTUBE_STREAM_HEADERS = {
     ),
 }
 
-# Prefer clients that avoid bot checks / PO-token requirements when possible.
-YOUTUBE_PLAYER_CLIENTS: list[list[str]] = [
+# Prefer clients that work with cookies + EJS challenge solving.
+YOUTUBE_PLAYER_CLIENTS_WITH_COOKIES: list[list[str]] = [
+    ["web", "mweb"],
+    ["tv_embedded"],
+    ["web_safari"],
+    ["web"],
+]
+
+YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES: list[list[str]] = [
     ["android_vr"],
     ["tv_embedded"],
     ["web_safari"],
-    ["mweb"],
     ["ios", "web"],
-    ["web"],
     ["android", "web"],
 ]
+
+
+def _player_client_attempts() -> list[list[str]]:
+    if _resolve_cookie_file():
+        return (
+            YOUTUBE_PLAYER_CLIENTS_WITH_COOKIES + YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES
+        )
+    return YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES + YOUTUBE_PLAYER_CLIENTS_WITH_COOKIES
 
 
 def _utc_iso(offset_seconds: int = 3600) -> str:
@@ -147,6 +160,8 @@ def _base_opts(**extra: Any) -> dict[str, Any]:
         "no_warnings": True,
         "skip_download": True,
         "nocheckcertificate": True,
+        "remote_components": ["ejs:github"],
+        "js_runtimes": {"deno": {}, "node": {}},
         **_auth_opts(),
         **extra,
     }
@@ -156,6 +171,13 @@ def _youtube_opts(player_clients: list[str], **extra: Any) -> dict[str, Any]:
     return _base_opts(
         extractor_args=_youtube_extractor_args(player_clients),
         **extra,
+    )
+
+
+def _stream_youtube_opts(player_clients: list[str]) -> dict[str, Any]:
+    return _youtube_opts(
+        player_clients,
+        ignore_no_formats_error=True,
     )
 
 
@@ -210,15 +232,68 @@ def _format_sort_key(fmt: dict[str, Any], prefer_video: bool) -> tuple[int, int,
     return (audio_only, progressive, abr, audio_with_video * height)
 
 
+def _stream_format_selector(prefer_video: bool) -> list[str]:
+    if prefer_video:
+        return [
+            "bestvideo[height<=720]+bestaudio/best[height<=720]/best",
+            "best[height<=720]/best",
+        ]
+
+    return [
+        "bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio",
+        "best[acodec!=none][vcodec=none]/best[acodec!=none]",
+        "bestaudio/best",
+    ]
+
+
+def _format_with_url(fmt: dict[str, Any]) -> dict[str, Any] | None:
+    if fmt.get("url"):
+        return fmt
+    if fmt.get("manifest_url"):
+        return {**fmt, "url": fmt["manifest_url"]}
+    if fmt.get("fragment_base_url"):
+        return {**fmt, "url": fmt["fragment_base_url"]}
+    return None
+
+
+def _format_from_info(info: dict[str, Any], prefer_video: bool = False) -> dict[str, Any] | None:
+    if info.get("url"):
+        return {
+            "url": info["url"],
+            "ext": info.get("ext"),
+            "abr": info.get("abr") or info.get("tbr"),
+            "vcodec": info.get("vcodec"),
+            "mime_type": info.get("mime_type"),
+        }
+
+    requested = info.get("requested_formats") or []
+    resolved = [
+        picked
+        for fmt in requested
+        if (picked := _format_with_url(fmt)) is not None
+    ]
+    if resolved:
+        return max(
+            resolved,
+            key=lambda fmt: _format_sort_key(fmt, prefer_video=prefer_video),
+        )
+
+    return _pick_format(info, prefer_video=prefer_video)
+
+
 def _pick_format(info: dict[str, Any], prefer_video: bool = False) -> dict[str, Any] | None:
     formats = info.get("formats") or []
-    candidates = [f for f in formats if f.get("url")]
+    candidates = [
+        picked
+        for fmt in formats
+        if (picked := _format_with_url(fmt)) is not None
+    ]
 
     if not candidates and info.get("url"):
         return {
             "url": info["url"],
             "ext": info.get("ext"),
-            "abr": info.get("abr"),
+            "abr": info.get("abr") or info.get("tbr"),
             "vcodec": info.get("vcodec"),
             "mime_type": info.get("mime_type"),
         }
@@ -232,8 +307,27 @@ def _pick_format(info: dict[str, Any], prefer_video: bool = False) -> dict[str, 
     )
 
 
-def _extract_info(url: str, player_clients: list[str]) -> dict[str, Any]:
-    with yt_dlp.YoutubeDL(_youtube_opts(player_clients)) as ydl:
+def _extract_info(
+    url: str,
+    player_clients: list[str],
+    *,
+    for_stream: bool = False,
+    format_selector: str | None = None,
+) -> dict[str, Any]:
+    extra: dict[str, Any] = {}
+    if format_selector:
+        extra["format"] = format_selector
+
+    opts = (
+        _stream_youtube_opts(player_clients)
+        if for_stream and not format_selector
+        else _youtube_opts(player_clients, **extra)
+    )
+    if for_stream and format_selector:
+        opts = _stream_youtube_opts(player_clients)
+        opts["format"] = format_selector
+
+    with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)
         if info.get("_type") == "playlist":
             raise ValueError("URL is a playlist — use playlist import endpoint")
@@ -251,6 +345,8 @@ def _build_stream_payload(chosen: dict[str, Any]) -> dict[str, Any]:
             "mp4": "video/mp4",
             "webm": "audio/webm",
             "opus": "audio/opus",
+            "m3u8": "application/vnd.apple.mpegurl",
+            "mpd": "application/dash+xml",
         }.get(str(ext))
 
     return {
@@ -265,7 +361,7 @@ def _build_stream_payload(chosen: dict[str, Any]) -> dict[str, Any]:
 
 def extract_metadata(url: str) -> dict[str, Any]:
     last_error: Exception | None = None
-    for clients in YOUTUBE_PLAYER_CLIENTS:
+    for clients in _player_client_attempts():
         try:
             return _map_track(_extract_info(url, clients))
         except Exception as exc:  # noqa: BLE001
@@ -278,7 +374,7 @@ def search_tracks(query: str, limit: int) -> list[dict[str, Any]]:
     search_url = f"ytsearch{limit}:{query}"
     last_error: Exception | None = None
 
-    for clients in YOUTUBE_PLAYER_CLIENTS:
+    for clients in _player_client_attempts():
         try:
             with yt_dlp.YoutubeDL(_youtube_opts(clients, extract_flat=True)) as ydl:
                 info = ydl.extract_info(search_url, download=False)
@@ -320,20 +416,34 @@ def search_tracks(query: str, limit: int) -> list[dict[str, Any]]:
 def resolve_stream(url: str, prefer_video: bool = False) -> dict[str, Any]:
     last_error: Exception | None = None
 
-    for clients in YOUTUBE_PLAYER_CLIENTS:
+    for clients in _player_client_attempts():
         try:
-            info = _extract_info(url, clients)
-            chosen = _pick_format(info, prefer_video=prefer_video)
+            info = _extract_info(url, clients, for_stream=True)
+            chosen = _format_from_info(info, prefer_video=prefer_video)
             if chosen and chosen.get("url"):
                 return _build_stream_payload(chosen)
         except Exception as exc:  # noqa: BLE001
             last_error = exc
 
+        for format_selector in _stream_format_selector(prefer_video):
+            try:
+                info = _extract_info(
+                    url,
+                    clients,
+                    for_stream=True,
+                    format_selector=format_selector,
+                )
+                chosen = _format_from_info(info, prefer_video=prefer_video)
+                if chosen and chosen.get("url"):
+                    return _build_stream_payload(chosen)
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+
     raise ValueError(str(last_error) if last_error else "No playable stream URL found")
 
 
 def resolve_download(url: str) -> dict[str, Any]:
-    info = _extract_info(url, YOUTUBE_PLAYER_CLIENTS[0])
+    info = _extract_info(url, _player_client_attempts()[0], for_stream=True)
     chosen = _pick_format(info, prefer_video=False)
     if not chosen or not chosen.get("url"):
         raise ValueError("No downloadable URL found")
@@ -352,7 +462,7 @@ def resolve_download(url: str) -> dict[str, Any]:
 
 
 def import_playlist(url: str, max_tracks: int = 100) -> dict[str, Any]:
-    opts = _youtube_opts(YOUTUBE_PLAYER_CLIENTS[0], extract_flat=True)
+    opts = _youtube_opts(_player_client_attempts()[0], extract_flat=True)
 
     with yt_dlp.YoutubeDL(opts) as ydl:
         info = ydl.extract_info(url, download=False)

@@ -4,7 +4,12 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+    ca-certificates \
+    unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh \
+    && deno --version
 
 COPY services/extractor/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
