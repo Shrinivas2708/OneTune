@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -34,11 +35,36 @@ def _utc_iso(offset_seconds: int = 3600) -> str:
     return instant.replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def _auth_opts() -> dict[str, Any]:
-    opts: dict[str, Any] = {}
+_resolved_cookie_file: str | None = None
+
+
+def _resolve_cookie_file() -> str | None:
+    """Resolve cookie file from disk path or YTDLP_COOKIES_BASE64 (for Render / PaaS)."""
+    global _resolved_cookie_file
+
+    if _resolved_cookie_file and Path(_resolved_cookie_file).is_file():
+        return _resolved_cookie_file
 
     cookie_file = os.environ.get("YTDLP_COOKIE_FILE", "").strip()
     if cookie_file and Path(cookie_file).is_file():
+        _resolved_cookie_file = cookie_file
+        return cookie_file
+
+    encoded = os.environ.get("YTDLP_COOKIES_BASE64", "").strip()
+    if not encoded:
+        return None
+
+    target = os.environ.get("YTDLP_COOKIE_FILE", "").strip() or "/tmp/youtube-cookies.txt"
+    Path(target).write_bytes(base64.b64decode(encoded))
+    _resolved_cookie_file = target
+    return target
+
+
+def _auth_opts() -> dict[str, Any]:
+    opts: dict[str, Any] = {}
+
+    cookie_file = _resolve_cookie_file()
+    if cookie_file:
         opts["cookiefile"] = cookie_file
 
     browser = os.environ.get("YTDLP_COOKIES_FROM_BROWSER", "").strip()

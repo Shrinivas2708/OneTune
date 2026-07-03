@@ -13,6 +13,9 @@ services:
     plan: starter
     healthCheckPath: /health
     autoDeploy: true
+    envVars:
+      - key: YTDLP_COOKIES_BASE64
+        sync: false
 
   - type: web
     name: onetune-spotify
