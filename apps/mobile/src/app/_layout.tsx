@@ -12,11 +12,11 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Constants from "expo-constants";
 import { PlayerSync } from "@/components/player/player-sync";
 import { LoadingScreen } from "@/components/ui/screen";
 import { ToastHost } from "@/components/ui/toast-host";
 import { useAppUpdatePrompt } from "@/hooks/use-app-update-prompt";
+import { isProductionBuild } from "@/lib/app-release";
 import { AppProviders } from "@/providers/app-providers";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDownloadStore } from "@/stores/download-store";
@@ -35,9 +35,8 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
   });
 
-  const isStandaloneRelease =
-    !__DEV__ && Constants.executionEnvironment === "standalone";
-  useAppUpdatePrompt(isStandaloneRelease);
+  const appReady = fontsLoaded && isHydrated;
+  useAppUpdatePrompt(isProductionBuild() && appReady);
 
   useEffect(() => {
     void hydrate();

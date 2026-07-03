@@ -10,6 +10,8 @@ import { FavoriteButton } from "@/components/library/favorite-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
 import { GlassCard } from "@/components/ui/glass-card";
 import { useDownloadStatus } from "@/hooks/use-download-status";
+import { getTrackArtworkUri } from "@/lib/track-artwork";
+import { formatArtists } from "@/lib/track-format";
 import { searchResultToTrack } from "@/stores/player-store";
 import { ProviderBadge } from "./provider-badge";
 
@@ -21,7 +23,7 @@ interface TrackRowProps {
 }
 
 function artistLine(result: SearchResult) {
-  return result.artists.map((artist) => artist.name).join(", ");
+  return formatArtists(searchResultToTrack(result));
 }
 
 export function TrackRow({
@@ -51,7 +53,7 @@ export function TrackRow({
               label={`${result.title} artwork`}
               radius={12}
               size={56}
-              uri={result.artworkUrl}
+              uri={getTrackArtworkUri(track)}
             />
             {isActive ? (
               <View className="absolute inset-0 items-center justify-center rounded-vault-lg bg-black/45">

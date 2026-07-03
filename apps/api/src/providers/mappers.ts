@@ -32,6 +32,22 @@ function nullToUndefined<T>(value: T | null | undefined): T | undefined {
   return value === null ? undefined : value;
 }
 
+function youtubeArtworkUrl(
+  externalId: string,
+  artworkUrl?: string | null,
+): string | undefined {
+  if (artworkUrl) {
+    return artworkUrl;
+  }
+
+  const id = externalId.trim();
+  if (!id || id.startsWith("http")) {
+    return undefined;
+  }
+
+  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+}
+
 export function sanitizeTrackMetadata(
   track: TrackMetadata,
 ): TrackMetadata | null {
@@ -95,7 +111,7 @@ export function extractorToMetadata(track: ExtractorTrack): TrackMetadata {
           artworkUrl: track.album.artwork_url ?? undefined,
         }
       : undefined,
-    artworkUrl: track.artwork_url ?? undefined,
+    artworkUrl: youtubeArtworkUrl(track.id, track.artwork_url),
     durationMs: track.duration_ms ?? undefined,
     isVideo: track.is_video,
     releaseYear: undefined,

@@ -249,7 +249,7 @@ To go fully hands-off later, extend `.github/workflows/release.yml` with an Andr
 
 | Problem                              | Fix                                                                                                         |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Update prompt never appears          | User must install a build that includes the update check; confirm `executionEnvironment` is `standalone`    |
+| Update prompt never appears          | Install a release APK that includes the update check. Local Gradle builds use `executionEnvironment: bare` (not only `standalone`) — fixed in app code. Prompt runs after splash, not during loading. |
 | APK link 404                         | Asset on GitHub Release must be named `OneTune-{version}.apk` matching the tag                              |
 | Website still shows old link         | Hard refresh; confirm `release.json` deployed; check `ApkLink` loads `/release.json`                        |
 | Action did not update `release.json` | Tag must match `v*`; Actions enabled; workflow has `contents: write`                                        |

@@ -8,6 +8,7 @@ import { ArtworkImage } from "@/components/ui/artwork-image";
 import { VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Screen } from "@/components/ui/screen";
+import { getTrackArtworkUri } from "@/lib/track-artwork";
 import { useHistory, useHistoryArtists } from "@/hooks/use-history";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { useAuthStore } from "@/stores/auth-store";
@@ -107,7 +108,7 @@ export default function HomeScreen() {
                   label={`${currentTrack.title} artwork`}
                   radius={12}
                   size={64}
-                  uri={currentTrack.artworkUrl}
+                  uri={getTrackArtworkUri(currentTrack)}
                 />
                 <View className="min-w-0 flex-1">
                   <Text

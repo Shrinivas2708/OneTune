@@ -10,6 +10,7 @@ import { ArtworkImage } from "@/components/ui/artwork-image";
 import { GlassCard } from "@/components/ui/glass-card";
 import { useDownloadStatus } from "@/hooks/use-download-status";
 import { usePlayTrack } from "@/hooks/use-play-track";
+import { getTrackArtworkUri } from "@/lib/track-artwork";
 import { formatArtists } from "@/lib/track-format";
 import { trackToSearchResult } from "@/lib/track-to-search-result";
 import { trackKey, usePlayerStore } from "@/stores/player-store";
@@ -50,7 +51,7 @@ export function LibraryTrackRow({
           label={`${track.title} artwork`}
           radius={12}
           size={52}
-          uri={track.artworkUrl}
+          uri={getTrackArtworkUri(track)}
         />
 
         <View className="min-w-0 flex-1 gap-1">

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import base64
+import gc
 import os
+import threading
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -35,12 +38,35 @@ YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES: list[list[str]] = [
 ]
 
 
-def _player_client_attempts() -> list[list[str]]:
+_YTDLP_LOCK = threading.Lock()
+_DEFAULT_STREAM_CLIENT_ATTEMPTS = 2
+_DEFAULT_METADATA_CLIENT_ATTEMPTS = 2
+_DEFAULT_SEARCH_CLIENT_ATTEMPTS = 1
+
+
+@contextmanager
+def _serialized_ytdlp():
+    """One yt-dlp job at a time — avoids OOM on 512MB hosts (Render free tier)."""
+    with _YTDLP_LOCK:
+        try:
+            yield
+        finally:
+            gc.collect()
+
+
+def _player_client_attempts(limit: int | None = None) -> list[list[str]]:
     if _resolve_cookie_file():
-        return (
+        attempts = (
             YOUTUBE_PLAYER_CLIENTS_WITH_COOKIES + YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES
         )
-    return YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES + YOUTUBE_PLAYER_CLIENTS_WITH_COOKIES
+    else:
+        attempts = (
+            YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES + YOUTUBE_PLAYER_CLIENTS_WITH_COOKIES
+        )
+
+    if limit is not None:
+        return attempts[:limit]
+    return attempts
 
 
 def _utc_iso(offset_seconds: int = 3600) -> str:
@@ -161,7 +187,7 @@ def _base_opts(**extra: Any) -> dict[str, Any]:
         "skip_download": True,
         "nocheckcertificate": True,
         "remote_components": ["ejs:github"],
-        "js_runtimes": {"deno": {}, "node": {}},
+        "js_runtimes": {"deno": {}},
         **_auth_opts(),
         **extra,
     }
@@ -181,17 +207,83 @@ def _stream_youtube_opts(player_clients: list[str]) -> dict[str, Any]:
     )
 
 
+def _youtube_thumbnail_url(video_id: str) -> str:
+    return f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+
+
+def _parse_artist_from_title(title: str) -> str | None:
+    for sep in (" - ", " – ", " — ", " | ", ": "):
+        if sep in title:
+            artist = title.split(sep, 1)[0].strip()
+            if artist and len(artist) <= 80:
+                return artist
+    return None
+
+
+def _pick_thumbnail(info: dict[str, Any], video_id: str | None = None) -> str | None:
+    thumb = info.get("thumbnail")
+    if thumb:
+        return str(thumb)
+
+    thumbnails = info.get("thumbnails")
+    if isinstance(thumbnails, list):
+        valid = [
+            item
+            for item in thumbnails
+            if isinstance(item, dict) and item.get("url")
+        ]
+        if valid:
+            best = max(valid, key=lambda item: int(item.get("height") or 0))
+            return str(best["url"])
+
+    vid = video_id or info.get("id")
+    if vid:
+        return _youtube_thumbnail_url(str(vid))
+    return None
+
+
 def _map_artists(info: dict[str, Any]) -> list[dict[str, str | None]]:
-    artist = info.get("artist") or info.get("uploader") or info.get("channel")
-    if artist:
-        return [{"id": None, "name": str(artist)}]
+    for key in ("artist", "creator", "uploader", "channel", "album_artist"):
+        value = info.get(key)
+        if value:
+            name = str(value).strip()
+            if name and name.lower() not in {"unknown", "n/a"}:
+                channel_id = info.get("channel_id") or info.get("uploader_id")
+                return [
+                    {
+                        "id": str(channel_id) if channel_id else None,
+                        "name": name,
+                    }
+                ]
+
+    title = info.get("title") or ""
+    parsed = _parse_artist_from_title(title)
+    if parsed:
+        return [{"id": None, "name": parsed}]
+
     return [{"id": None, "name": "Unknown Artist"}]
+
+
+def _map_flat_entry(entry: dict[str, Any]) -> dict[str, Any]:
+    entry_id = entry.get("id") or ""
+    duration = entry.get("duration")
+
+    return {
+        "id": entry_id,
+        "provider": "youtube",
+        "title": entry.get("title") or "Unknown Title",
+        "artists": _map_artists(entry),
+        "album": None,
+        "artwork_url": _pick_thumbnail(entry, entry_id or None),
+        "duration_ms": int(duration * 1000) if duration else None,
+        "is_video": entry.get("vcodec") not in (None, "none"),
+        "url": entry.get("url") or f"https://www.youtube.com/watch?v={entry_id}",
+    }
 
 
 def _map_track(info: dict[str, Any]) -> dict[str, Any]:
     video_id = info.get("id") or ""
     webpage_url = info.get("webpage_url") or info.get("original_url") or ""
-    thumbnail = info.get("thumbnail")
     duration = info.get("duration")
 
     return {
@@ -200,7 +292,7 @@ def _map_track(info: dict[str, Any]) -> dict[str, Any]:
         "title": info.get("title") or "Unknown Title",
         "artists": _map_artists(info),
         "album": None,
-        "artwork_url": thumbnail,
+        "artwork_url": _pick_thumbnail(info, video_id or None),
         "duration_ms": int(duration * 1000) if duration else None,
         "is_video": info.get("vcodec") not in (None, "none"),
         "url": webpage_url,
@@ -361,11 +453,12 @@ def _build_stream_payload(chosen: dict[str, Any]) -> dict[str, Any]:
 
 def extract_metadata(url: str) -> dict[str, Any]:
     last_error: Exception | None = None
-    for clients in _player_client_attempts():
-        try:
-            return _map_track(_extract_info(url, clients))
-        except Exception as exc:  # noqa: BLE001
-            last_error = exc
+    with _serialized_ytdlp():
+        for clients in _player_client_attempts(limit=_DEFAULT_METADATA_CLIENT_ATTEMPTS):
+            try:
+                return _map_track(_extract_info(url, clients))
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
 
     raise ValueError(str(last_error) if last_error else "Could not extract metadata")
 
@@ -374,15 +467,16 @@ def search_tracks(query: str, limit: int) -> list[dict[str, Any]]:
     search_url = f"ytsearch{limit}:{query}"
     last_error: Exception | None = None
 
-    for clients in _player_client_attempts():
-        try:
-            with yt_dlp.YoutubeDL(_youtube_opts(clients, extract_flat=True)) as ydl:
-                info = ydl.extract_info(search_url, download=False)
-            break
-        except Exception as exc:  # noqa: BLE001
-            last_error = exc
-    else:
-        raise ValueError(str(last_error) if last_error else "Search failed")
+    with _serialized_ytdlp():
+        for clients in _player_client_attempts(limit=_DEFAULT_SEARCH_CLIENT_ATTEMPTS):
+            try:
+                with yt_dlp.YoutubeDL(_youtube_opts(clients, extract_flat=True)) as ydl:
+                    info = ydl.extract_info(search_url, download=False)
+                break
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+        else:
+            raise ValueError(str(last_error) if last_error else "Search failed")
 
     entries = info.get("entries") or []
     results: list[dict[str, Any]] = []
@@ -393,119 +487,97 @@ def search_tracks(query: str, limit: int) -> list[dict[str, Any]]:
         entry_id = entry.get("id")
         if not entry_id:
             continue
-        results.append(
-            {
-                "id": entry_id,
-                "provider": "youtube",
-                "title": entry.get("title") or "Unknown Title",
-                "artists": _map_artists(entry),
-                "album": None,
-                "artwork_url": entry.get("thumbnail"),
-                "duration_ms": int(entry["duration"] * 1000)
-                if entry.get("duration")
-                else None,
-                "is_video": True,
-                "url": entry.get("url")
-                or f"https://www.youtube.com/watch?v={entry_id}",
-            }
-        )
+        results.append(_map_flat_entry(entry))
 
     return results
 
 
 def resolve_stream(url: str, prefer_video: bool = False) -> dict[str, Any]:
     last_error: Exception | None = None
+    format_selectors = _stream_format_selector(prefer_video)[:2]
 
-    for clients in _player_client_attempts():
-        try:
-            info = _extract_info(url, clients, for_stream=True)
-            chosen = _format_from_info(info, prefer_video=prefer_video)
-            if chosen and chosen.get("url"):
-                return _build_stream_payload(chosen)
-        except Exception as exc:  # noqa: BLE001
-            last_error = exc
-
-        for format_selector in _stream_format_selector(prefer_video):
+    with _serialized_ytdlp():
+        for clients in _player_client_attempts(limit=_DEFAULT_STREAM_CLIENT_ATTEMPTS):
             try:
-                info = _extract_info(
-                    url,
-                    clients,
-                    for_stream=True,
-                    format_selector=format_selector,
-                )
+                info = _extract_info(url, clients, for_stream=True)
                 chosen = _format_from_info(info, prefer_video=prefer_video)
                 if chosen and chosen.get("url"):
                     return _build_stream_payload(chosen)
             except Exception as exc:  # noqa: BLE001
                 last_error = exc
 
+            for format_selector in format_selectors:
+                try:
+                    info = _extract_info(
+                        url,
+                        clients,
+                        for_stream=True,
+                        format_selector=format_selector,
+                    )
+                    chosen = _format_from_info(info, prefer_video=prefer_video)
+                    if chosen and chosen.get("url"):
+                        return _build_stream_payload(chosen)
+                except Exception as exc:  # noqa: BLE001
+                    last_error = exc
+
     raise ValueError(str(last_error) if last_error else "No playable stream URL found")
 
 
 def resolve_download(url: str) -> dict[str, Any]:
-    info = _extract_info(url, _player_client_attempts()[0], for_stream=True)
-    chosen = _pick_format(info, prefer_video=False)
-    if not chosen or not chosen.get("url"):
-        raise ValueError("No downloadable URL found")
+    with _serialized_ytdlp():
+        info = _extract_info(
+            url,
+            _player_client_attempts(limit=1)[0],
+            for_stream=True,
+        )
+        chosen = _pick_format(info, prefer_video=False)
+        if not chosen or not chosen.get("url"):
+            raise ValueError("No downloadable URL found")
 
-    title = info.get("title") or "track"
-    ext = chosen.get("ext") or "m4a"
-    safe_title = "".join(c if c.isalnum() or c in "- _" else "_" for c in title)
+        title = info.get("title") or "track"
+        ext = chosen.get("ext") or "m4a"
+        safe_title = "".join(c if c.isalnum() or c in "- _" else "_" for c in title)
 
-    return {
-        "url": chosen["url"],
-        "filename": f"{safe_title}.{ext}",
-        "format": ext,
-        "size_bytes": chosen.get("filesize") or chosen.get("filesize_approx"),
-        "expires_at": _utc_iso(3600),
-    }
+        return {
+            "url": chosen["url"],
+            "filename": f"{safe_title}.{ext}",
+            "format": ext,
+            "size_bytes": chosen.get("filesize") or chosen.get("filesize_approx"),
+            "expires_at": _utc_iso(3600),
+        }
 
 
 def import_playlist(url: str, max_tracks: int = 100) -> dict[str, Any]:
-    opts = _youtube_opts(_player_client_attempts()[0], extract_flat=True)
+    with _serialized_ytdlp():
+        opts = _youtube_opts(_player_client_attempts(limit=1)[0], extract_flat=True)
 
-    with yt_dlp.YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=False)
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=False)
 
-    if info.get("_type") != "playlist":
-        raise ValueError("URL is not a playlist")
+        if info.get("_type") != "playlist":
+            raise ValueError("URL is not a playlist")
 
-    entries = (info.get("entries") or [])[:max_tracks]
-    tracks: list[dict[str, Any]] = []
+        entries = (info.get("entries") or [])[:max_tracks]
+        tracks: list[dict[str, Any]] = []
 
-    for entry in entries:
-        if not entry:
-            continue
-        entry_id = entry.get("id")
-        if not entry_id:
-            continue
-        tracks.append(
-            {
-                "id": entry_id,
-                "provider": "youtube",
-                "title": entry.get("title") or "Unknown Title",
-                "artists": _map_artists(entry),
-                "album": None,
-                "artwork_url": entry.get("thumbnail"),
-                "duration_ms": int(entry["duration"] * 1000)
-                if entry.get("duration")
-                else None,
-                "is_video": True,
-                "url": entry.get("url")
-                or f"https://www.youtube.com/watch?v={entry_id}",
-            }
-        )
+        for entry in entries:
+            if not entry:
+                continue
+            entry_id = entry.get("id")
+            if not entry_id:
+                continue
+            tracks.append(_map_flat_entry(entry))
 
-    return {
-        "id": info.get("id"),
-        "name": info.get("title") or "Imported Playlist",
-        "description": info.get("description"),
-        "artwork_url": info.get("thumbnail"),
-        "track_count": len(tracks),
-        "owner": info.get("uploader"),
-        "source_url": url,
-        "tracks": tracks,
-    }
+        return {
+            "id": info.get("id"),
+            "name": info.get("title") or "Imported Playlist",
+            "description": info.get("description"),
+            "artwork_url": _pick_thumbnail(info),
+            "track_count": len(tracks),
+            "owner": info.get("uploader"),
+            "source_url": url,
+            "tracks": tracks,
+        }
 
 
 def build_youtube_url(external_id: str, url: str | None = None) -> str:

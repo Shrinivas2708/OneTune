@@ -15,6 +15,38 @@ import { musicApi } from "@/lib/music-api";
 const PRELOAD_AHEAD = 2;
 const preloadInFlight = new Set<string>();
 
+function isUnknownArtist(name: string) {
+  return !name.trim() || /^unknown artist$/i.test(name.trim());
+}
+
+function youtubeThumbnail(externalId: string) {
+  const id = externalId.trim();
+  if (!id || id.startsWith("http")) {
+    return undefined;
+  }
+
+  return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+}
+
+function mergePlayableMetadata(
+  source: SearchResult,
+  match: SearchResult,
+): SearchResult {
+  const artists = match.artists.every((artist) => isUnknownArtist(artist.name))
+    ? source.artists
+    : match.artists;
+
+  return {
+    ...match,
+    artists: artists.length > 0 ? artists : match.artists,
+    artworkUrl:
+      match.artworkUrl ??
+      source.artworkUrl ??
+      youtubeThumbnail(match.ref.externalId),
+    album: match.album ?? source.album,
+  };
+}
+
 export async function resolvePlayableResult(
   input: SearchResult | TrackMeta,
 ): Promise<SearchResult> {
@@ -48,8 +80,9 @@ export async function resolvePlayableResult(
       durationMs: result.durationMs,
     })
     .then((matched) => {
-      cachePlayableResult(result, matched);
-      return matched;
+      const merged = mergePlayableMetadata(result, matched);
+      cachePlayableResult(result, merged);
+      return merged;
     });
 
   setInFlightMatch(matchKey, request);

@@ -54,7 +54,7 @@
   ],
   "name": "OneTune",
   "slug": "onetune",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "extra": {
     "router": {
       "origin": "https://onetune.app"
