@@ -38,7 +38,7 @@ export function LoadingScreen() {
   return (
     <AmbientGlow>
       <View className="flex-1 items-center justify-center bg-vault-background">
-        <ActivityIndicator color="#1ed760" size="large" />
+        <ActivityIndicator color="#ffffff" size="large" />
       </View>
     </AmbientGlow>
   );

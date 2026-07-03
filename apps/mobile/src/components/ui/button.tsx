@@ -1,10 +1,12 @@
 import * as Haptics from "expo-haptics";
 import type { ReactNode } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   type PressableProps,
   Text,
   type TextStyle,
+  View,
 } from "react-native";
 
 type VaultButtonVariant = "primary" | "secondary" | "ghost";
@@ -51,12 +53,24 @@ export function VaultButton({
       onPress={handlePress}
       {...props}
     >
-      <Text
-        className={`font-inter-bold text-sm ${textClasses[variant]} ${uppercase ? "uppercase tracking-widest" : ""}`}
-        style={{ letterSpacing: uppercase ? 1.4 : 0 } as TextStyle}
-      >
-        {loading ? "Please wait…" : label}
-      </Text>
+      {loading ? (
+        <View className="flex-row items-center gap-2">
+          <ActivityIndicator color="#ffffff" size="small" />
+          <Text
+            className={`font-inter-bold text-sm text-white ${uppercase ? "uppercase tracking-widest" : ""}`}
+            style={{ letterSpacing: uppercase ? 1.4 : 0 } as TextStyle}
+          >
+            Please wait…
+          </Text>
+        </View>
+      ) : (
+        <Text
+          className={`font-inter-bold text-sm ${textClasses[variant]} ${uppercase ? "uppercase tracking-widest" : ""}`}
+          style={{ letterSpacing: uppercase ? 1.4 : 0 } as TextStyle}
+        >
+          {label}
+        </Text>
+      )}
     </Pressable>
   );
 }

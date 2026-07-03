@@ -12,9 +12,9 @@ import { AddToQueueButton } from "@/components/player/add-to-queue-button";
 import { ArtworkImage } from "@/components/ui/artwork-image";
 import { getTrackArtworkUri } from "@/lib/track-artwork";
 import { ErrorState } from "@/components/ui/error-state";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { Screen } from "@/components/ui/screen";
 import { SubScreenHeader } from "@/components/ui/sub-screen-header";
-import { PlaylistDetailSkeleton } from "@/components/ui/skeleton";
 import { useDownloadStatus } from "@/hooks/use-download-status";
 import { usePlayTrack } from "@/hooks/use-play-track";
 import { useDeletePlaylist, usePlaylist } from "@/hooks/use-playlists";
@@ -199,7 +199,8 @@ export default function PlaylistDetailScreen() {
   if (isLoading) {
     return (
       <Screen className="pt-2" padded={false}>
-        <PlaylistDetailSkeleton />
+        <SubScreenHeader backHref="/(tabs)/library" subtitle="Loading…" title="Playlist" />
+        <LoadingIndicator message="Loading playlist…" />
       </Screen>
     );
   }

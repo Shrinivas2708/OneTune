@@ -1,9 +1,9 @@
 import { FlashList } from "@shopify/flash-list";
 import type { SearchResult } from "@vibevault/types";
 import { Text, View } from "react-native";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { SearchMessage } from "./search-message";
-import { SearchSkeleton } from "./search-skeleton";
 import { TrackRow } from "./track-row";
 
 interface SearchResultsListProps {
@@ -34,7 +34,7 @@ export function SearchResultsList({
   const bottomInset = useScrollBottomInset();
 
   if (isLoading || isFetching) {
-    return <SearchSkeleton />;
+    return <LoadingIndicator message="Searching…" />;
   }
 
   if (results.length === 0) {

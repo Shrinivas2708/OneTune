@@ -8,6 +8,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Text, View } from "react-native";
 import { z } from "zod";
 import { VaultButton } from "@/components/ui/button";
+import { LoadingOverlay } from "@/components/ui/loading-indicator";
 import { VaultInput } from "@/components/ui/input";
 import { Screen } from "@/components/ui/screen";
 import { SubScreenHeader } from "@/components/ui/sub-screen-header";
@@ -75,8 +76,12 @@ export default function ImportPlaylistScreen() {
 
   const example = EXAMPLES[activeExample];
 
+  const isImporting = isSubmitting || importMutation.isPending;
+
   return (
     <Screen className="pt-2">
+      <LoadingOverlay message="Importing playlist…" visible={isImporting} />
+
       <SubScreenHeader
         backHref="/(tabs)/library"
         subtitle="Paste a public Spotify, YouTube, or JioSaavn link — playlists, albums, or singles."
@@ -123,7 +128,7 @@ export default function ImportPlaylistScreen() {
 
         <VaultButton
           label="Import"
-          loading={isSubmitting || importMutation.isPending}
+          loading={isImporting}
           onPress={onSubmit}
         />
 
