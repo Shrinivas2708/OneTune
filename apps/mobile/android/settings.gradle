@@ -29,6 +29,8 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
     ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand)
   }
 }
+expoAutolinking.exclude = ["expo-dev-client","expo-dev-launcher","expo-dev-menu","expo-dev-menu-interface"]
+
 expoAutolinking.useExpoModules()
 
 rootProject.name = 'OneTune'
