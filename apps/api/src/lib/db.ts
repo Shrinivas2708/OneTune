@@ -77,4 +77,7 @@ async function ensureIndexes(database: Db): Promise<void> {
   if (!hasCorrectPartialIndex) {
     await history.createIndex(historyIndexSpec, historyIndexOptions);
   }
+  await database
+    .collection("user_top_artists")
+    .createIndex({ userId: 1 }, { unique: true });
 }

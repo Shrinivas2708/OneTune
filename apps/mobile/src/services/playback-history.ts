@@ -15,10 +15,7 @@ let lastRecordedAt = 0;
 const RECORD_DEBOUNCE_MS = 2000;
 
 function invalidateHistoryQueries() {
-  void Promise.all([
-    queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY }),
-    queryClient.invalidateQueries({ queryKey: HISTORY_ARTISTS_QUERY_KEY }),
-  ]);
+  void queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY });
 }
 
 /** Persist a play to the server and refresh history lists in the UI. */

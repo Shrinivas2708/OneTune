@@ -24,6 +24,15 @@ interface HistoryDocument {
   deletedAt?: Date | null;
 }
 
+interface UserTopArtistsDocument {
+  _id: ObjectId;
+  userId: ObjectId;
+  artists: Array<{ name: string; playCount: number }>;
+  updatedAt: Date;
+}
+
+const TOP_ARTISTS_STORE_LIMIT = 30;
+
 function activeHistoryFilter(userId: string) {
   return {
     userId: new ObjectId(userId),
@@ -37,6 +46,10 @@ function favorites(): Collection<FavoriteDocument> {
 
 function history(): Collection<HistoryDocument> {
   return getDb().collection<HistoryDocument>("history");
+}
+
+function userTopArtists(): Collection<UserTopArtistsDocument> {
+  return getDb().collection<UserTopArtistsDocument>("user_top_artists");
 }
 
 function trackKey(track: TrackMetadata) {
@@ -184,18 +197,9 @@ export async function recordHistory(
   return toHistoryEntry({ _id: result.insertedId, ...doc });
 }
 
-export async function listHistoryArtists(
-  userId: string,
-  limit = 8,
-): Promise<Array<{ name: string; playCount: number }>> {
-  if (!ObjectId.isValid(userId)) return [];
-
-  const docs = await history()
-    .find(activeHistoryFilter(userId))
-    .sort({ playedAt: -1 })
-    .limit(2000)
-    .toArray();
-
+function aggregateTopArtistsFromHistory(
+  docs: HistoryDocument[],
+): Array<{ name: string; playCount: number }> {
   const counts = new Map<string, { name: string; playCount: number }>();
 
   for (const doc of docs) {
@@ -220,7 +224,65 @@ export async function listHistoryArtists(
 
   return [...counts.values()]
     .sort((a, b) => b.playCount - a.playCount)
-    .slice(0, limit);
+    .slice(0, TOP_ARTISTS_STORE_LIMIT);
+}
+
+export async function recomputeUserTopArtists(userId: string): Promise<void> {
+  if (!ObjectId.isValid(userId)) return;
+
+  const userObjectId = new ObjectId(userId);
+  const docs = await history()
+    .find(activeHistoryFilter(userId))
+    .sort({ playedAt: -1 })
+    .limit(2000)
+    .toArray();
+
+  const artists = aggregateTopArtistsFromHistory(docs);
+
+  await userTopArtists().updateOne(
+    { userId: userObjectId },
+    {
+      $set: {
+        artists,
+        updatedAt: new Date(),
+      },
+      $setOnInsert: {
+        userId: userObjectId,
+      },
+    },
+    { upsert: true },
+  );
+}
+
+export async function recomputeAllUsersTopArtists(): Promise<number> {
+  const userIds = await history().distinct("userId", { deletedAt: null });
+  let updated = 0;
+
+  for (const userId of userIds) {
+    const id =
+      userId instanceof ObjectId ? userId.toHexString() : String(userId);
+    await recomputeUserTopArtists(id);
+    updated += 1;
+  }
+
+  return updated;
+}
+
+export async function listHistoryArtists(
+  userId: string,
+  limit = 8,
+): Promise<Array<{ name: string; playCount: number }>> {
+  if (!ObjectId.isValid(userId)) return [];
+
+  const doc = await userTopArtists().findOne({
+    userId: new ObjectId(userId),
+  });
+
+  if (!doc?.artists?.length) {
+    return [];
+  }
+
+  return doc.artists.slice(0, limit);
 }
 
 export async function clearHistory(userId: string): Promise<number> {
@@ -229,6 +291,8 @@ export async function clearHistory(userId: string): Promise<number> {
   const result = await history().updateMany(activeHistoryFilter(userId), {
     $set: { deletedAt: new Date() },
   });
+
+  await recomputeUserTopArtists(userId);
 
   return result.modifiedCount;
 }

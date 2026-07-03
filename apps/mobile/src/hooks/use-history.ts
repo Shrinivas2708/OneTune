@@ -26,7 +26,8 @@ export function useHistoryArtists(limit = 8) {
   return useQuery({
     queryKey: [...HISTORY_ARTISTS_KEY, limit],
     queryFn: () => libraryApi.listHistoryArtists(limit),
-    staleTime: 30_000,
+    staleTime: 5 * 60_000,
+    refetchInterval: 15 * 60_000,
     enabled: isAuthenticated,
   });
 }

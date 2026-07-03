@@ -91,8 +91,8 @@ export default function HomeScreen() {
               artists={historyArtists ?? []}
               emptyMessage={
                 isLoadingArtists
-                  ? "Loading your listening stats…"
-                  : "Play songs for about 10 seconds — we'll track your most-listened artists here."
+                  ? "Loading your top artists…"
+                  : "Keep listening — your top artists refresh every few minutes."
               }
               title="Your top artists"
             />
