@@ -160,3 +160,19 @@ export async function updatePlaylistTracksForUser(input: {
 
   return result ? toSavedPlaylist(result) : null;
 }
+
+export async function deletePlaylistByIdForUser(
+  userId: string,
+  playlistId: string,
+): Promise<boolean> {
+  if (!ObjectId.isValid(userId) || !ObjectId.isValid(playlistId)) {
+    return false;
+  }
+
+  const result = await playlists().deleteOne({
+    _id: new ObjectId(playlistId),
+    userId: new ObjectId(userId),
+  });
+
+  return result.deletedCount > 0;
+}

@@ -50,3 +50,19 @@ playlistRoutes.get(
     return jsonSuccess(c, SavedPlaylistSchema.parse(playlist));
   },
 );
+
+playlistRoutes.delete(
+  "/playlists/:playlistId",
+  zValidator(
+    "param",
+    z.object({
+      playlistId: z.string().min(1),
+    }),
+  ),
+  async (c) => {
+    const userId = c.get("userId")!;
+    const { playlistId } = c.req.valid("param");
+    const result = await playlistService.deleteUserPlaylist(userId, playlistId);
+    return jsonSuccess(c, z.object({ success: z.boolean() }).parse(result));
+  },
+);

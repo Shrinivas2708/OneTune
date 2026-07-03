@@ -32,6 +32,13 @@ export const playlistApi = {
       },
       SavedPlaylistSchema,
     ),
+
+  delete: (playlistId: string) =>
+    apiRequest(
+      `/v1/playlists/${encodeURIComponent(playlistId)}`,
+      { method: "DELETE" },
+      z.object({ success: z.boolean() }),
+    ),
 };
 
 export type { SavedPlaylist, SavedPlaylistSummary };

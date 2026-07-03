@@ -28,6 +28,7 @@ import {
   trackToImportedPlaylist,
 } from "../providers/mappers";
 import {
+  deletePlaylistByIdForUser,
   findPlaylistByIdForUser,
   listPlaylistsByUser,
   updatePlaylistTracksForUser,
@@ -133,4 +134,14 @@ export async function getUserPlaylist(userId: string, playlistId: string) {
   });
 
   return updated ?? enriched;
+}
+
+export async function deleteUserPlaylist(userId: string, playlistId: string) {
+  const deleted = await deletePlaylistByIdForUser(userId, playlistId);
+
+  if (!deleted) {
+    throw new AppError(ERROR_CODES.NOT_FOUND, "Playlist not found", 404);
+  }
+
+  return { success: true as const };
 }

@@ -3,7 +3,7 @@ import type { TrackMetadata } from "@vibevault/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useMemo } from "react";
-import { ActivityIndicator, Pressable, RefreshControl, Text, View } from "react-native";
+import { ActivityIndicator, Alert, Pressable, RefreshControl, Text, View } from "react-native";
 import { ProviderBadge } from "@/components/search/provider-badge";
 import { DownloadButton } from "@/components/downloads/download-button";
 import { DownloadProgressBar } from "@/components/downloads/download-progress-bar";
@@ -17,7 +17,7 @@ import { SubScreenHeader } from "@/components/ui/sub-screen-header";
 import { PlaylistDetailSkeleton } from "@/components/ui/skeleton";
 import { useDownloadStatus } from "@/hooks/use-download-status";
 import { usePlayTrack } from "@/hooks/use-play-track";
-import { usePlaylist } from "@/hooks/use-playlists";
+import { useDeletePlaylist, usePlaylist } from "@/hooks/use-playlists";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { formatArtists } from "@/lib/track-format";
 import { getErrorMessage } from "@/lib/error-message";
@@ -121,6 +121,7 @@ function PlaylistListHeader({
 export default function PlaylistDetailScreen() {
   const { playlistId } = useLocalSearchParams<{ playlistId: string }>();
   const { data, error, isLoading, refetch, isRefetching } = usePlaylist(playlistId ?? "");
+  const deletePlaylist = useDeletePlaylist();
   const playTrack = usePlayTrack();
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isResolving = usePlayerStore((state) => state.isResolving);
@@ -133,9 +134,54 @@ export default function PlaylistDetailScreen() {
 
   const activeKey = currentTrack ? trackKey(currentTrack) : null;
 
+  const confirmDeletePlaylist = useCallback(() => {
+    if (!data) return;
+
+    Alert.alert(
+      "Delete playlist?",
+      `"${data.name}" will be removed from your library. This cannot be undone.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deletePlaylist.mutate(data.id),
+        },
+      ],
+    );
+  }, [data, deletePlaylist]);
+
+  const screenHeader = useMemo(
+    () => (
+      <SubScreenHeader
+        backHref="/(tabs)/library"
+        right={
+          <Pressable
+            accessibilityLabel="Delete playlist"
+            accessibilityRole="button"
+            className="rounded-vault-lg bg-vault-surface-elevated p-2.5"
+            disabled={deletePlaylist.isPending}
+            onPress={confirmDeletePlaylist}
+          >
+            <Ionicons color="#f3727f" name="trash-outline" size={20} />
+          </Pressable>
+        }
+        subtitle={`${data?.trackCount ?? 0} tracks`}
+        title={data?.name ?? "Playlist"}
+      />
+    ),
+    [confirmDeletePlaylist, data?.name, data?.trackCount, deletePlaylist.isPending],
+  );
+
   const listHeader = useMemo(
-    () => (data ? <PlaylistListHeader playlist={data} tracks={data.tracks} /> : null),
-    [data],
+    () =>
+      data ? (
+        <View>
+          {screenHeader}
+          <PlaylistListHeader playlist={data} tracks={data.tracks} />
+        </View>
+      ) : null,
+    [data, screenHeader],
   );
 
   const renderItem = useCallback(
@@ -161,6 +207,7 @@ export default function PlaylistDetailScreen() {
   if (!data || error) {
     return (
       <Screen className="pt-4">
+        <SubScreenHeader backHref="/(tabs)/library" title="Playlist" />
         <ErrorState
           message={error ? getErrorMessage(error, "Playlist not found.") : "Playlist not found."}
           onRetry={() => void refetch()}
@@ -171,8 +218,6 @@ export default function PlaylistDetailScreen() {
 
   return (
     <Screen className="pt-2" padded={false}>
-      <SubScreenHeader backHref="/(tabs)/library" title={data.name} />
-
       <View className="min-h-0 flex-1">
         <FlashList
           contentContainerStyle={{ paddingBottom: bottomInset }}
