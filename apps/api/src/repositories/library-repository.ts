@@ -21,13 +21,13 @@ interface HistoryDocument {
   track: TrackMetadata;
   playedAt: Date;
   durationPlayedMs?: number;
-  deletedAt?: Date;
+  deletedAt?: Date | null;
 }
 
 function activeHistoryFilter(userId: string) {
   return {
     userId: new ObjectId(userId),
-    deletedAt: { $exists: false },
+    deletedAt: null,
   };
 }
 
@@ -173,6 +173,7 @@ export async function recordHistory(
     userId: new ObjectId(userId),
     track,
     playedAt: new Date(),
+    deletedAt: null,
   };
 
   if (durationPlayedMs !== undefined) {

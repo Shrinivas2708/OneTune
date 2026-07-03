@@ -54,8 +54,14 @@ async function ensureIndexes(database: Db): Promise<void> {
   await database
     .collection("favorites")
     .createIndex({ userId: 1, createdAt: -1 });
-  await database.collection("history").createIndex(
+  const history = database.collection("history");
+  // Atlas partial indexes do not support `{ deletedAt: { $exists: false } }`.
+  await history.updateMany(
+    { deletedAt: { $exists: false } },
+    { $set: { deletedAt: null } },
+  );
+  await history.createIndex(
     { userId: 1, playedAt: -1 },
-    { partialFilterExpression: { deletedAt: { $exists: false } } },
+    { partialFilterExpression: { deletedAt: null } },
   );
 }
