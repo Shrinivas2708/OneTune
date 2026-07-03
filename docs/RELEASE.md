@@ -253,6 +253,8 @@ To go fully hands-off later, extend `.github/workflows/release.yml` with an Andr
 | APK link 404                         | Asset on GitHub Release must be named `OneTune-{version}.apk` matching the tag                              |
 | Website still shows old link         | Hard refresh; confirm `release.json` deployed; check `ApkLink` loads `/release.json`                        |
 | Action did not update `release.json` | Tag must match `v*`; Actions enabled; workflow has `contents: write`                                        |
+| **Workflow never ran after first tag** | If `.github/workflows/release.yml` was added in the **same commit** as the tag, GitHub skips the run. Push this fix to `main`, then either **re-push the tag** (`git push --delete origin v1.0.1` then `git push origin v1.0.1`) or run **Actions → Release → Run workflow** with tag `v1.0.1` |
+| `v1.0.0` tag never triggered release   | That tag predates the workflow file — only tags pushed **after** the workflow exists on `main` will auto-run |
 | Update prompt shows wrong version    | Bump `app.json` `version` before building; rebuild APK — `build.gradle` alone does not fix the in-app check |
 | Android won’t install over old APK   | `versionCode` in `build.gradle` must be greater than the installed build                                    |
 | Manifest fetch fails in app          | Ensure `https://your-domain/release.json` is HTTPS and publicly reachable                                   |
