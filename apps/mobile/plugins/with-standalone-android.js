@@ -1,4 +1,8 @@
-const { withAppBuildGradle, withMainApplication } = require("expo/config-plugins");
+const {
+  withAppBuildGradle,
+  withGradleProperties,
+  withMainApplication,
+} = require("expo/config-plugins");
 
 /** Production APK: use bundled index.js instead of dev-client Metro entry. */
 function withStandaloneAndroid(config) {
@@ -36,6 +40,25 @@ function withMonorepoGradleRoot(config) {
   });
 }
 
+/** Windows monorepo builds: fewer ABIs + no parallel Gradle reduces file-lock OOMs. */
+function withStandaloneGradleProperties(config) {
+  return withGradleProperties(config, (mod) => {
+    const keys = new Set(["org.gradle.parallel", "reactNativeArchitectures"]);
+    mod.modResults = mod.modResults.filter(
+      (item) => item.type !== "property" || !keys.has(item.key),
+    );
+    mod.modResults.push(
+      { type: "property", key: "org.gradle.parallel", value: "false" },
+      {
+        type: "property",
+        key: "reactNativeArchitectures",
+        value: "arm64-v8a",
+      },
+    );
+    return mod;
+  });
+}
+
 module.exports = function withStandaloneAndroidPlugin(config) {
   if (process.env.EXPO_STANDALONE_BUILD !== "1") {
     return config;
@@ -43,5 +66,6 @@ module.exports = function withStandaloneAndroidPlugin(config) {
 
   config = withStandaloneAndroid(config);
   config = withMonorepoGradleRoot(config);
+  config = withStandaloneGradleProperties(config);
   return config;
 };
