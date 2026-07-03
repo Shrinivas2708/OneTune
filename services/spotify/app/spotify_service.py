@@ -71,7 +71,7 @@ def _unwrap_playlist_item(item: Any) -> Any | None:
     return inner if inner is not None else item
 
 
-def _map_track(track: Any) -> dict[str, Any] | None:
+def _map_track(track: Any, *, fetch_oembed: bool = True) -> dict[str, Any] | None:
     if track is None:
         return None
 
@@ -90,7 +90,7 @@ def _map_track(track: Any) -> dict[str, Any] | None:
         getattr(track, "images", None),
         getattr(album_ref, "images", None) if album_ref else None,
     )
-    if not artwork and track_id:
+    if not artwork and track_id and fetch_oembed:
         artwork = _oembed_thumbnail(_track_url(track_id))
 
     duration_ms = getattr(track, "duration_ms", None)
@@ -152,7 +152,7 @@ def import_album(url: str, max_tracks: int = 100) -> dict[str, Any]:
     tracks: list[dict[str, Any]] = []
 
     for item in tracks_raw[:max_tracks]:
-        mapped = _map_track(item)
+        mapped = _map_track(item, fetch_oembed=False)
         if mapped:
             tracks.append(mapped)
 
@@ -208,7 +208,7 @@ def import_playlist(url: str, max_tracks: int = 100) -> dict[str, Any]:
     tracks: list[dict[str, Any]] = []
 
     for item in tracks_raw[:max_tracks]:
-        mapped = _map_track(_unwrap_playlist_item(item))
+        mapped = _map_track(_unwrap_playlist_item(item), fetch_oembed=False)
         if mapped:
             tracks.append(mapped)
 
