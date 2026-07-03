@@ -1,0 +1,64 @@
+# Create a GitHub Release and update website/public/release.json when you push a tag.
+#
+# Release day (no manual sync scripts):
+#   1. Bump apps/mobile/app.json version (+ android versionName in build.gradle)
+#   2. Build APK: cd apps/mobile && bun run build:android:standalone
+#   3. git commit && git tag v1.0.1 && git push origin main --tags
+#   4. After the workflow runs, upload OneTune-1.0.1.apk to the new GitHub Release
+#
+# Optional repo variable: WEBSITE_URL (e.g. https://onetune.shribuilds.in)
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Parse version from tag
+        id: meta
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "download_url=https://github.com/${{ github.repository }}/releases/download/${GITHUB_REF_NAME}/OneTune-${VERSION}.apk" >> "$GITHUB_OUTPUT"
+
+      - name: Update release manifest
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          DOWNLOAD_URL: ${{ steps.meta.outputs.download_url }}
+          WEBSITE_URL: ${{ vars.WEBSITE_URL || 'https://onetune.shribuilds.in' }}
+        run: |
+          printf '%s\n' \
+            '{' \
+            "  \"version\": \"${VERSION}\"," \
+            "  \"downloadUrl\": \"${DOWNLOAD_URL}\"," \
+            "  \"websiteUrl\": \"${WEBSITE_URL}\"," \
+            '  "releaseNotes": ""' \
+            '}' \
+            > website/public/release.json
+
+      - name: Commit manifest to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add website/public/release.json
+          git diff --staged --quiet || git commit -m "chore(release): update manifest for v${{ steps.meta.outputs.version }}"
+          git push origin main
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: OneTune ${{ steps.meta.outputs.version }}
+          generate_release_notes: true

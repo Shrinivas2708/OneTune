@@ -4,10 +4,13 @@
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot\..
 
-  $env:EXPO_PUBLIC_API_URL = "https://api.onetune.shribuilds.in"
+. "$PSScriptRoot\android-apk-output.ps1"
+
+$env:EXPO_PUBLIC_API_URL = "https://api.onetune.shribuilds.in"
 $env:EXPO_NO_METRO_WORKSPACE_ROOT = "1"
 
 Write-Host "API URL: $env:EXPO_PUBLIC_API_URL"
+Write-Host "App version: $(Get-OneTuneAppVersion)"
 Write-Host "Clearing old JS bundle cache..."
 
 $cachePaths = @(
@@ -30,17 +33,16 @@ Set-Location android
 .\gradlew.bat assembleRelease -x lint -x test
 Set-Location ..
 
-$apk = "android\app\build\outputs\apk\release\app-release.apk"
-$brandedApk = "android\app\build\outputs\apk\release\OneTune-1.0.0.apk"
-if (Test-Path $apk) {
-  Copy-Item -Force $apk $brandedApk
-  Write-Host ""
-  Write-Host "Done. Install:"
-  Write-Host (Resolve-Path $brandedApk)
-} elseif (Test-Path "android\app\build\outputs\apk\release\OneTune-1.0.0-release.apk") {
-  Write-Host ""
-  Write-Host "Done. Install:"
-  Write-Host (Resolve-Path "android\app\build\outputs\apk\release\OneTune-1.0.0-release.apk")
-} else {
-  Write-Error "APK not found at $apk"
+$apk = Find-ReleaseApk
+if (-not $apk) {
+  Write-Error "APK not found in android\app\build\outputs\apk\release (expected OneTune-<version>-release.apk)"
 }
+
+$uploadApk = Copy-UploadApk -SourceApk $apk
+
+Write-Host ""
+Write-Host "Done. Install:"
+Write-Host $apk
+Write-Host ""
+Write-Host "Upload to GitHub Releases as:"
+Write-Host $uploadApk
