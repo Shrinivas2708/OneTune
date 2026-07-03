@@ -24,6 +24,12 @@ services:
     restart: unless-stopped
     environment:
       PORT: ${EXTRACTOR_PORT:-8001}
+      YTDLP_COOKIE_FILE: ${YTDLP_COOKIE_FILE:-/secrets/youtube-cookies.txt}
+      YTDLP_COOKIES_FROM_BROWSER: ${YTDLP_COOKIES_FROM_BROWSER:-}
+      YTDLP_PO_TOKEN: ${YTDLP_PO_TOKEN:-}
+      YTDLP_VISITOR_DATA: ${YTDLP_VISITOR_DATA:-}
+    volumes:
+      - ./secrets:/secrets:ro
     healthcheck:
       test:
         [

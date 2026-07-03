@@ -222,3 +222,16 @@ export const HistoryQuerySchema = z.object({
 });
 
 export type HistoryQuery = z.infer<typeof HistoryQuerySchema>;
+
+export const HistoryArtistSchema = z.object({
+  name: z.string().min(1),
+  playCount: z.number().int().positive(),
+});
+
+export type HistoryArtist = z.infer<typeof HistoryArtistSchema>;
+
+export const HistoryArtistsQuerySchema = z.object({
+  limit: z.coerce.number().int().positive().max(20).default(8),
+});
+
+export type HistoryArtistsQuery = z.infer<typeof HistoryArtistsQuerySchema>;

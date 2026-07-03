@@ -43,9 +43,11 @@ export function PlaylistActions({ tracks }: PlaylistActionsProps) {
       usePlayerStore.getState().setQueue(rest);
       const local = downloadManager.getLocalRecordForTrack(first);
       if (local) {
-        await playerEngine.playDownloadedTrack(local.track);
+        await playerEngine.playDownloadedTrack(local.track, { keepQueue: true });
       } else {
-        await playerEngine.playSearchResult(trackToSearchResult(first));
+        await playerEngine.playSearchResult(trackToSearchResult(first), {
+          keepQueue: true,
+        });
       }
       showToast(
         rest.length > 0

@@ -55,6 +55,7 @@ export default function SearchScreen() {
     query.trim().length > 0 && trimmedDebounced.length < SEARCH_MIN_QUERY_LENGTH;
   const isDebouncing =
     query.trim() !== trimmedDebounced && query.trim().length >= SEARCH_MIN_QUERY_LENGTH;
+  const isSearching = isDebouncing || isFetching;
 
   const resolvingTrackKey = useMemo(() => {
     if (!isResolving || !playTrack.variables) return null;
@@ -122,10 +123,6 @@ export default function SearchScreen() {
           />
         ) : null}
 
-        {isDebouncing && !data ? (
-          <SearchMessage icon="hourglass-outline" title="Searching…" />
-        ) : null}
-
         {errorMessage && trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH ? (
           <SearchMessage
             icon="cloud-offline-outline"
@@ -151,16 +148,15 @@ export default function SearchScreen() {
         {!showHint &&
         !showMinLength &&
         !errorMessage &&
-        trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH &&
-        (!isDebouncing || data) ? (
+        trimmedDebounced.length >= SEARCH_MIN_QUERY_LENGTH ? (
           <SearchResultsList
             activeTrackKey={activeTrackKey(currentTrack)}
-            isFetching={isFetching || isDebouncing}
-            isLoading={isLoading && !data}
-            providersFailed={data?.providersFailed ?? []}
+            isFetching={isSearching}
+            isLoading={isLoading}
+            providersFailed={isSearching ? [] : (data?.providersFailed ?? [])}
             query={trimmedDebounced}
             resolvingTrackKey={resolvingTrackKey}
-            results={data?.results ?? []}
+            results={isSearching ? [] : (data?.results ?? [])}
             onPressTrack={handlePressTrack}
           />
         ) : null}

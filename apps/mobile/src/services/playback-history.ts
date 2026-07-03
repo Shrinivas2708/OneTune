@@ -4,6 +4,7 @@ import { queryClient } from "@/lib/query-client";
 import { trackKey } from "@/services/player-helpers";
 
 export const HISTORY_QUERY_KEY = ["library", "history"] as const;
+export const HISTORY_ARTISTS_QUERY_KEY = ["library", "history", "artists"] as const;
 
 let lastRecordedKey: string | null = null;
 let lastRecordedAt = 0;
@@ -25,7 +26,10 @@ export function recordPlaybackHistory(track: TrackMetadata) {
   void libraryApi
     .recordHistory(track)
     .then(() =>
-      queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY }),
+        queryClient.invalidateQueries({ queryKey: HISTORY_ARTISTS_QUERY_KEY }),
+      ]),
     )
     .catch(() => undefined);
 }

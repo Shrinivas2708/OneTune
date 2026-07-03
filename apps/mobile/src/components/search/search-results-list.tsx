@@ -33,7 +33,7 @@ export function SearchResultsList({
 }: SearchResultsListProps) {
   const bottomInset = useScrollBottomInset();
 
-  if (isLoading || (isFetching && results.length === 0)) {
+  if (isLoading || isFetching) {
     return <SearchSkeleton />;
   }
 

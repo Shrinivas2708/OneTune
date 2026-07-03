@@ -54,7 +54,8 @@ async function ensureIndexes(database: Db): Promise<void> {
   await database
     .collection("favorites")
     .createIndex({ userId: 1, createdAt: -1 });
-  await database
-    .collection("history")
-    .createIndex({ userId: 1, playedAt: -1 });
+  await database.collection("history").createIndex(
+    { userId: 1, playedAt: -1 },
+    { partialFilterExpression: { deletedAt: { $exists: false } } },
+  );
 }

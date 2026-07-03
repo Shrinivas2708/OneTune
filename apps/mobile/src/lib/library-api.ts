@@ -1,6 +1,7 @@
 import {
   AddFavoriteRequestSchema,
   FavoriteSchema,
+  HistoryArtistSchema,
   HistoryEntrySchema,
   RecordHistoryRequestSchema,
   type Favorite,
@@ -36,6 +37,13 @@ export const libraryApi = {
       `/v1/library/history?limit=${limit}`,
       { method: "GET" },
       z.array(HistoryEntrySchema),
+    ),
+
+  listHistoryArtists: (limit = 8) =>
+    apiRequest(
+      `/v1/library/history/artists?limit=${limit}`,
+      { method: "GET" },
+      z.array(HistoryArtistSchema),
     ),
 
   recordHistory: (track: TrackMetadata, durationPlayedMs?: number) =>

@@ -33,6 +33,10 @@ export async function getHistory(userId: string, limit: number) {
   return libraryRepository.listHistory(userId, limit);
 }
 
+export async function getHistoryArtists(userId: string, limit: number) {
+  return libraryRepository.listHistoryArtists(userId, limit);
+}
+
 export async function recordHistory(
   userId: string,
   track: TrackMetadata,

@@ -15,10 +15,12 @@ import {
   takeNativeTrackLink,
 } from "@/services/native-queue-bridge";
 import {
+  advanceQueue,
   beginPlaybackTransition,
   isActivePlaybackGeneration,
   prepareTrackTransition,
   removeTrackAndSkippedFromQueue,
+  type QueueTransitionOptions,
 } from "@/services/playback-core";
 import {
   searchResultToTrack,
@@ -103,8 +105,8 @@ async function startNativePlayback(
 async function transitionToTrack(
   track: TrackMetadata,
   token: number,
-  options: { syncQueue: boolean },
-) {
+  options: QueueTransitionOptions,
+): Promise<boolean> {
   await playerEngine.ensureSetup();
   usePlayerStore.setState({ isResolving: true, resolveError: null });
 
@@ -115,7 +117,7 @@ async function transitionToTrack(
     if (local) {
       const info = await FileSystem.getInfoAsync(local.localPath);
       if (info.exists) {
-        if (!isActivePlaybackGeneration(token)) return;
+        if (!isActivePlaybackGeneration(token)) return false;
 
         if (options.syncQueue) {
           removeTrackAndSkippedFromQueue(track);
@@ -129,28 +131,32 @@ async function transitionToTrack(
           },
           track,
         );
-        return;
+        return true;
       }
     }
 
     const prepared = await prepareTrackTransition(track, token);
-    if (!prepared) return;
+    if (!prepared) return false;
 
     if (options.syncQueue) {
       removeTrackAndSkippedFromQueue(track);
     }
 
     const source = await resolvePlaybackSource(prepared.playable);
-    if (!isActivePlaybackGeneration(token)) return;
+    if (!isActivePlaybackGeneration(token)) return false;
 
     await startNativePlayback(prepared.playable, source, track);
+    return true;
   } catch (error) {
-    if (!isActivePlaybackGeneration(token)) return;
+    if (!isActivePlaybackGeneration(token)) return false;
 
     const message = getErrorMessage(error, "Could not start playback.");
     usePlayerStore.getState().setIsPlaying(false);
-    usePlayerStore.getState().setResolveError(message);
-    showToast(message);
+    if (!options.quiet) {
+      usePlayerStore.getState().setResolveError(message);
+      showToast(message);
+    }
+    return false;
   } finally {
     if (isActivePlaybackGeneration(token)) {
       usePlayerStore.getState().setIsResolving(false);
@@ -199,14 +205,28 @@ export const playerEngine = {
     return setupPromise;
   },
 
-  async playSearchResult(result: SearchResult) {
+  async playSearchResult(
+    result: SearchResult,
+    options?: { keepQueue?: boolean },
+  ) {
+    if (!options?.keepQueue) {
+      usePlayerStore.getState().setQueue([]);
+    }
+
     const token = beginPlaybackTransition();
     await transitionToTrack(searchResultToTrack(result), token, {
       syncQueue: false,
     });
   },
 
-  async playDownloadedTrack(track: TrackMetadata) {
+  async playDownloadedTrack(
+    track: TrackMetadata,
+    options?: { keepQueue?: boolean },
+  ) {
+    if (!options?.keepQueue) {
+      usePlayerStore.getState().setQueue([]);
+    }
+
     const token = beginPlaybackTransition();
     await this.ensureSetup();
     usePlayerStore.setState({ isResolving: true, resolveError: null });
@@ -259,11 +279,8 @@ export const playerEngine = {
   },
 
   async skipToNext() {
-    const queue = usePlayerStore.getState().queue;
-    if (queue.length === 0) return;
-
     const token = beginPlaybackTransition();
-    await transitionToTrack(queue[0]!, token, { syncQueue: true });
+    await advanceQueue(transitionToTrack, token);
   },
 
   async skipToPrevious() {

@@ -7,12 +7,10 @@ import { ArtworkImage } from "@/components/ui/artwork-image";
 import { VaultHeading, VaultSubheading } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Screen } from "@/components/ui/screen";
-import { useHistory } from "@/hooks/use-history";
+import { useHistory, useHistoryArtists } from "@/hooks/use-history";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { useAuthStore } from "@/stores/auth-store";
 import { usePlayerStore } from "@/stores/player-store";
-
-const MOOD_SEARCHES = ["seedhe maut", "manto", "arijit singh", "lofi"];
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -24,7 +22,9 @@ function getGreeting() {
 export default function HomeScreen() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { data: history } = useHistory(6);
+  const { data: historyArtists } = useHistoryArtists(8);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const bottomInset = useScrollBottomInset();
 
@@ -83,33 +83,35 @@ export default function HomeScreen() {
           <LibraryHub />
         </View>
 
-        <View className="mt-8 px-6">
-          <Text className="font-jakarta text-lg text-vault-text">Jump in</Text>
-          <ScrollView
-            horizontal
-            className="mt-3"
-            contentContainerClassName="gap-2 pr-6"
-            showsHorizontalScrollIndicator={false}
-          >
-            {MOOD_SEARCHES.map((term) => (
-              <Pressable
-                key={term}
-                accessibilityRole="button"
-                className="rounded-vault-pill bg-vault-surface-elevated px-4 py-2.5"
-                onPress={() =>
-                  router.push({
-                    pathname: "/(tabs)/search",
-                    params: { q: term },
-                  })
-                }
-              >
-                <Text className="font-inter-semibold text-sm capitalize text-vault-text">
-                  {term}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+        {isAuthenticated && historyArtists && historyArtists.length > 0 ? (
+          <View className="mt-8 px-6">
+            <Text className="font-jakarta text-lg text-vault-text">Your artists</Text>
+            <ScrollView
+              horizontal
+              className="mt-3"
+              contentContainerClassName="gap-2 pr-6"
+              showsHorizontalScrollIndicator={false}
+            >
+              {historyArtists.map((artist) => (
+                <Pressable
+                  key={artist.name}
+                  accessibilityRole="button"
+                  className="rounded-vault-pill bg-vault-surface-elevated px-4 py-2.5"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(tabs)/search",
+                      params: { q: artist.name },
+                    })
+                  }
+                >
+                  <Text className="font-inter-semibold text-sm text-vault-text">
+                    {artist.name}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        ) : null}
 
         {currentTrack ? (
           <View className="mt-8 px-6">

@@ -3,10 +3,12 @@ import { isStreamExpired } from "@vibevault/utils";
 import { getErrorMessage } from "@/lib/error-message";
 import { resolvePlaybackUrl } from "@/lib/playback-url";
 import {
+  advanceQueue,
   beginPlaybackTransition,
   isActivePlaybackGeneration,
   prepareTrackTransition,
   removeTrackAndSkippedFromQueue,
+  type QueueTransitionOptions,
 } from "@/services/playback-core";
 import {
   searchResultToTrack,
@@ -18,14 +20,14 @@ import { webAudioPlayer } from "./web-audio-player";
 async function transitionToTrack(
   track: TrackMetadata,
   token: number,
-  options: { syncQueue: boolean },
-) {
+  options: QueueTransitionOptions,
+): Promise<boolean> {
   usePlayerStore.setState({ isResolving: true, resolveError: null });
   webAudioPlayer.pause();
 
   try {
     const prepared = await prepareTrackTransition(track, token);
-    if (!prepared) return;
+    if (!prepared) return false;
 
     if (options.syncQueue) {
       removeTrackAndSkippedFromQueue(track);
@@ -41,13 +43,17 @@ async function transitionToTrack(
       position: 0,
       duration: playable.durationMs ? playable.durationMs / 1000 : 0,
     });
+    return true;
   } catch (error) {
-    if (!isActivePlaybackGeneration(token)) return;
+    if (!isActivePlaybackGeneration(token)) return false;
 
     const message = getErrorMessage(error, "Could not start playback.");
     usePlayerStore.getState().setIsPlaying(false);
-    usePlayerStore.getState().setResolveError(message);
-    showToast(message);
+    if (!options.quiet) {
+      usePlayerStore.getState().setResolveError(message);
+      showToast(message);
+    }
+    return false;
   } finally {
     if (isActivePlaybackGeneration(token)) {
       usePlayerStore.getState().setIsResolving(false);
@@ -58,14 +64,28 @@ async function transitionToTrack(
 export const playerEngine = {
   async ensureSetup() {},
 
-  async playSearchResult(result: SearchResult) {
+  async playSearchResult(
+    result: SearchResult,
+    options?: { keepQueue?: boolean },
+  ) {
+    if (!options?.keepQueue) {
+      usePlayerStore.getState().setQueue([]);
+    }
+
     const token = beginPlaybackTransition();
     await transitionToTrack(searchResultToTrack(result), token, {
       syncQueue: false,
     });
   },
 
-  async playDownloadedTrack(track: TrackMetadata) {
+  async playDownloadedTrack(
+    track: TrackMetadata,
+    options?: { keepQueue?: boolean },
+  ) {
+    if (!options?.keepQueue) {
+      usePlayerStore.getState().setQueue([]);
+    }
+
     showToast("Offline downloads are available in the mobile app.", "info");
     throw new Error("Offline downloads are available in the mobile app.");
   },
@@ -81,11 +101,8 @@ export const playerEngine = {
   },
 
   async skipToNext() {
-    const queue = usePlayerStore.getState().queue;
-    if (queue.length === 0) return;
-
     const token = beginPlaybackTransition();
-    await transitionToTrack(queue[0]!, token, { syncQueue: true });
+    await advanceQueue(transitionToTrack, token);
   },
 
   async skipToPrevious() {

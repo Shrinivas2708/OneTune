@@ -5,6 +5,8 @@ import {
   AddFavoriteRequestSchema,
   FavoriteSchema,
   HistoryEntrySchema,
+  HistoryArtistSchema,
+  HistoryArtistsQuerySchema,
   HistoryQuerySchema,
   ProviderIdSchema,
   RecordHistoryRequestSchema,
@@ -53,6 +55,17 @@ libraryRoutes.delete(
       externalId,
     );
     return jsonSuccess(c, result);
+  },
+);
+
+libraryRoutes.get(
+  "/library/history/artists",
+  zValidator("query", HistoryArtistsQuerySchema),
+  async (c) => {
+    const userId = c.get("userId")!;
+    const { limit } = c.req.valid("query");
+    const artists = await libraryService.getHistoryArtists(userId, limit);
+    return jsonSuccess(c, z.array(HistoryArtistSchema).parse(artists));
   },
 );
 

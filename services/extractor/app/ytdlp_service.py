@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 import yt_dlp
@@ -15,12 +17,15 @@ YOUTUBE_STREAM_HEADERS = {
     ),
 }
 
+# Prefer clients that avoid bot checks / PO-token requirements when possible.
 YOUTUBE_PLAYER_CLIENTS: list[list[str]] = [
-    ["android", "web"],
+    ["android_vr"],
+    ["tv_embedded"],
+    ["web_safari"],
     ["mweb"],
     ["ios", "web"],
     ["web"],
-    ["tv_embedded"],
+    ["android", "web"],
 ]
 
 
@@ -29,19 +34,48 @@ def _utc_iso(offset_seconds: int = 3600) -> str:
     return instant.replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
+def _auth_opts() -> dict[str, Any]:
+    opts: dict[str, Any] = {}
+
+    cookie_file = os.environ.get("YTDLP_COOKIE_FILE", "").strip()
+    if cookie_file and Path(cookie_file).is_file():
+        opts["cookiefile"] = cookie_file
+
+    browser = os.environ.get("YTDLP_COOKIES_FROM_BROWSER", "").strip()
+    if browser and "cookiefile" not in opts:
+        opts["cookiesfrombrowser"] = (browser,)
+
+    return opts
+
+
+def _youtube_extractor_args(player_clients: list[str]) -> dict[str, Any]:
+    youtube_args: dict[str, list[str]] = {"player_client": player_clients}
+
+    po_token = os.environ.get("YTDLP_PO_TOKEN", "").strip()
+    if po_token:
+        youtube_args["po_token"] = [po_token]
+
+    visitor_data = os.environ.get("YTDLP_VISITOR_DATA", "").strip()
+    if visitor_data:
+        youtube_args["visitor_data"] = [visitor_data]
+
+    return {"youtube": youtube_args}
+
+
 def _base_opts(**extra: Any) -> dict[str, Any]:
     return {
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
         "nocheckcertificate": True,
+        **_auth_opts(),
         **extra,
     }
 
 
 def _youtube_opts(player_clients: list[str], **extra: Any) -> dict[str, Any]:
     return _base_opts(
-        extractor_args={"youtube": {"player_client": player_clients}},
+        extractor_args=_youtube_extractor_args(player_clients),
         **extra,
     )
 
@@ -163,8 +197,17 @@ def extract_metadata(url: str) -> dict[str, Any]:
 
 def search_tracks(query: str, limit: int) -> list[dict[str, Any]]:
     search_url = f"ytsearch{limit}:{query}"
-    with yt_dlp.YoutubeDL(_base_opts(extract_flat=True)) as ydl:
-        info = ydl.extract_info(search_url, download=False)
+    last_error: Exception | None = None
+
+    for clients in YOUTUBE_PLAYER_CLIENTS:
+        try:
+            with yt_dlp.YoutubeDL(_youtube_opts(clients, extract_flat=True)) as ydl:
+                info = ydl.extract_info(search_url, download=False)
+            break
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+    else:
+        raise ValueError(str(last_error) if last_error else "Search failed")
 
     entries = info.get("entries") or []
     results: list[dict[str, Any]] = []

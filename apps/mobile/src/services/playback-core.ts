@@ -6,6 +6,7 @@ import { resolvePlayableResult } from "@/lib/resolve-playable-track";
 import { trackToSearchResult } from "@/lib/track-to-search-result";
 import { trackKey } from "@/services/player-helpers";
 import { searchResultToTrack, usePlayerStore } from "@/stores/player-store";
+import { showToast } from "@/stores/toast-store";
 import {
   beginPlaybackTransition,
   isActivePlaybackGeneration,
@@ -52,6 +53,70 @@ export async function prepareTrackTransition(
   }
 
   return { playable, manifest };
+}
+
+export interface QueueTransitionOptions {
+  syncQueue: boolean;
+  quiet?: boolean;
+}
+
+export type QueueTransitionFn = (
+  track: TrackMetadata,
+  token: number,
+  options: QueueTransitionOptions,
+) => Promise<boolean>;
+
+const MAX_QUEUE_SKIP_ATTEMPTS = 25;
+
+export async function advanceQueue(
+  transition: QueueTransitionFn,
+  token: number,
+): Promise<void> {
+  let skipped = 0;
+
+  for (let attempt = 0; attempt < MAX_QUEUE_SKIP_ATTEMPTS; attempt += 1) {
+    if (!isActivePlaybackGeneration(token)) {
+      return;
+    }
+
+    const queue = usePlayerStore.getState().queue;
+    if (queue.length === 0) {
+      usePlayerStore.getState().setIsPlaying(false);
+      return;
+    }
+
+    const track = queue[0]!;
+    const success = await transition(track, token, {
+      syncQueue: true,
+      quiet: true,
+    });
+
+    if (success) {
+      if (skipped > 0) {
+        showToast(
+          `Skipped ${skipped} unavailable track${skipped === 1 ? "" : "s"}`,
+          "info",
+        );
+      }
+      return;
+    }
+
+    if (!isActivePlaybackGeneration(token)) {
+      return;
+    }
+
+    const head = usePlayerStore.getState().queue[0];
+    if (head && trackKey(head) === trackKey(track)) {
+      removeTrackAndSkippedFromQueue(track);
+    }
+
+    skipped += 1;
+  }
+
+  const message = "Could not play any queued tracks.";
+  usePlayerStore.getState().setIsPlaying(false);
+  usePlayerStore.getState().setResolveError(message);
+  showToast(message);
 }
 
 export function removeTrackAndSkippedFromQueue(track: TrackMetadata) {

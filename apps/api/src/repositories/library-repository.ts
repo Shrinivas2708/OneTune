@@ -21,6 +21,14 @@ interface HistoryDocument {
   track: TrackMetadata;
   playedAt: Date;
   durationPlayedMs?: number;
+  deletedAt?: Date;
+}
+
+function activeHistoryFilter(userId: string) {
+  return {
+    userId: new ObjectId(userId),
+    deletedAt: { $exists: false },
+  };
 }
 
 function favorites(): Collection<FavoriteDocument> {
@@ -137,7 +145,7 @@ export async function listHistory(
   if (!ObjectId.isValid(userId)) return [];
 
   const docs = await history()
-    .find({ userId: new ObjectId(userId) })
+    .find(activeHistoryFilter(userId))
     .sort({ playedAt: -1 })
     .limit(Math.min(limit * 3, 300))
     .toArray();
@@ -175,12 +183,46 @@ export async function recordHistory(
   return toHistoryEntry({ _id: result.insertedId, ...doc });
 }
 
+export async function listHistoryArtists(
+  userId: string,
+  limit = 8,
+): Promise<Array<{ name: string; playCount: number }>> {
+  if (!ObjectId.isValid(userId)) return [];
+
+  const docs = await history()
+    .find(activeHistoryFilter(userId))
+    .sort({ playedAt: -1 })
+    .limit(500)
+    .toArray();
+
+  const counts = new Map<string, { name: string; playCount: number }>();
+
+  for (const doc of docs) {
+    for (const artist of doc.track.artists) {
+      const name = artist.name.trim();
+      if (!name) continue;
+
+      const key = name.toLowerCase();
+      const existing = counts.get(key);
+      if (existing) {
+        existing.playCount += 1;
+      } else {
+        counts.set(key, { name, playCount: 1 });
+      }
+    }
+  }
+
+  return [...counts.values()]
+    .sort((a, b) => b.playCount - a.playCount)
+    .slice(0, limit);
+}
+
 export async function clearHistory(userId: string): Promise<number> {
   if (!ObjectId.isValid(userId)) return 0;
 
-  const result = await history().deleteMany({
-    userId: new ObjectId(userId),
+  const result = await history().updateMany(activeHistoryFilter(userId), {
+    $set: { deletedAt: new Date() },
   });
 
-  return result.deletedCount;
+  return result.modifiedCount;
 }
