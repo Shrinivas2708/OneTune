@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { getErrorMessage } from "@/lib/error-message";
 import { isNativePlaybackSupported } from "@/lib/platform";
+import { shuffleArray } from "@/lib/shuffle-array";
 import { trackToSearchResult } from "@/lib/track-to-search-result";
 import { downloadManager } from "@/services/download-manager";
 import { playerEngine } from "@/services/player-engine";
@@ -14,15 +15,6 @@ import { useDownloadStore } from "@/stores/download-store";
 
 interface PlaylistActionsProps {
   tracks: TrackMetadata[];
-}
-
-function shuffleTracks<T>(items: T[]): T[] {
-  const copy = [...items];
-  for (let index = copy.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
-  }
-  return copy;
 }
 
 export function PlaylistActions({ tracks }: PlaylistActionsProps) {
@@ -37,7 +29,7 @@ export function PlaylistActions({ tracks }: PlaylistActionsProps) {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const ordered = shuffle ? shuffleTracks(tracks) : tracks;
+      const ordered = shuffle ? shuffleArray(tracks) : tracks;
       const [first, ...rest] = ordered;
 
       usePlayerStore.getState().setQueue(rest);

@@ -2,9 +2,10 @@ import { FlashList } from "@shopify/flash-list";
 import { useEffect } from "react";
 import { Text, View } from "react-native";
 import { DownloadRow } from "@/components/downloads/download-row";
+import { DownloadActions } from "@/components/downloads/download-actions";
+import { LoadingIndicator } from "@/components/ui/loading-indicator";
 import { Screen } from "@/components/ui/screen";
 import { SubScreenHeader } from "@/components/ui/sub-screen-header";
-import { TrackListSkeleton } from "@/components/ui/skeleton";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
 import { useDownloadStore } from "@/stores/download-store";
 
@@ -27,7 +28,7 @@ export default function DownloadsScreen() {
       />
 
       <View className="mt-4 min-h-[200px] flex-1 px-4">
-        {!isHydrated ? <TrackListSkeleton /> : null}
+        {!isHydrated ? <LoadingIndicator message="Loading downloads…" /> : null}
 
         {isHydrated && records.length === 0 ? (
           <View className="items-center px-6 py-10">
@@ -43,6 +44,7 @@ export default function DownloadsScreen() {
             data={records}
             ItemSeparatorComponent={() => <View className="h-2" />}
             keyExtractor={(item) => item.id}
+            ListHeaderComponent={<DownloadActions records={records} />}
             renderItem={({ item }) => <DownloadRow record={item} />}
             showsVerticalScrollIndicator={false}
           />
