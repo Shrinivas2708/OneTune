@@ -427,13 +427,51 @@ export const playerEngine = {
     usePlayerStore.getState().setStreamManifest(source.manifest);
   },
 
+  async replayCurrent() {
+    await this.ensureSetup();
+
+    const progress = await TrackPlayer.getProgress();
+    if (progress.position > 1) {
+      await TrackPlayer.seekTo(0);
+      await TrackPlayer.play();
+      usePlayerStore.getState().setProgress(0, usePlayerStore.getState().duration);
+      usePlayerStore.getState().setIsPlaying(true);
+      return;
+    }
+
+    const { currentTrack } = usePlayerStore.getState();
+    if (!currentTrack) {
+      return;
+    }
+
+    const token = beginPlaybackTransition();
+    await transitionToTrack(currentTrack, token, { syncQueue: false, quiet: true });
+  },
+
   async handleQueueEnded() {
     if (isQueueAdvanceSuppressed()) {
       return;
     }
 
-    const { isResolving, queue } = usePlayerStore.getState();
+    const { isResolving, queue, repeatMode, currentTrack } =
+      usePlayerStore.getState();
     if (isResolving) {
+      return;
+    }
+
+    if (repeatMode === "one" && currentTrack) {
+      const now = Date.now();
+      if (queueAdvanceInFlight || now - lastQueueAdvanceAt < 1000) {
+        return;
+      }
+
+      queueAdvanceInFlight = true;
+      lastQueueAdvanceAt = now;
+      try {
+        await this.replayCurrent();
+      } finally {
+        queueAdvanceInFlight = false;
+      }
       return;
     }
 

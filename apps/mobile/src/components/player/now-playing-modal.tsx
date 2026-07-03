@@ -11,6 +11,7 @@ import { getTrackArtworkUri } from "@/lib/track-artwork";
 import { usePlayerUiStore } from "@/stores/player-ui-store";
 import { usePlayerStore } from "@/stores/player-store";
 import { PlaybackButtons } from "./playback-buttons";
+import { LoopToggle } from "./loop-toggle";
 import { ProgressBar } from "./progress-bar";
 import { QueueSheet } from "./queue-sheet";
 import { TrackArtwork } from "./track-artwork";
@@ -36,6 +37,8 @@ export function NowPlayingModal() {
     skipToPrevious,
     seekTo,
     playQueueIndex,
+    repeatMode,
+    toggleRepeatMode,
   } = usePlaybackControls();
 
   if (!currentTrack) {
@@ -134,22 +137,26 @@ export function NowPlayingModal() {
                   }}
                 />
               ) : (
-                <View className="gap-6 px-6 pt-2">
+                <View className="gap-5 px-6 pt-2">
                   <ProgressBar
                     duration={duration}
                     large
                     position={position}
                     onSeek={seekTo}
                   />
-                  <PlaybackButtons
-                    hasNext={hasNext}
-                    hasPrevious={hasPrevious}
-                    isPlaying={isPlaying}
-                    size="full"
-                    onNext={skipToNext}
-                    onPrevious={skipToPrevious}
-                    onToggle={toggle}
-                  />
+                  <View className="flex-row items-center justify-between px-2">
+                    <LoopToggle mode={repeatMode} onToggle={toggleRepeatMode} />
+                    <PlaybackButtons
+                      hasNext={hasNext}
+                      hasPrevious={hasPrevious}
+                      isPlaying={isPlaying}
+                      size="full"
+                      onNext={skipToNext}
+                      onPrevious={skipToPrevious}
+                      onToggle={toggle}
+                    />
+                    <View className="w-10" />
+                  </View>
                 </View>
               )}
             </View>

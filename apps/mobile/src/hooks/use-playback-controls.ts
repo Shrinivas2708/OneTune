@@ -8,6 +8,8 @@ export function usePlaybackControls() {
   const duration = usePlayerStore((state) => state.duration);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const queue = usePlayerStore((state) => state.queue);
+  const repeatMode = usePlayerStore((state) => state.repeatMode);
+  const toggleRepeatMode = usePlayerStore((state) => state.toggleRepeatMode);
 
   const play = useCallback(() => {
     void playerEngine.play();
@@ -52,6 +54,7 @@ export function usePlaybackControls() {
     duration,
     currentTrack,
     queue,
+    repeatMode,
     hasNext,
     hasPrevious,
     play,
@@ -61,5 +64,6 @@ export function usePlaybackControls() {
     skipToPrevious,
     seekTo,
     playQueueIndex,
+    toggleRepeatMode,
   };
 }

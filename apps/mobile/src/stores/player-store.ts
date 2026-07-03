@@ -4,6 +4,8 @@ import { manifestCache } from "@/lib/manifest-cache";
 import { loadWebVolume, saveWebVolume } from "@/lib/web-volume";
 import { trackKey } from "@/services/player-helpers";
 
+export type RepeatMode = "off" | "one";
+
 interface PlayerState {
   currentTrack: TrackMetadata | null;
   streamManifest: StreamManifest | null;
@@ -16,6 +18,7 @@ interface PlayerState {
   volume: number;
   /** Tracks explicitly added to play later — never includes the current track. */
   queue: TrackMetadata[];
+  repeatMode: RepeatMode;
   setCurrentTrack: (track: TrackMetadata | null) => void;
   setStreamManifest: (manifest: StreamManifest | null) => void;
   setIsPlaying: (isPlaying: boolean) => void;
@@ -26,6 +29,8 @@ interface PlayerState {
   addToQueue: (track: TrackMetadata) => boolean;
   removeFromQueue: (index: number) => void;
   setQueue: (tracks: TrackMetadata[]) => void;
+  setRepeatMode: (mode: RepeatMode) => void;
+  toggleRepeatMode: () => void;
   reset: () => void;
 }
 
@@ -53,6 +58,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   duration: 0,
   volume: loadWebVolume(),
   queue: [],
+  repeatMode: "off",
 
   setCurrentTrack: (track) => set({ currentTrack: track }),
   setStreamManifest: (manifest) => set({ streamManifest: manifest }),
@@ -89,6 +95,13 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
 
   setQueue: (tracks) => set({ queue: tracks }),
+
+  setRepeatMode: (mode) => set({ repeatMode: mode }),
+
+  toggleRepeatMode: () =>
+    set((state) => ({
+      repeatMode: state.repeatMode === "off" ? "one" : "off",
+    })),
 
   reset: () => {
     manifestCache.clear();

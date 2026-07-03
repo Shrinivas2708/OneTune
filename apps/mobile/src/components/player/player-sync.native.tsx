@@ -19,6 +19,7 @@ export function PlayerSync() {
   const setProgress = usePlayerStore((state) => state.setProgress);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
+  const repeatMode = usePlayerStore((state) => state.repeatMode);
   const queueLength = usePlayerStore((state) => state.queue.length);
   const lastAutoAdvanceKeyRef = useRef<string | null>(null);
   const listenStartedAtRef = useRef<number | null>(null);
@@ -145,6 +146,17 @@ export function PlayerSync() {
     }
 
     if (queueLength === 0) {
+      if (repeatMode === "one") {
+        const advanceKey = `${trackKey(currentTrack)}:${Math.round(duration)}`;
+        if (lastAutoAdvanceKeyRef.current === advanceKey) {
+          return;
+        }
+
+        lastAutoAdvanceKeyRef.current = advanceKey;
+        void playerEngine.handleQueueEnded();
+        return;
+      }
+
       usePlayerStore.getState().setIsPlaying(false);
       return;
     }
@@ -156,7 +168,7 @@ export function PlayerSync() {
 
     lastAutoAdvanceKeyRef.current = advanceKey;
     void playerEngine.handleQueueEnded();
-  }, [currentTrack, progress.duration, progress.position, queueLength]);
+  }, [currentTrack, progress.duration, progress.position, queueLength, repeatMode]);
 
   useEffect(() => {
     const interval = setInterval(() => {

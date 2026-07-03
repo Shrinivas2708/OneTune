@@ -151,8 +151,32 @@ export const playerEngine = {
     await webAudioPlayer.play();
   },
 
+  async replayCurrent() {
+    const { currentTrack, position, duration } = usePlayerStore.getState();
+    if (!currentTrack) {
+      return;
+    }
+
+    if (position > 1) {
+      webAudioPlayer.seek(0);
+      usePlayerStore.getState().setProgress(0, duration);
+      await webAudioPlayer.play();
+      usePlayerStore.getState().setIsPlaying(true);
+      return;
+    }
+
+    const token = beginPlaybackTransition();
+    await transitionToTrack(currentTrack, token, { syncQueue: false, quiet: true });
+  },
+
   async handleQueueEnded() {
-    const queue = usePlayerStore.getState().queue;
+    const { queue, repeatMode, currentTrack } = usePlayerStore.getState();
+
+    if (repeatMode === "one" && currentTrack) {
+      await this.replayCurrent();
+      return;
+    }
+
     if (queue.length === 0) {
       usePlayerStore.getState().setIsPlaying(false);
       return;
