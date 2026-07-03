@@ -40,18 +40,6 @@ module.exports = () => {
 
   return {
     ...appJson,
-    ...(isStandaloneBuild
-      ? {
-          autolinking: {
-            exclude: [
-              "expo-dev-client",
-              "expo-dev-launcher",
-              "expo-dev-menu",
-              "expo-dev-menu-interface",
-            ],
-          },
-        }
-      : {}),
     extra: {
       ...appJson.extra,
       apiUrl,

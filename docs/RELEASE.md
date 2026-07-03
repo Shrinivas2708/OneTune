@@ -123,10 +123,16 @@ versionName "1.0.1"
 
 ### 2. Build the release APK
 
+Close **Android Studio** first. On Windows, pause **Defender** real-time scan on the repo if builds fail with “Unable to delete file”.
+
 ```powershell
-cd apps\mobile
+cd C:\Users\DELL\vibevault\apps\mobile
 bun run build:android:standalone
 ```
+
+The script uses **`bunx expo prebuild`** (SDK 54, not `npx expo`), excludes dev-client modules, stops Gradle, clears stale caches, and builds from the real `C:\` path (no SUBST drive).
+
+If a previous build mapped a short drive, unmap it first: `subst P: /d` (and `O:` etc. if needed).
 
 Output (typical):
 
@@ -249,7 +255,7 @@ To go fully hands-off later, extend `.github/workflows/release.yml` with an Andr
 
 | Problem                              | Fix                                                                                                         |
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Update prompt never appears          | Install a release APK that includes the update check. Local Gradle builds use `executionEnvironment: bare` (not only `standalone`) — fixed in app code. Prompt runs after splash, not during loading. |
+| Update prompt never appears          | Rebuild APK after fix: version must come from **Android versionName** (`expo-application`), not embedded `app.json`. Alert runs ~1s after splash hides. Phone must be **older** than `release.json` (e.g. 1.0.2 installed, site shows 1.0.3). |
 | APK link 404                         | Asset on GitHub Release must be named `OneTune-{version}.apk` matching the tag                              |
 | Website still shows old link         | Hard refresh; confirm `release.json` deployed; check `ApkLink` loads `/release.json`                        |
 | Action did not update `release.json` | Tag must match `v*`; Actions enabled; workflow has `contents: write`                                        |
@@ -257,6 +263,10 @@ To go fully hands-off later, extend `.github/workflows/release.yml` with an Andr
 | `v1.0.0` tag never triggered release   | That tag predates the workflow file — only tags pushed **after** the workflow exists on `main` will auto-run |
 | Update prompt shows wrong version    | Bump `app.json` `version` before building; rebuild APK — `build.gradle` alone does not fix the in-app check |
 | Android won’t install over old APK   | `versionCode` in `build.gradle` must be greater than the installed build                                    |
+| Windows Gradle “Unable to delete file” | Close Android Studio; run `cd android; .\gradlew.bat --stop`; pause Defender on repo; rerun build script |
+| `different roots P:\` vs `C:\`       | Run `subst P: /d` (and other SUBST letters); always build on real path — script clears SUBST automatically |
+| `expo-dev-client` in release build   | Use `bun run build:android:standalone` (sets `EXPO_STANDALONE_BUILD=1` + excludes dev modules in Gradle)     |
+| Reanimated / CMake `.o` not found    | Enable Windows long paths (admin + reboot) or move repo to a shorter path like `C:\vv\vibevault`              |
 | Manifest fetch fails in app          | Ensure `https://your-domain/release.json` is HTTPS and publicly reachable                                   |
 
 

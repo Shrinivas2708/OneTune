@@ -54,16 +54,16 @@
   ],
   "name": "OneTune",
   "slug": "onetune",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "extra": {
     "router": {
       "origin": "https://onetune.app"
     },
-    "eas": {
+    "eas": {  
       "projectId": "122c1b04-d383-4bc5-8eed-15c308ac28b6"
     }
   },
-  "runtimeVersion": "1.0.0",
+  "runtimeVersion": "1.0.4",
   "updates": {
     "url": "https://u.expo.dev/122c1b04-d383-4bc5-8eed-15c308ac28b6",
     "checkAutomatically": "NEVER",

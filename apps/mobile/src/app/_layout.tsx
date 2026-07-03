@@ -10,7 +10,7 @@ import { PlusJakartaSans_700Bold } from "@expo-google-fonts/plus-jakarta-sans";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PlayerSync } from "@/components/player/player-sync";
 import { LoadingScreen } from "@/components/ui/screen";
@@ -35,8 +35,8 @@ export default function RootLayout() {
     PlusJakartaSans_700Bold,
   });
 
-  const appReady = fontsLoaded && isHydrated;
-  useAppUpdatePrompt(isProductionBuild() && appReady);
+  const [splashHidden, setSplashHidden] = useState(false);
+  useAppUpdatePrompt(isProductionBuild() && splashHidden);
 
   useEffect(() => {
     void hydrate();
@@ -45,7 +45,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded && isHydrated) {
-      void SplashScreen.hideAsync();
+      void SplashScreen.hideAsync().then(() => setSplashHidden(true));
     }
   }, [fontsLoaded, isHydrated]);
 

@@ -1,8 +1,18 @@
+const fs = require("fs");
+const path = require("path");
 const {
   withAppBuildGradle,
+  withDangerousMod,
   withGradleProperties,
   withMainApplication,
 } = require("expo/config-plugins");
+
+const STANDALONE_AUTOLINK_EXCLUDE = [
+  "expo-dev-client",
+  "expo-dev-launcher",
+  "expo-dev-menu",
+  "expo-dev-menu-interface",
+];
 
 /** Production APK: use bundled index.js instead of dev-client Metro entry. */
 function withStandaloneAndroid(config) {
@@ -13,6 +23,31 @@ function withStandaloneAndroid(config) {
     );
     return mod;
   });
+}
+
+/** Drop dev-client modules from Gradle autolinking (package.json exclude is always-on). */
+function withStandaloneAutolinkingExclude(config) {
+  return withDangerousMod(config, [
+    "android",
+    async (modConfig) => {
+      const settingsGradle = path.join(
+        modConfig.modRequest.platformProjectRoot,
+        "settings.gradle",
+      );
+      let contents = fs.readFileSync(settingsGradle, "utf8");
+
+      if (!contents.includes("expoAutolinking.exclude")) {
+        const excludeLine = `expoAutolinking.exclude = ${JSON.stringify(STANDALONE_AUTOLINK_EXCLUDE)}`;
+        contents = contents.replace(
+          "expoAutolinking.useExpoModules()",
+          `${excludeLine}\n\nexpoAutolinking.useExpoModules()`,
+        );
+        fs.writeFileSync(settingsGradle, contents);
+      }
+
+      return modConfig;
+    },
+  ]);
 }
 
 /** Monorepo: Gradle must bundle from apps/mobile, not the workspace root. */
@@ -67,5 +102,6 @@ module.exports = function withStandaloneAndroidPlugin(config) {
   config = withStandaloneAndroid(config);
   config = withMonorepoGradleRoot(config);
   config = withStandaloneGradleProperties(config);
+  config = withStandaloneAutolinkingExclude(config);
   return config;
 };
