@@ -231,7 +231,7 @@ export const HistoryArtistSchema = z.object({
 export type HistoryArtist = z.infer<typeof HistoryArtistSchema>;
 
 export const HistoryArtistsQuerySchema = z.object({
-  limit: z.coerce.number().int().positive().max(20).default(8),
+  limit: z.coerce.number().int().positive().max(30).default(8),
 });
 
 export type HistoryArtistsQuery = z.infer<typeof HistoryArtistsQuerySchema>;

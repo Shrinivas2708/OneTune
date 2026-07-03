@@ -6,8 +6,9 @@ import { ErrorState } from "@/components/ui/error-state";
 import { Screen } from "@/components/ui/screen";
 import { SubScreenHeader } from "@/components/ui/sub-screen-header";
 import { TrackListSkeleton } from "@/components/ui/skeleton";
-import { useClearHistory, useHistory } from "@/hooks/use-history";
+import { useClearHistory, useHistory, useHistoryArtists } from "@/hooks/use-history";
 import { useScrollBottomInset } from "@/hooks/use-scroll-bottom-inset";
+import { TopArtistsRow } from "@/components/home/top-artists-row";
 import { formatArtists } from "@/lib/track-format";
 import { getErrorMessage } from "@/lib/error-message";
 
@@ -25,6 +26,7 @@ function formatPlayedAt(iso: string) {
 
 export default function HistoryScreen() {
   const { data, error, isLoading, refetch, isRefetching } = useHistory();
+  const { data: topArtists } = useHistoryArtists(20);
   const clearHistory = useClearHistory();
   const bottomInset = useScrollBottomInset();
 
@@ -75,9 +77,13 @@ export default function HistoryScreen() {
         ) : null}
 
         {!isLoading && !errorMessage && !hasHistory ? (
-          <Text className="px-6 text-center font-inter text-sm text-vault-muted">
-            Nothing played yet. Your listening history will show up here.
-          </Text>
+          <View className="px-2">
+            <TopArtistsRow artists={topArtists ?? []} title="Most listened artists" />
+            <Text className="mt-8 px-4 text-center font-inter text-sm text-vault-muted">
+              Nothing played yet. Listen for about 10 seconds per track and it
+              will show up here.
+            </Text>
+          </View>
         ) : null}
 
         {!isLoading && !errorMessage && data && data.length > 0 ? (
@@ -86,6 +92,17 @@ export default function HistoryScreen() {
             data={data}
             estimatedItemSize={80}
             keyExtractor={(item) => item.id}
+            ListHeaderComponent={
+              <View className="mb-4 px-2">
+                <TopArtistsRow
+                  artists={topArtists ?? []}
+                  title="Most listened artists"
+                />
+                <Text className="mt-6 font-jakarta text-lg text-vault-text">
+                  Recent plays
+                </Text>
+              </View>
+            }
             refreshControl={
               <RefreshControl
                 refreshing={isRefetching}

@@ -6,7 +6,10 @@ import TrackPlayer, {
   useProgress,
 } from "react-native-track-player";
 import { playerEngine } from "@/services/player-engine";
-import { recordPlaybackHistory } from "@/services/playback-history";
+import {
+  MIN_LISTEN_RECORD_MS,
+  recordListenIfQualified,
+} from "@/services/playback-history";
 import { ensureQueuePreloader } from "@/services/queue-preloader";
 import { trackKey, usePlayerStore } from "@/stores/player-store";
 
@@ -15,9 +18,11 @@ export function PlayerSync() {
   const progress = useProgress(500);
   const setProgress = usePlayerStore((state) => state.setProgress);
   const currentTrack = usePlayerStore((state) => state.currentTrack);
+  const isPlaying = usePlayerStore((state) => state.isPlaying);
   const queueLength = usePlayerStore((state) => state.queue.length);
   const lastAutoAdvanceKeyRef = useRef<string | null>(null);
-  const lastHistoryKeyRef = useRef<string | null>(null);
+  const listenStartedAtRef = useRef<number | null>(null);
+  const recordedTrackKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     ensureQueuePreloader();
@@ -26,18 +31,66 @@ export function PlayerSync() {
 
   useEffect(() => {
     if (!currentTrack) {
-      lastHistoryKeyRef.current = null;
+      listenStartedAtRef.current = null;
+      recordedTrackKeyRef.current = null;
       return;
     }
 
     const key = trackKey(currentTrack);
-    if (lastHistoryKeyRef.current === key) {
+    listenStartedAtRef.current = Date.now();
+    recordedTrackKeyRef.current = null;
+
+    const timer = setTimeout(() => {
+      const active = usePlayerStore.getState().currentTrack;
+      if (!active || trackKey(active) !== key) {
+        return;
+      }
+
+      recordedTrackKeyRef.current = key;
+      recordListenIfQualified(active, MIN_LISTEN_RECORD_MS, false);
+    }, MIN_LISTEN_RECORD_MS);
+
+    return () => {
+      clearTimeout(timer);
+
+      const startedAt = listenStartedAtRef.current;
+      if (!startedAt || recordedTrackKeyRef.current === key) {
+        return;
+      }
+
+      const listenedMs = Date.now() - startedAt;
+      const recorded = recordListenIfQualified(
+        currentTrack,
+        listenedMs,
+        recordedTrackKeyRef.current === key,
+      );
+      if (recorded) {
+        recordedTrackKeyRef.current = key;
+      }
+    };
+  }, [currentTrack]);
+
+  useEffect(() => {
+    if (!currentTrack || !isPlaying) {
       return;
     }
 
-    lastHistoryKeyRef.current = key;
-    recordPlaybackHistory(currentTrack);
-  }, [currentTrack]);
+    const key = trackKey(currentTrack);
+    if (recordedTrackKeyRef.current === key) {
+      return;
+    }
+
+    if (progress.position * 1000 < MIN_LISTEN_RECORD_MS) {
+      return;
+    }
+
+    recordedTrackKeyRef.current = key;
+    recordListenIfQualified(
+      currentTrack,
+      Math.round(progress.position * 1000),
+      false,
+    );
+  }, [currentTrack, isPlaying, progress.position]);
 
   useEffect(() => {
     const subscription = TrackPlayer.addEventListener(

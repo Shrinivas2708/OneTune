@@ -23,6 +23,10 @@ import {
   type QueueTransitionOptions,
 } from "@/services/playback-core";
 import {
+  isQueueAdvanceSuppressed,
+  withQueueAdvanceSuppressed,
+} from "@/services/playback-session";
+import {
   searchResultToTrack,
   usePlayerStore,
 } from "@/stores/player-store";
@@ -83,23 +87,25 @@ async function startNativePlayback(
   manifest: PlaybackSource,
   queueTrack?: TrackMetadata,
 ) {
-  const playerTrack = toPlayerTrack(playable, manifest);
+  await withQueueAdvanceSuppressed(async () => {
+    const playerTrack = toPlayerTrack(playable, manifest);
 
-  await TrackPlayer.reset();
-  clearNativeTrackLinks();
-  await TrackPlayer.setQueue([playerTrack]);
-  linkNativeTrack(playerTrack.id!, queueTrack ?? playable, playable);
-  await TrackPlayer.play();
+    await TrackPlayer.reset();
+    clearNativeTrackLinks();
+    await TrackPlayer.setQueue([playerTrack]);
+    linkNativeTrack(playerTrack.id!, queueTrack ?? playable, playable);
+    await TrackPlayer.play();
 
-  usePlayerStore.setState({
-    currentTrack: playable,
-    streamManifest: manifest.kind === "stream" ? manifest.manifest : null,
-    isLocalPlayback: isLocalPlaybackSource(manifest),
-    isPlaying: true,
-    resolveError: null,
+    usePlayerStore.setState({
+      currentTrack: playable,
+      streamManifest: manifest.kind === "stream" ? manifest.manifest : null,
+      isLocalPlayback: isLocalPlaybackSource(manifest),
+      isPlaying: true,
+      resolveError: null,
+    });
+
+    await playerEngine.syncNativeQueue();
   });
-
-  await playerEngine.syncNativeQueue();
 }
 
 async function transitionToTrack(
@@ -410,22 +416,32 @@ export const playerEngine = {
 
     const playerTrack = toPlayerTrack(currentTrack, source);
 
-    await TrackPlayer.pause();
-    await TrackPlayer.reset();
-    await TrackPlayer.setQueue([playerTrack]);
-    await TrackPlayer.skip(0, progress.position);
-    await TrackPlayer.play();
+    await withQueueAdvanceSuppressed(async () => {
+      await TrackPlayer.pause();
+      await TrackPlayer.reset();
+      await TrackPlayer.setQueue([playerTrack]);
+      await TrackPlayer.skip(0, progress.position);
+      await TrackPlayer.play();
+    });
 
     usePlayerStore.getState().setStreamManifest(source.manifest);
   },
 
   async handleQueueEnded() {
+    if (isQueueAdvanceSuppressed()) {
+      return;
+    }
+
+    const { isResolving, queue } = usePlayerStore.getState();
+    if (isResolving) {
+      return;
+    }
+
     const now = Date.now();
     if (queueAdvanceInFlight || now - lastQueueAdvanceAt < 1000) {
       return;
     }
 
-    const queue = usePlayerStore.getState().queue;
     if (queue.length === 0) {
       usePlayerStore.getState().setIsPlaying(false);
       return;

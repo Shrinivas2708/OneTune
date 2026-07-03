@@ -1,7 +1,5 @@
-import type { TrackMetadata } from "@vibevault/types";
-import { isStreamExpired } from "@vibevault/utils";
-import { manifestCache } from "@/lib/manifest-cache";
-import { musicApi } from "@/lib/music-api";
+import type { SearchResult, TrackMetadata as TrackMeta } from "@vibevault/types";
+import { isPlayableProvider } from "@vibevault/utils";
 import {
   getCachedPlayableResult,
   getInFlightMatch,
@@ -12,10 +10,9 @@ import {
 import { trackToSearchResult } from "@/lib/track-to-search-result";
 import { searchResultToTrack } from "@/stores/player-store";
 import { trackKey } from "@/services/player-helpers";
-import type { SearchResult, TrackMetadata as TrackMeta } from "@vibevault/types";
-import { isPlayableProvider } from "@vibevault/utils";
+import { musicApi } from "@/lib/music-api";
 
-const PRELOAD_AHEAD = 3;
+const PRELOAD_AHEAD = 2;
 const preloadInFlight = new Set<string>();
 
 export async function resolvePlayableResult(
@@ -66,33 +63,21 @@ export async function resolvePlayableTrack(
   return searchResultToTrack(result);
 }
 
-export async function preloadQueueTracks(queue: TrackMetadata[]) {
+export async function preloadQueueTracks(queue: TrackMeta[]) {
   const batch = queue.slice(0, PRELOAD_AHEAD);
 
-  await Promise.all(
-    batch.map(async (track) => {
-      const sourceKey = trackKey(track);
-      if (preloadInFlight.has(sourceKey)) return;
+  for (const track of batch) {
+    const sourceKey = trackKey(track);
+    if (preloadInFlight.has(sourceKey)) continue;
 
-      preloadInFlight.add(sourceKey);
-      try {
-        const playable = searchResultToTrack(
-          await resolvePlayableResult(trackToSearchResult(track)),
-        );
-        const streamKey = trackKey(playable);
-        const cached = manifestCache.get(streamKey);
-
-        if (!cached || isStreamExpired(cached.expiresAt)) {
-          const manifest = await musicApi.resolveStream({
-            trackRef: playable.ref,
-          });
-          manifestCache.set(streamKey, manifest);
-        }
-      } catch {
-        // Best-effort preload.
-      } finally {
-        preloadInFlight.delete(sourceKey);
-      }
-    }),
-  );
+    preloadInFlight.add(sourceKey);
+    try {
+      // Match only — stream URLs are resolved when a track is about to play.
+      await resolvePlayableResult(trackToSearchResult(track));
+    } catch {
+      // Best-effort preload.
+    } finally {
+      preloadInFlight.delete(sourceKey);
+    }
+  }
 }

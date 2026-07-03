@@ -63,7 +63,7 @@ export async function extractorStream(
   preferVideo = false,
 ): Promise<ExtractorStream> {
   const endpoint = `${env.EXTRACTOR_URL}/extract/stream?prefer_video=${preferVideo}`;
-  return postJson<ExtractorStream>(endpoint, { url });
+  return postJson<ExtractorStream>(endpoint, { url }, { timeoutMs: 45_000 });
 }
 
 export async function extractorDownload(url: string): Promise<ExtractorDownload> {

@@ -193,12 +193,17 @@ export async function listHistoryArtists(
   const docs = await history()
     .find(activeHistoryFilter(userId))
     .sort({ playedAt: -1 })
-    .limit(500)
+    .limit(2000)
     .toArray();
 
   const counts = new Map<string, { name: string; playCount: number }>();
 
   for (const doc of docs) {
+    const listenWeight =
+      typeof doc.durationPlayedMs === "number" && doc.durationPlayedMs > 0
+        ? Math.max(1, Math.round(doc.durationPlayedMs / 120_000))
+        : 1;
+
     for (const artist of doc.track.artists) {
       const name = artist.name.trim();
       if (!name) continue;
@@ -206,9 +211,9 @@ export async function listHistoryArtists(
       const key = name.toLowerCase();
       const existing = counts.get(key);
       if (existing) {
-        existing.playCount += 1;
+        existing.playCount += listenWeight;
       } else {
-        counts.set(key, { name, playCount: 1 });
+        counts.set(key, { name, playCount: listenWeight });
       }
     }
   }
