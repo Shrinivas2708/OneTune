@@ -41,8 +41,10 @@ function LoginScreen({ onSuccess }: { onSuccess: () => void }) {
       if (err instanceof AdminApiError) {
         setError(
           err.status === 403
-            ? "This account is not an admin."
-            : err.message,
+            ? "This account is not an admin. Set isAdmin: true in MongoDB for your user."
+            : err.status === 401
+              ? "Invalid email or password."
+              : err.message,
         );
       } else {
         setError("Login failed. Check your credentials.");

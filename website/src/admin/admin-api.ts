@@ -105,7 +105,7 @@ interface AdminLoginResponse {
 }
 
 export async function login(email: string, password: string) {
-  const response = await fetch(`${adminConfig.apiUrl}/v1/admin/login`, {
+  const response = await fetch(`${adminConfig.apiUrl}/v1/auth/admin-login`, {
     method: "POST",
     headers: {
       Accept: "application/json",

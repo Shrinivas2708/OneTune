@@ -1,6 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import {
+  AuthResponseSchema,
   LoginRequestSchema,
   RefreshTokenRequestSchema,
   RegisterRequestSchema,
@@ -30,6 +31,16 @@ authRoutes.post(
     const body = c.req.valid("json");
     const result = await authService.login(body);
     return jsonSuccess(c, result);
+  },
+);
+
+authRoutes.post(
+  "/admin-login",
+  zValidator("json", LoginRequestSchema),
+  async (c) => {
+    const body = c.req.valid("json");
+    const result = await authService.loginAdmin(body);
+    return jsonSuccess(c, AuthResponseSchema.parse(result));
   },
 );
 
