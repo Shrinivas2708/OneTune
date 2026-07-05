@@ -7,6 +7,7 @@ export interface UserDocument {
   passwordHash: string;
   displayName: string;
   createdAt: Date;
+  isAdmin?: boolean;
 }
 
 export interface RefreshSessionDocument {
@@ -85,4 +86,17 @@ export function toPublicUser(user: UserDocument) {
     displayName: user.displayName,
     createdAt: user.createdAt.toISOString(),
   };
+}
+
+export async function listAllUsers(): Promise<UserDocument[]> {
+  return users().find({}).sort({ createdAt: -1 }).toArray();
+}
+
+export async function isUserAdmin(userId: string): Promise<boolean> {
+  if (!ObjectId.isValid(userId)) return false;
+  const user = await users().findOne(
+    { _id: new ObjectId(userId) },
+    { projection: { isAdmin: 1 } },
+  );
+  return user?.isAdmin === true;
 }

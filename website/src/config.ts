@@ -10,3 +10,8 @@ export const siteConfig = {
     "https://github.com/Shrinivas2708/OneTune/releases/download/v1.0.0/OneTune-1.0.0.apk",
   apkFileName: import.meta.env.VITE_APK_FILE_NAME ?? "OneTune-1.0.0.apk",
 } as const;
+
+export const adminConfig = {
+  apiUrl:
+    import.meta.env.VITE_API_URL ?? "https://api.onetune.shribuilds.in",
+} as const;

@@ -1318,3 +1318,345 @@ h2 {
     transform: none;
   }
 }
+
+/* Admin dashboard */
+.admin-root {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.admin-shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.admin-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-header h1,
+.admin-login h1 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.admin-muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.admin-btn {
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.admin-btn:hover {
+  border-color: var(--border-hover);
+}
+
+.admin-btn-primary {
+  background: var(--accent);
+  color: #000;
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.admin-btn-primary:hover {
+  background: var(--accent-dim);
+}
+
+.admin-btn-ghost {
+  background: transparent;
+}
+
+.admin-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+}
+
+.admin-login-card {
+  width: min(100%, 420px);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-heavy);
+}
+
+.admin-form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.admin-form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.admin-form input,
+.admin-search {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.admin-form input:focus,
+.admin-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.admin-error,
+.admin-banner-error {
+  color: #ff6b6b;
+  font-size: 0.9rem;
+}
+
+.admin-banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.35);
+}
+
+.admin-loading {
+  color: var(--text-muted);
+}
+
+.admin-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.admin-stat {
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.admin-stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.admin-stat-value {
+  font-size: 1.75rem;
+  font-family: var(--font-title);
+}
+
+.admin-section {
+  margin-bottom: 2rem;
+}
+
+.admin-section h2,
+.admin-section h3 {
+  margin: 0 0 1rem;
+  font-family: var(--font-title);
+}
+
+.admin-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-search {
+  max-width: 320px;
+}
+
+.admin-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.admin-chip em {
+  font-style: normal;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.admin-users-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .admin-users-layout {
+    grid-template-columns: 1.2fr 0.8fr;
+  }
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-table th {
+  color: var(--text-muted);
+  font-weight: 500;
+  background: var(--surface);
+}
+
+.admin-table tbody tr {
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.admin-table tbody tr:hover {
+  background: var(--card-hover);
+}
+
+.admin-table tbody tr.is-selected {
+  background: rgba(30, 215, 96, 0.08);
+}
+
+.admin-table td strong {
+  display: block;
+}
+
+.admin-table td .admin-muted {
+  font-size: 0.8rem;
+}
+
+.admin-table-compact td:last-child,
+.admin-table-compact th:last-child {
+  text-align: right;
+  width: 5rem;
+}
+
+.admin-detail {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 1.25rem;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.admin-detail-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  min-height: 200px;
+}
+
+.admin-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-detail-header h2 {
+  margin: 0;
+  font-family: var(--font-title);
+}
+
+.admin-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-detail-stats .admin-stat {
+  padding: 0.85rem;
+}
+
+.admin-detail-stats .admin-stat-value {
+  font-size: 1.1rem;
+}
+
+.admin-history-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-history-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.admin-history-item strong {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.admin-history-item time {
+  color: var(--text-subtle);
+  white-space: nowrap;
+  font-size: 0.8rem;
+}

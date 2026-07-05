@@ -5,6 +5,7 @@ import { env } from "@vibevault/config/server";
 import { jsonError } from "./lib/response";
 import { errorHandler } from "./middleware/error-handler";
 import { requestIdMiddleware } from "./middleware/request-id";
+import { adminRoutes } from "./routes/admin";
 import { authRoutes } from "./routes/auth";
 import { healthRoutes } from "./routes/health";
 import { internalRoutes } from "./routes/internal";
@@ -27,6 +28,7 @@ export function createApp() {
   app.route("/v1", musicRoutes);
   app.route("/v1", playlistRoutes);
   app.route("/v1", libraryRoutes);
+  app.route("/v1/admin", adminRoutes);
 
   if (env.NODE_ENV !== "production") {
     app.route("/v1/internal", internalRoutes);
