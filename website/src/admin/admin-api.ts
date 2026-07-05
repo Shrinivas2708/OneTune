@@ -98,19 +98,40 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return payload.data as T;
 }
 
+interface AdminLoginResponse {
+  tokens: {
+    accessToken: string;
+  };
+}
+
 export async function login(email: string, password: string) {
-  const result = await request<{ accessToken: string }>("/v1/auth/login", {
+  const response = await fetch(`${adminConfig.apiUrl}/v1/admin/login`, {
     method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ email, password }),
   });
-  sessionStorage.setItem(TOKEN_KEY, result.accessToken);
 
-  try {
-    await fetchOverview();
-  } catch (err) {
-    clearAdminToken();
-    throw err;
+  const payload = (await response.json()) as {
+    data?: AdminLoginResponse;
+    error?: { message?: string };
+  };
+
+  if (!response.ok) {
+    throw new AdminApiError(
+      payload.error?.message ?? `Login failed (${response.status})`,
+      response.status,
+    );
   }
+
+  const accessToken = payload.data?.tokens.accessToken;
+  if (!accessToken) {
+    throw new AdminApiError("Login response missing access token", 500);
+  }
+
+  sessionStorage.setItem(TOKEN_KEY, accessToken);
 }
 
 export function fetchOverview() {

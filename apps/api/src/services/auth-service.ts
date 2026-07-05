@@ -77,6 +77,27 @@ export async function register(input: RegisterRequest): Promise<AuthResponse> {
 }
 
 export async function login(input: LoginRequest): Promise<AuthResponse> {
+  const user = await authenticateUser(input);
+  const tokens = await issueTokens(user._id.toHexString(), user.email);
+  return buildAuthResponse(toPublicUser(user), tokens);
+}
+
+export async function loginAdmin(input: LoginRequest): Promise<AuthResponse> {
+  const user = await authenticateUser(input);
+
+  if (user.isAdmin !== true) {
+    throw new AppError(
+      ERROR_CODES.FORBIDDEN,
+      "This account is not an admin",
+      403,
+    );
+  }
+
+  const tokens = await issueTokens(user._id.toHexString(), user.email);
+  return buildAuthResponse(toPublicUser(user), tokens);
+}
+
+async function authenticateUser(input: LoginRequest) {
   const user = await findUserByEmail(input.email);
 
   if (!user) {
@@ -88,8 +109,7 @@ export async function login(input: LoginRequest): Promise<AuthResponse> {
     throw new AppError(ERROR_CODES.UNAUTHORIZED, "Invalid email or password", 401);
   }
 
-  const tokens = await issueTokens(user._id.toHexString(), user.email);
-  return buildAuthResponse(toPublicUser(user), tokens);
+  return user;
 }
 
 export async function refresh(refreshToken: string): Promise<AuthResponse> {
