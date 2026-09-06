@@ -32,7 +32,10 @@ export const errorHandler: ErrorHandler<AppEnv> = (error, c) => {
   }
 
   if (error instanceof ProviderUnavailableError) {
-    log.warn({ code: error.code, providerId: error.providerId }, error.message);
+    log.warn(
+      { code: error.code, providerId: error.providerId, err: error.cause },
+      error.message,
+    );
     return jsonError(c, ERROR_CODES.PROVIDER_UNAVAILABLE, error.message, 503);
   }
 
