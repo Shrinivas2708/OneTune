@@ -13,6 +13,5 @@ export const siteConfig = {
 } as const;
 
 export const adminConfig = {
-  apiUrl:
-    import.meta.env.VITE_API_URL ?? "https://api.onetune.shribuilds.in",
+  apiUrl: import.meta.env.VITE_API_URL ?? "https://api.onetune.shribuilds.in",
 } as const;

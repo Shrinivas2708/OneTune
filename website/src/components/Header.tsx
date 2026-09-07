@@ -5,7 +5,13 @@ import { NavAnchor } from "../lib/navigation";
 
 function DownloadIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
       <path
         d="M12 3v12m0 0l4-4m-4 4L8 11M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"
         stroke="currentColor"
@@ -34,7 +40,13 @@ export function Header() {
     <header className="site-header">
       <div className="header-inner">
         <NavAnchor href="#top" className="brand">
-          <img src="/assets/icon.png" alt="" width={32} height={32} className="brand-icon" />
+          <img
+            src="/assets/icon.png"
+            alt=""
+            width={32}
+            height={32}
+            className="brand-icon"
+          />
           <span>OneTune</span>
         </NavAnchor>
 
@@ -46,7 +58,7 @@ export function Header() {
               </NavAnchor>
             ))}
           </nav>
-          <ApkLink className="nav-cta" >
+          <ApkLink className="nav-cta">
             <DownloadIcon />
             Download for Android
           </ApkLink>
@@ -72,10 +84,18 @@ export function Header() {
             {item.label}
           </NavAnchor>
         ))}
-        <ApkLink className="nav-cta nav-cta-mobile" href="#download" onClick={closeMobile}>
+        <ApkLink
+          className="nav-cta nav-cta-mobile"
+          href="#download"
+          onClick={closeMobile}
+        >
           Download for Android
         </ApkLink>
-        <a className="nav-web-link nav-web-link-mobile" href={siteConfig.webUrl} onClick={closeMobile}>
+        <a
+          className="nav-web-link nav-web-link-mobile"
+          href={siteConfig.webUrl}
+          onClick={closeMobile}
+        >
           Open web version
         </a>
       </nav>

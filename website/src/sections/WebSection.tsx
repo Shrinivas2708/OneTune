@@ -20,8 +20,9 @@ export function WebSection() {
               <span className="gradient-text">one tab away.</span>
             </h2>
             <p className="section-sub">
-              Prefer a bigger screen? Open OneTune in your browser for a fast, installation-free
-              way to search, organize, and play your library from anywhere.
+              Prefer a bigger screen? Open OneTune in your browser for a fast,
+              installation-free way to search, organize, and play your library
+              from anywhere.
             </p>
             <a className="btn btn-primary btn-lg" href={siteConfig.webUrl}>
               Open web version

@@ -14,14 +14,12 @@ export function HeroSection() {
           Live for sound.
         </h1>
         <p className="lead">
-          Search YouTube, JioSaavn, and Spotify in one place. Build your library, import any
-          playlist link, download for offline, and keep playback alive on the lock screen — all
-          backed by <em>your</em> API.
+          Search YouTube, JioSaavn, and Spotify in one place. Build your
+          library, import any playlist link, download for offline, and keep
+          playback alive on the lock screen — all backed by <em>your</em> API.
         </p>
         <div className="hero-actions">
-          <ApkLink className="btn btn-primary">
-            Download for Android
-          </ApkLink>
+          <ApkLink className="btn btn-primary">Download for Android</ApkLink>
           <NavAnchor className="btn btn-ghost" href="#features">
             Explore features
           </NavAnchor>
@@ -76,7 +74,11 @@ export function HeroSection() {
               <span>4:38</span>
             </div>
             <div className="app-controls">
-              <button type="button" className="ctrl small" aria-label="Previous">
+              <button
+                type="button"
+                className="ctrl small"
+                aria-label="Previous"
+              >
                 ⏮
               </button>
               <button type="button" className="ctrl play" aria-label="Play">
