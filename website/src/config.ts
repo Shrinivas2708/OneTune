@@ -9,8 +9,19 @@ export const siteConfig = {
     import.meta.env.VITE_APK_URL ??
     "https://github.com/Shrinivas2708/OneTune/releases/download/v1.0.0/OneTune-1.0.0.apk",
   apkFileName: import.meta.env.VITE_APK_FILE_NAME ?? "OneTune-1.0.0.apk",
-  webUrl: import.meta.env.VITE_WEB_URL ?? "#web-version",
+  webUrl: normalizeWebUrl(import.meta.env.VITE_WEB_URL ?? "#web-version"),
 } as const;
+
+function normalizeWebUrl(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.startsWith("#") || trimmed.startsWith("/")) {
+    return trimmed || "#web-version";
+  }
+
+  return /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)
+    ? trimmed
+    : `https://${trimmed}`;
+}
 
 export const adminConfig = {
   apiUrl: import.meta.env.VITE_API_URL ?? "https://api.onetune.shribuilds.in",
