@@ -1,5 +1,6 @@
 import { ApkLink } from "../components/ApkLink";
 import { Reveal } from "../components/Reveal";
+import { siteConfig } from "../config";
 import { NavAnchor } from "../lib/navigation";
 
 export function HeroSection() {
@@ -24,6 +25,9 @@ export function HeroSection() {
           <NavAnchor className="btn btn-ghost" href="#features">
             Explore features
           </NavAnchor>
+          <a className="btn btn-web" href={siteConfig.webUrl}>
+            Open web version
+          </a>
         </div>
         <ul className="hero-stats">
           <li>

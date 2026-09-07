@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ApkLink } from "./ApkLink";
+import { siteConfig } from "../config";
 import { NavAnchor } from "../lib/navigation";
 
 function DownloadIcon() {
@@ -49,6 +50,9 @@ export function Header() {
             <DownloadIcon />
             Download for Android
           </ApkLink>
+          <a className="nav-web-link" href={siteConfig.webUrl}>
+            Web version
+          </a>
           <button
             className="menu-btn"
             type="button"
@@ -71,6 +75,9 @@ export function Header() {
         <ApkLink className="nav-cta nav-cta-mobile" href="#download" onClick={closeMobile}>
           Download for Android
         </ApkLink>
+        <a className="nav-web-link nav-web-link-mobile" href={siteConfig.webUrl} onClick={closeMobile}>
+          Open web version
+        </a>
       </nav>
     </header>
   );

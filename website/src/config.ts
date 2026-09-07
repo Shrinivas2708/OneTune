@@ -9,6 +9,7 @@ export const siteConfig = {
     import.meta.env.VITE_APK_URL ??
     "https://github.com/Shrinivas2708/OneTune/releases/download/v1.0.0/OneTune-1.0.0.apk",
   apkFileName: import.meta.env.VITE_APK_FILE_NAME ?? "OneTune-1.0.0.apk",
+  webUrl: import.meta.env.VITE_WEB_URL ?? "#web-version",
 } as const;
 
 export const adminConfig = {

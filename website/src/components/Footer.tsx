@@ -1,4 +1,5 @@
 import { ApkLink } from "../components/ApkLink";
+import { siteConfig } from "../config";
 import { NavAnchor } from "../lib/navigation";
 
 export function Footer() {
@@ -24,6 +25,7 @@ export function Footer() {
             <div className="footer-col">
               <h4>Platform</h4>
               <NavAnchor href="#android">Android app</NavAnchor>
+              <a href={siteConfig.webUrl}>Web version</a>
               <ApkLink href="#download">Direct install</ApkLink>
               <span className="footer-muted">iOS · not available</span>
             </div>

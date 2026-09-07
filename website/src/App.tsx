@@ -7,6 +7,7 @@ import { FeaturesSection } from "./sections/FeaturesSection";
 import { HeroSection } from "./sections/HeroSection";
 import { SplitSection } from "./sections/SplitSection";
 import { VibesSection } from "./sections/VibesSection";
+import { WebSection } from "./sections/WebSection";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <VibesSection />
         <SplitSection />
         <AndroidSection />
+        <WebSection />
         <CtaSection />
       </main>
       <Footer />
